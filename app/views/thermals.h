@@ -5,6 +5,7 @@
 
 #include <deque>
 #include <optional>
+#include <vector>
 
 class QLabel;
 class QTreeWidget;
@@ -13,6 +14,7 @@ namespace fg {
 
 class Graph;
 class InfoGrid;
+class SortItem;
 
 class ThermalsView final : public View {
     Q_OBJECT
@@ -34,6 +36,7 @@ private:
     QString statusOf(const ThermalSensor& sensor) const;
 
     std::deque<Tracked> m_tracked; // one per sensor, in the order the system lists them
+    std::vector<SortItem*> m_rows; // likewise
     History m_hotspot;
     std::optional<std::uint64_t> m_firstThrottleCount;
     int m_shownSensor = -2; // -1 is the CPU hotspot

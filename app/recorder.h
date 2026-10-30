@@ -41,4 +41,7 @@ private:
     bool m_triggerArmed = true;
 };
 
+// Starts a recording at launch, if the user asked for that.
+void startFlightRecorderIfEnabled(SamplerHub& hub);
+
 } // namespace fg

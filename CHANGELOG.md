@@ -20,6 +20,10 @@
 
 - Menus open and switch when pointed at, submenus open on hover, and they close when the pointer leaves. Settings can turn this off.
 - Alerts on CPU, memory and temperature.
+- Wi-Fi network name and link speed, read from the kernel.
+- The Thermals table sorts by any column.
+- The Disk Space map works from the keyboard: arrow keys, Enter and Backspace. Right-click also goes up a level.
+- Flight Recorder can start recording when the app starts.
 - English and Norwegian.
 
 ### Fixed along the way
@@ -42,3 +46,9 @@
 - Network totals no longer count the same traffic twice through bridges and tunnels.
 - Wi-Fi quality is marked as estimated, since it assumes a scale.
 - Process export leaves out GPU and network columns that weren't being measured.
+- Process names longer than the kernel's 15 characters are shown whole.
+- A new process counts from its first update, in Processes and App History.
+- A memory slot of unknown size no longer shows as empty.
+- The last page is remembered by name, so a changed page order can't open the wrong one.
+- The Modern window is wider by the width of its sidebar, so Processes keeps its columns.
+- The Performance page spends less on pages that aren't showing, now 0.39% CPU against 0.50%.

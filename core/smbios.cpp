@@ -74,7 +74,7 @@ std::vector<MemoryModule> parseMemoryModules(std::string_view table)
             if (size == 0x7FFF)
                 module.sizeBytes = static_cast<std::uint64_t>(dword(s, 0x1C)) * 1024 * 1024;
             else if (size == 0xFFFF)
-                module.sizeBytes = 0;
+                module.sizeKnown = false;
             else if (size & 0x8000)
                 module.sizeBytes = static_cast<std::uint64_t>(size & 0x7FFF) * 1024;
             else

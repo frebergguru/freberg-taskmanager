@@ -4,6 +4,7 @@
 #include "../style/style.h"
 #include "../widgets/resultsdb.h"
 
+#include <QAccessible>
 #include <QComboBox>
 #include <QDateTime>
 #include <QDir>
@@ -11,6 +12,7 @@
 #include <QFileDialog>
 #include <QHBoxLayout>
 #include <QHeaderView>
+#include <QKeyEvent>
 #include <QLabel>
 #include <QLineEdit>
 #include <QLocale>
@@ -120,20 +122,72 @@ void DiskModel::removeNode(const QModelIndex& index)
 Treemap::Treemap(QWidget* parent) : QWidget(parent)
 {
     setMinimumHeight(60);
+    setFocusPolicy(Qt::StrongFocus);
     setAccessibleName(tr("Map of the largest items"));
-    setAccessibleDescription(tr("The same items as the list. Use the list with the keyboard."));
+    describeFocus();
+}
+
+void Treemap::describeFocus()
+{
+    const QString help = tr("Arrow keys move between items, Enter opens a folder and Backspace goes up.");
+    if (m_focusCell < 0 || m_focusCell >= m_cells.size()) {
+        setAccessibleDescription(help);
+    } else {
+        const DiskNode* node = m_cells[m_focusCell].node;
+        setAccessibleDescription(tr("%1, %2. %3").arg(QString::fromStdString(node->name), Format::bytes(node->bytes), help));
+    }
+    if (QAccessible::isActive()) {
+        QAccessibleEvent event(this, QAccessible::DescriptionChanged);
+        QAccessible::updateAccessibility(&event);
+    }
+}
+
+void Treemap::keyPressEvent(QKeyEvent* event)
+{
+    const auto moveTo = [this](int cell) {
+        m_focusCell = cell;
+        describeFocus();
+        update();
+    };
+    switch (event->key()) {
+    case Qt::Key_Left:
+    case Qt::Key_Up:
+        if (!m_cells.isEmpty())
+            moveTo(std::max(0, m_focusCell - 1));
+        break;
+    case Qt::Key_Right:
+    case Qt::Key_Down:
+        if (!m_cells.isEmpty())
+            moveTo(std::min(static_cast<int>(m_cells.size()) - 1, m_focusCell + 1));
+        break;
+    case Qt::Key_Return:
+    case Qt::Key_Enter:
+        if (m_focusCell >= 0 && m_focusCell < m_cells.size())
+            emit nodeClicked(m_cells[m_focusCell].node);
+        break;
+    case Qt::Key_Backspace:
+        if (m_node && m_node->parent)
+            emit nodeClicked(m_node->parent);
+        break;
+    default:
+        QWidget::keyPressEvent(event);
+    }
 }
 
 void Treemap::setNode(DiskNode* node)
 {
     m_node = node;
     layoutCells();
+    m_focusCell = m_cells.isEmpty() ? -1 : 0;
+    describeFocus();
     update();
 }
 
 void Treemap::resizeEvent(QResizeEvent*)
 {
     layoutCells();
+    if (m_focusCell >= m_cells.size())
+        m_focusCell = m_cells.isEmpty() ? -1 : 0;
 }
 
 void Treemap::layoutCells()
@@ -180,10 +234,19 @@ void Treemap::paintEvent(QPaintEvent*)
             p.drawText(text, Qt::AlignLeft | Qt::AlignTop | Qt::TextWordWrap, label);
         }
     }
+    if (hasFocus() && m_focusCell >= 0 && m_focusCell < m_cells.size()) {
+        p.setPen(QPen(palette().color(QPalette::Highlight), 2));
+        p.drawRect(m_cells[m_focusCell].rect.adjusted(1, 1, -2, -2));
+    }
 }
 
 void Treemap::mousePressEvent(QMouseEvent* event)
 {
+    if (event->button() == Qt::BackButton || event->button() == Qt::RightButton) {
+        if (m_node && m_node->parent)
+            emit nodeClicked(m_node->parent);
+        return;
+    }
     for (const Cell& cell : std::as_const(m_cells))
         if (cell.rect.contains(event->position().toPoint())) {
             emit nodeClicked(cell.node);

@@ -15,7 +15,7 @@ Denne appen skal kunne brukes med skjermleser, med bare tastatur og med nedsatt 
 ## Kjente begrensninger
 
 - Knappene for å minimere, maksimere og lukke i tittellinjen kan ikke nås med Tab. Bruk Alt+mellomrom eller Alt+F4 i stedet.
-- Klikk i kartet under Diskplass og spoling med mus i ferdsskriverens paneler har ingen egen tastaturvei. Listen ved siden av kartet har de samme elementene, og posisjonsglidebryteren gjør det samme som spoling.
+- Spoling med mus i ferdsskriverens paneler har ingen egen tastaturvei. Posisjonsglidebryteren gjør det samme.
 - Flytting og størrelse på miniviseren er opp til skrivebordet, og den har ikke menylinje. Den lukkes med Esc, og menyen åpnes med menytasten eller Shift+F10.
 - Fullskjermvisningen av belastning er til å se på. Tallene leses ikke opp etter hvert som de endrer seg.
 

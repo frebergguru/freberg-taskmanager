@@ -132,6 +132,16 @@ private slots:
         QCOMPARE(modules[1].sizeBytes, std::uint64_t(0));
         QCOMPARE(modules[1].locator, std::string("DIMM B"));
         QVERIFY(parseMemoryModules("").empty());
+
+        // A slot whose size the firmware won't state is not an empty slot.
+        std::string unknown(0x22, '\0');
+        unknown[0] = 17;
+        unknown[1] = 0x22;
+        unknown[0x0C] = unknown[0x0D] = static_cast<char>(0xFF);
+        unknown.append(2, '\0');
+        const auto slots_ = parseMemoryModules(unknown);
+        QCOMPARE(slots_.size(), std::size_t(1));
+        QVERIFY(!slots_[0].sizeKnown);
     }
 
     void historyKeepsGaps()

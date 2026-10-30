@@ -36,6 +36,7 @@ public:
     void setPage(int index, QWidget* page);
     QWidget* page(int index) const;
     int currentIndex() const { return m_current; }
+    int sidebarWidth() const { return m_sidebarWidth; }
     int count() const { return m_tabs.size(); }
     QSize minimumSizeHint() const override;
 

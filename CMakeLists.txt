@@ -25,6 +25,7 @@ add_library(fg_core STATIC
     platform/linux/gpu_thermal_power.cpp
     platform/linux/processes.cpp
     platform/linux/connections.cpp
+    platform/linux/wifi.cpp
     platform/linux/details.cpp
     platform/linux/linux_backend.cpp
 )

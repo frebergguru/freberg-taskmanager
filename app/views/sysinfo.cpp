@@ -57,6 +57,11 @@ void SystemInfoView::refresh()
         QStringList modules;
         int used = 0;
         for (const MemoryModule& module : facts.memoryModules.value) {
+            if (!module.sizeKnown) {
+                ++used; // something is there, even if the firmware won't say how big
+                modules << tr("%1: size not reported").arg(QString::fromStdString(module.locator));
+                continue;
+            }
             if (module.sizeBytes == 0) {
                 modules << tr("%1: empty").arg(QString::fromStdString(module.locator));
                 continue;

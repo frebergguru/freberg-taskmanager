@@ -3,11 +3,13 @@
 #include "../format.h"
 #include "../hub.h"
 #include "../recorder.h"
+#include "../settings.h"
 #include "../style/style.h"
 #include "../widgets/infogrid.h"
 
 #include <QAccessible>
 #include <QApplication>
+#include <QCheckBox>
 #include <QFileDialog>
 #include <QGridLayout>
 #include <QHBoxLayout>
@@ -204,6 +206,11 @@ FlightRecorderView::FlightRecorderView(SamplerHub& hub)
     buttons->addWidget(triggerLabel);
     buttons->addWidget(m_trigger);
     layout->addLayout(buttons);
+
+    auto* autoStart = new QCheckBox(tr("&Begin recording when the app starts (reads all sensors and processes until stopped, even with the window hidden)"));
+    autoStart->setChecked(Settings::instance().value("flightRecorder/autoStart", false).toBool());
+    connect(autoStart, &QCheckBox::toggled, this, [](bool on) { Settings::instance().setValue("flightRecorder/autoStart", on); });
+    layout->addWidget(autoStart);
 
     auto* grid = new QGridLayout;
     grid->setSpacing(2);

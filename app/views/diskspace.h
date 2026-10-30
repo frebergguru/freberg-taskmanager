@@ -48,6 +48,9 @@ signals:
 protected:
     void paintEvent(QPaintEvent* event) override;
     void mousePressEvent(QMouseEvent* event) override;
+    void keyPressEvent(QKeyEvent* event) override;
+    void focusInEvent(QFocusEvent*) override { update(); }
+    void focusOutEvent(QFocusEvent*) override { update(); }
     void resizeEvent(QResizeEvent* event) override;
 
 private:
@@ -56,8 +59,10 @@ private:
         DiskNode* node;
     };
     void layoutCells();
+    void describeFocus();
     DiskNode* m_node = nullptr;
     QList<Cell> m_cells;
+    int m_focusCell = -1;
 };
 
 class DiskSpaceView final : public View {

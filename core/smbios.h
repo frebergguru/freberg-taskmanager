@@ -12,7 +12,8 @@ struct MemoryModule {
     std::string locator;
     std::string formFactor;
     std::string type;
-    std::uint64_t sizeBytes = 0; // 0 means the slot is empty
+    std::uint64_t sizeBytes = 0; // 0 means the slot is empty, if the size is known at all
+    bool sizeKnown = true;
     unsigned speedMTs = 0;       // 0 means not reported
 };
 

@@ -13,6 +13,7 @@ namespace {
 // exec keeps the PID and start time but changes everything else. A new name shows at once.
 // The same name with new arguments is caught by reading a few processes again on each pass.
 constexpr std::uint64_t kInfoRefreshPasses = 30;
+constexpr std::size_t kKernelNameLimit = 15;
 }
 
 ProcessSampler::ProcessSampler(const std::string& root) : m_root(root), m_pageSize(::sysconf(_SC_PAGESIZE)) {}
@@ -32,6 +33,24 @@ std::shared_ptr<const ProcessInfo> ProcessSampler::readInfo(int pid, const PidSt
     if (readFile(dir + "/cmdline", text) == ReadStatus::Ok) {
         while (!text.empty() && text.back() == '\0')
             text.pop_back();
+        // The kernel cuts names to 15 characters. The whole one is in the program's path,
+        // or for a script in the first argument after its interpreter.
+        if (info->name.size() == kKernelNameLimit) {
+            std::string_view rest = text;
+            for (int argument = 0; argument < 2 && !rest.empty(); ++argument) {
+                const std::size_t end = rest.find('\0');
+                // A program can rewrite this into a status line: "name: waiting".
+                std::string_view path = rest.substr(0, end);
+                path = path.substr(0, path.find(' '));
+                path = path.substr(path.rfind('/') + 1);
+                path = path.substr(0, path.find(':'));
+                if (path.starts_with(info->name)) {
+                    info->name = std::string(path);
+                    break;
+                }
+                rest = end == std::string_view::npos ? std::string_view{} : rest.substr(end + 1);
+            }
+        }
         for (char& c : text)
             if (c == '\0')
                 c = ' ';
@@ -146,8 +165,13 @@ void ProcessSampler::sample(std::int64_t nowMs, std::uint64_t totalCpuTicksDelta
             // New process, or this PID was reused: forget every previous counter.
             known = {};
             known.info = readInfo(static_cast<int>(*pid), stat);
-        } else if (stat.state != 'Z' && (stat.comm != known.info->name || (m_pass + static_cast<std::uint64_t>(*pid)) % kInfoRefreshPasses == 0)) {
+            known.kernelName = stat.comm;
+            // It started since the last pass, so all it has used so far falls in this interval.
+            known.haveIo = m_previousPassMs != 0;
+            known.atMs = m_previousPassMs;
+        } else if (stat.state != 'Z' && (stat.comm != known.kernelName || (m_pass + static_cast<std::uint64_t>(*pid)) % kInfoRefreshPasses == 0)) {
             known.info = readInfo(static_cast<int>(*pid), stat); // a zombie has nothing left to read
+            known.kernelName = stat.comm;
         }
 
         ProcessSample sample;
@@ -159,7 +183,7 @@ void ProcessSampler::sample(std::int64_t nowMs, std::uint64_t totalCpuTicksDelta
         sample.rssBytes = Reading<std::uint64_t>::measured(static_cast<std::uint64_t>(stat.rssPages < 0 ? 0 : stat.rssPages) * static_cast<std::uint64_t>(m_pageSize));
 
         const std::uint64_t ticks = stat.utime + stat.stime;
-        if (samePerson && totalCpuTicksDelta > 0 && ticks >= known.cpuTicks)
+        if ((samePerson || m_previousPassMs != 0) && totalCpuTicksDelta > 0 && ticks >= known.cpuTicks)
             sample.cpuPct = Reading<double>::measured(100.0 * static_cast<double>(ticks - known.cpuTicks) / static_cast<double>(totalCpuTicksDelta));
         known.cpuTicks = ticks;
 
@@ -205,6 +229,7 @@ void ProcessSampler::sample(std::int64_t nowMs, std::uint64_t totalCpuTicksDelta
         out.push_back(std::move(sample));
     }
     ::closedir(proc);
+    m_previousPassMs = nowMs;
 
     std::erase_if(m_known, [this](const auto& item) { return item.second.seenAt != m_pass; });
 }

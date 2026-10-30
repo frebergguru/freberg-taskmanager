@@ -57,6 +57,8 @@ private:
     SamplerHub& m_hub;
     QListWidget* m_list;
     QStackedWidget* m_stack;
+    bool isShown(const Page& page) const;
+    bool m_updating = false;
     std::deque<Page> m_pages; // deque, so Graphs may keep pointers to the histories
     QHash<QString, Page*> m_byKey;
 

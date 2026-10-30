@@ -94,7 +94,12 @@ MainWindow::MainWindow(SamplerHub& hub) : QWidget(nullptr, Qt::Window | Qt::Fram
     setWindowFlag(Qt::WindowStaysOnTopHint, Settings::instance().value("app/alwaysOnTop", false).toBool());
     resize(kBaseWidth, kBaseHeight);
     applyAppearance();
-    m_sheet->setCurrentIndex(Settings::instance().value("app/lastView", 0).toInt());
+    int firstPage = 0;
+    const QString lastPage = Settings::instance().value("app/lastPage").toString();
+    for (qsizetype page = 0; page < m_defs.size(); ++page)
+        if (lastPage == QLatin1String(m_defs[page].id))
+            firstPage = static_cast<int>(page);
+    m_sheet->setCurrentIndex(firstPage);
 }
 
 MainWindow::~MainWindow()
@@ -119,7 +124,8 @@ void MainWindow::applyAppearance()
     // Larger text needs a larger window, as far as the screen allows.
     layout()->activate();
     if (!isMaximized()) {
-        QSize wanted = QSize(qRound(kBaseWidth * scale), qRound(kBaseHeight * scale)).expandedTo(minimumSizeHint());
+        // A sidebar takes width from the page, so the window grows by that much.
+        QSize wanted = QSize(qRound(kBaseWidth * scale) + m_sheet->sidebarWidth(), qRound(kBaseHeight * scale)).expandedTo(minimumSizeHint());
         if (const QScreen* where = screen())
             wanted = wanted.boundedTo(where->availableSize());
         if (wanted.width() > width() || wanted.height() > height())
@@ -160,7 +166,8 @@ void MainWindow::buildMenus()
     auto* familyGroup = new QActionGroup(this);
     auto* modeGroup = new QActionGroup(this);
     const auto refreshThemeMenu = [familyGroup, modeGroup] {
-        const Scheme& current = schemeById(Settings::instance().scheme());
+        const QString chosen = Settings::instance().scheme();
+        const Scheme& current = schemeById(chosen);
         for (QAction* action : familyGroup->actions())
             action->setChecked(action->data().toString() == current.family);
         for (QAction* action : modeGroup->actions())
@@ -244,7 +251,7 @@ void MainWindow::onCurrentChanged(int index)
     ::malloc_trim(0); // what the page just dropped goes back to the system
 #endif
     m_currentIndex = index;
-    Settings::instance().setValue("app/lastView", index);
+    Settings::instance().setValue("app/lastPage", QLatin1String(m_defs[index].id));
 
     if (!m_views[index]) {
         m_views[index] = m_defs[index].create(m_hub);

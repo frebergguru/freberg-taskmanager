@@ -1,5 +1,7 @@
 #include "recorder.h"
 
+#include "settings.h"
+
 #include <QDateTime>
 #include <QDir>
 #include <QStandardPaths>
@@ -68,6 +70,12 @@ void FlightRecorder::onSampled(const SnapshotPtr& snapshot)
     std::string error;
     const bool saved = saveTrace(path.toStdString(), m_buffer.frames(), error);
     emit triggered(path, saved ? QString() : QString::fromStdString(error));
+}
+
+void startFlightRecorderIfEnabled(SamplerHub& hub)
+{
+    if (Settings::instance().value("flightRecorder/autoStart", false).toBool())
+        FlightRecorder::shared(hub).start();
 }
 
 } // namespace fg

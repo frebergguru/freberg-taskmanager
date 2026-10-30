@@ -153,13 +153,39 @@ private slots:
         QCOMPARE(snapshot->processes.size(), std::size_t(1));
         QCOMPARE(snapshot->processes[0].cpuPct.value, 25.0);
 
-        // Same PID, new start time: a new process, so no rate carries over.
+        // Same PID, new start time: a new process, so nothing carries over. All it has
+        // used so far falls in this interval, so that is its share.
         put("/proc/stat", "cpu  3000 0 0 0 0 0 0 0 0 0\n");
         put("/proc/42/stat", statLine("second", 900, 600));
         snapshot = system->sample(SubProcesses);
         QCOMPARE(snapshot->processes[0].info->name, std::string("second"));
         QCOMPARE(snapshot->processes[0].info->id.startTicks, std::uint64_t(600));
-        QCOMPARE(snapshot->processes[0].cpuPct.state, Availability::NotYetSampled);
+        QCOMPARE(snapshot->processes[0].cpuPct.value, 90.0);
+    }
+
+    void firstPassHasNoShareYet()
+    {
+        put("/proc/stat", "cpu  1000 0 0 0 0 0 0 0 0 0\n");
+        put("/proc/42/stat", "42 (old) S 1 42 42 0 -1 0 0 0 0 0 100 0 0 0 20 0 1 0 500 1000 10 0 0");
+        QCOMPARE(backend()->sample(SubProcesses)->processes[0].cpuPct.state, Availability::NotYetSampled);
+    }
+
+    void longNamesComeFromTheCommandLine()
+    {
+        const auto add = [this](int pid, const char* name, const QByteArray& command) {
+            put(QStringLiteral("/proc/%1/stat").arg(pid), QByteArray::number(pid) + " (" + name + ") S 1 1 1 0 -1 0 0 0 0 0 1 1 0 0 20 0 1 0 77 0 5 0 0 0\n");
+            put(QStringLiteral("/proc/%1/cmdline").arg(pid), command);
+        };
+        add(11, "systemd-userwor", QByteArray("/usr/lib/systemd/systemd-userwork\0x\0", 36));
+        add(12, "a-long-script-n", QByteArray("python3\0/opt/a-long-script-name.py\0", 35));
+        add(13, "fifteen-letters", QByteArray("something-else\0", 15));
+        add(14, "systemd-userwor", QByteArray("systemd-userwork: waiting...\0", 29));
+        auto list = backend()->sample(SubProcesses)->processes;
+        std::sort(list.begin(), list.end(), [](const ProcessSample& a, const ProcessSample& b) { return a.info->id.pid < b.info->id.pid; });
+        QCOMPARE(list.at(0).info->name, std::string("systemd-userwork"));
+        QCOMPARE(list.at(1).info->name, std::string("a-long-script-name.py"));
+        QCOMPARE(list.at(2).info->name, std::string("fifteen-letters"));
+        QCOMPARE(list.at(3).info->name, std::string("systemd-userwork"));
     }
 
     void refusesToSignalReusedPid()

@@ -38,6 +38,7 @@ signals:
 
 struct ViewDef {
     QString title;
+    const char* id; // what is saved as the last page, so reordering pages can't change it
     View* (*create)(SamplerHub& hub);
 };
 

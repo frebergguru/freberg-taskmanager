@@ -78,6 +78,9 @@ void PerformanceView::selectionChanged()
         m_stack->setCurrentWidget(selected->widget);
     Settings::instance().setValue("performance/selected", key);
     emit wantsChanged();
+    // Hidden pages don't keep their text current, so this one needs a sample of its own.
+    if (!m_updating)
+        m_hub.refreshNow();
 }
 
 PerformanceView::Page& PerformanceView::page(const QString& key, const QString& label, const QString& heading)
@@ -129,8 +132,14 @@ void PerformanceView::samplesMissed()
         history.push(History::gap());
 }
 
+bool PerformanceView::isShown(const Page& page) const
+{
+    return page.widget == m_stack->currentWidget();
+}
+
 void PerformanceView::onSnapshot(const Snapshot& snapshot)
 {
+    m_updating = true;
     updateCpu(snapshot);
     updateMemory(snapshot);
     updateDisks(snapshot);
@@ -138,6 +147,7 @@ void PerformanceView::onSnapshot(const Snapshot& snapshot)
     updateGpus(snapshot);
     updateThermals(snapshot);
     updateEnergy(snapshot);
+    m_updating = false;
 }
 
 void PerformanceView::updateCpu(const Snapshot& snapshot)
@@ -188,6 +198,8 @@ void PerformanceView::updateCpu(const Snapshot& snapshot)
         }
     }
 
+    if (!isShown(p))
+        return;
     p.grid->set(tr("Usage:"), Format::percent(snapshot.cpu.usagePct));
     p.grid->set(tr("Speed:"), Format::megahertz(snapshot.cpu.freqMHz));
     p.grid->set(tr("Maximum speed:"), Format::megahertz(topology.maxFreqMHz));
@@ -253,6 +265,8 @@ void PerformanceView::updateMemory(const Snapshot& snapshot)
     p.first.push(m.used);
     p.graph->sampled(p.subheading->text());
 
+    if (!isShown(p))
+        return;
     p.grid->set(tr("Available:"), Format::bytes(m.available));
     p.grid->set(tr("Cached:"), Format::bytes(m.cached));
     p.grid->set(tr("Free:"), Format::bytes(m.free));
@@ -295,10 +309,17 @@ void PerformanceView::updateDisks(const Snapshot& snapshot)
                 process->start(QStringLiteral("pkexec"), {QStringLiteral("smartctl"), QStringLiteral("-H"), QStringLiteral("/dev/") + name});
             });
         }
+        if (disk.readBps.known() && disk.writeBps.known()) {
+            totalRead += disk.readBps.value;
+            totalWrite += disk.writeBps.value;
+            anyRate = true;
+        }
         p.first.push(disk.readBps);
         p.second.push(disk.writeBps);
         p.graph->sampled(tr("Read %1, write %2").arg(Format::diskRate(disk.readBps), Format::diskRate(disk.writeBps)));
 
+        if (!isShown(p))
+            continue;
         p.grid->set(tr("Active time:"), Format::percent(disk.activePct));
         p.grid->set(tr("Read (solid line):"), Format::diskRate(disk.readBps));
         p.grid->set(tr("Write (second line):"), Format::diskRate(disk.writeBps));
@@ -314,11 +335,6 @@ void PerformanceView::updateDisks(const Snapshot& snapshot)
             for (const std::string& mount : disk.mounts)
                 mounts << QString::fromStdString(mount);
             p.grid->set(tr("Mounted at:"), mounts.join(QStringLiteral(", ")));
-        }
-        if (disk.readBps.known() && disk.writeBps.known()) {
-            totalRead += disk.readBps.value;
-            totalWrite += disk.writeBps.value;
-            anyRate = true;
         }
     }
 
@@ -351,6 +367,8 @@ void PerformanceView::updateNetworks(const Snapshot& snapshot)
         p.second.push(net.txBps);
         p.graph->sampled(tr("Receive %1, send %2").arg(Format::rate(net.rxBps), Format::rate(net.txBps)));
 
+        if (!isShown(p))
+            continue;
         p.grid->set(tr("Receive (solid line):"), Format::rate(net.rxBps));
         p.grid->set(tr("Send (second line):"), Format::rate(net.txBps));
         p.grid->set(tr("Received in total:"), Format::bytes(net.rxTotal));
@@ -358,6 +376,7 @@ void PerformanceView::updateNetworks(const Snapshot& snapshot)
         p.grid->set(tr("Link speed:"), net.linkMbps.known() ? tr("%1 Mbit/s").arg(net.linkMbps.value) : Format::why(net.linkMbps.state));
         p.grid->set(tr("State:"), QString::fromStdString(net.operState));
         if (net.wireless) {
+            p.grid->set(tr("Wi-Fi network:"), !net.wifiNetwork.known() ? Format::why(net.wifiNetwork.state) : (net.wifiNetwork.value.empty() ? tr("Not connected") : QString::fromStdString(net.wifiNetwork.value)));
             p.grid->set(tr("Wi-Fi signal:"), net.wifiSignalDbm.known() ? tr("%1 dBm").arg(net.wifiSignalDbm.value) : Format::why(net.wifiSignalDbm.state));
             p.grid->set(tr("Wi-Fi quality:"), Format::percent(net.wifiQualityPct));
         }
@@ -375,6 +394,8 @@ void PerformanceView::updateGpus(const Snapshot& snapshot)
         p.first.push(gpu.busyPct);
         p.graph->sampled(tr("GPU usage %1").arg(Format::percent(gpu.busyPct)));
 
+        if (!isShown(p))
+            continue;
         p.grid->set(tr("Usage:"), Format::percent(gpu.busyPct));
         p.grid->set(tr("Speed:"), Format::megahertz(gpu.freqMHz));
         p.grid->set(tr("Video memory:"), tr("%1 of %2").arg(Format::bytes(gpu.vramUsed), Format::bytes(gpu.vramTotal)));
@@ -391,6 +412,8 @@ void PerformanceView::updateThermals(const Snapshot& snapshot)
     p.first.push(t.cpuHotspotC);
     p.subheading->setText(tr("CPU hotspot: %1").arg(Format::temperature(t.cpuHotspotC)));
     p.graph->sampled(p.subheading->text());
+    if (!isShown(p))
+        return;
     p.grid->set(tr("Thermal pressure:"), t.throttleEvents.known() ? tr("%1 throttle events").arg(t.throttleEvents.value) : Format::why(t.throttleEvents.state));
     for (const ThermalSensor& sensor : t.sensors)
         p.grid->set(QStringLiteral("%1 %2:").arg(QString::fromStdString(sensor.chip), QString::fromStdString(sensor.label)), Format::temperature(sensor.tempC));
@@ -406,6 +429,8 @@ void PerformanceView::updateEnergy(const Snapshot& snapshot)
                               : tr("CPU package power: %1").arg(Format::watts(power.cpuPackageW)));
     p.graph->sampled(p.subheading->text());
 
+    if (!isShown(p))
+        return;
     p.grid->set(tr("Power source:"), power.onAc.known() ? (power.onAc.value ? tr("Mains") : tr("Battery")) : Format::why(power.onAc.state));
     for (const BatterySample& battery : power.batteries)
         p.grid->set(tr("Battery %1:").arg(QString::fromStdString(battery.name)),

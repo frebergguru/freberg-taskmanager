@@ -15,7 +15,7 @@ This app aims to be usable with a screen reader, with the keyboard alone, and wi
 ## Known limits
 
 - The title bar's minimize, maximize and close buttons aren't keyboard stops. Use Alt+Space or Alt+F4 instead.
-- Clicking in the Disk Space map and scrubbing with the mouse in the Flight Recorder panels have no direct keyboard route. The list beside the map holds the same items, and the position slider does the same as scrubbing.
+- Scrubbing with the mouse in the Flight Recorder panels has no direct keyboard route. The position slider does the same.
 - The popout's moving and resizing are left to the desktop, and it has no menu bar. It closes with Esc, and its menu opens with the Menu key or Shift+F10.
 - The full-screen load view is for looking at. Its figures are not spoken as they change.
 

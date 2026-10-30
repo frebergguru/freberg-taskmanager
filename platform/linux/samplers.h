@@ -14,6 +14,12 @@
 
 namespace fg {
 
+struct WifiLink {
+    Reading<std::string> network;
+    Reading<double> sendMbps;
+};
+WifiLink readWifiLink(const std::string& interfaceName);
+
 PowerDetails readPowerDetails(const std::string& root);
 std::vector<NetworkConnection> readConnections(const std::string& root);
 std::vector<KernelModule> readKernelModules(const std::string& root);
@@ -90,6 +96,11 @@ private:
     std::vector<NetCounters> m_counters;
     std::unordered_map<std::string, Previous> m_previous;
     std::int64_t m_previousMs = 0;
+    struct KnownWifi {
+        WifiLink link;
+        std::int64_t atMs = 0;
+    };
+    std::unordered_map<std::string, KnownWifi> m_wifi;
 };
 
 class GpuSampler {
@@ -165,6 +176,7 @@ public:
 private:
     struct Known {
         std::shared_ptr<const ProcessInfo> info;
+        std::string kernelName; // as the kernel has it, which info->name may extend
         std::uint64_t cpuTicks = 0;
         std::uint64_t readBytes = 0, writeBytes = 0;
         bool haveIo = false;
@@ -182,6 +194,7 @@ private:
     std::string m_buffer;
     std::unordered_map<int, Known> m_known;
     std::uint64_t m_pass = 0;
+    std::int64_t m_previousPassMs = 0;
     long m_pageSize;
 };
 

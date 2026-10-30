@@ -78,6 +78,7 @@ struct NetworkSample {
     Reading<double> linkMbps;
     Reading<double> rxBps, txBps;
     std::uint64_t rxTotal = 0, txTotal = 0;
+    Reading<std::string> wifiNetwork; // empty when not connected
     Reading<double> wifiSignalDbm;
     Reading<double> wifiQualityPct;
 };

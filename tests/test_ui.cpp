@@ -2,7 +2,9 @@
 // next to the test, so the user's own are never touched.
 #include "app/hub.h"
 #include "app/recorder.h"
+#include "app/views/diskspace.h"
 #include "app/views/drivers.h"
+#include "app/views/thermals.h"
 #include "app/views/services.h"
 #include "app/views/startup.h"
 #include "app/views/summary.h"
@@ -290,7 +292,7 @@ private slots:
 
     void summaryOpensTheChosenProcessEvenTheFirstTime()
     {
-        Settings::instance().setValue("app/lastView", 0);
+        Settings::instance().setValue("app/lastPage", QStringLiteral("summary"));
         Settings::instance().setValue("app/updateMs", 500);
         MainWindow window(*m_hub);
         window.show();
@@ -308,6 +310,95 @@ private slots:
         QTRY_VERIFY_WITH_TIMEOUT(tree->currentIndex().isValid(), 6000);
         QCOMPARE(tree->currentIndex().siblingAtColumn(1).data().toString(), pid);
         Settings::instance().setValue("app/updateMs", 1000);
+    }
+
+    void lastPageIsRememberedByName()
+    {
+        Settings::instance().setValue("app/lastPage", QStringLiteral("thermals"));
+        MainWindow window(*m_hub);
+        QVERIFY(window.findChild<ThermalsView*>());
+        window.openView(0);
+        QCOMPARE(Settings::instance().value("app/lastPage").toString(), QStringLiteral("summary"));
+    }
+
+    void diskMapWorksFromTheKeyboard()
+    {
+        DiskNode root;
+        root.isDir = true;
+        root.bytes = 300;
+        auto folder = std::make_unique<DiskNode>();
+        folder->name = "folder";
+        folder->isDir = true;
+        folder->bytes = 200;
+        folder->parent = &root;
+        auto file = std::make_unique<DiskNode>();
+        file->name = "file";
+        file->bytes = 100;
+        file->parent = &root;
+        DiskNode* folderNode = folder.get();
+        root.children.push_back(std::move(folder));
+        root.children.push_back(std::move(file));
+
+        Treemap map;
+        map.resize(400, 200);
+        map.setNode(&root);
+        map.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&map));
+        QCOMPARE(map.focusPolicy(), Qt::StrongFocus);
+        QVERIFY(map.accessibleDescription().startsWith(QLatin1String("folder")));
+        QList<DiskNode*> clicked;
+        connect(&map, &Treemap::nodeClicked, this, [&clicked](DiskNode* node) { clicked << node; });
+        QTest::keyClick(&map, Qt::Key_Right);
+        QVERIFY(map.accessibleDescription().startsWith(QLatin1String("file")));
+        QTest::keyClick(&map, Qt::Key_Left);
+        QTest::keyClick(&map, Qt::Key_Return);
+        QCOMPARE(clicked.size(), 1);
+        QCOMPARE(clicked[0], folderNode);
+        map.setNode(folderNode);
+        QTest::keyClick(&map, Qt::Key_Backspace);
+        QCOMPARE(clicked.size(), 2);
+        QCOMPARE(clicked[1], &root);
+    }
+
+    void thermalsTableSortsByValue()
+    {
+        ThermalsView view;
+        Snapshot snapshot;
+        snapshot.collected = SubThermal;
+        for (const double temperature : {9.0, 100.0, 45.0}) {
+            ThermalSensor sensor;
+            sensor.chip = "fixture";
+            sensor.label = std::to_string(static_cast<int>(temperature));
+            sensor.tempC = Reading<double>::measured(temperature);
+            sensor.limitC = Reading<double>::missing(Availability::Unsupported);
+            snapshot.thermal.sensors.push_back(sensor);
+        }
+        view.onSnapshot(snapshot);
+        QTreeWidget* sensors = nullptr;
+        for (QTreeWidget* list : view.findChildren<QTreeWidget*>())
+            if (list->columnCount() == 8)
+                sensors = list;
+        QVERIFY(sensors);
+        QCOMPARE(sensors->topLevelItem(0)->text(1), QStringLiteral("9")); // the system's own order first
+        sensors->sortByColumn(2, Qt::DescendingOrder);
+        QCOMPARE(sensors->topLevelItem(0)->text(1), QStringLiteral("100"));
+        QCOMPARE(sensors->topLevelItem(2)->text(1), QStringLiteral("9"));
+        // A new sample still lands on each sensor's own row.
+        snapshot.thermal.sensors[0].tempC = Reading<double>::measured(200.0);
+        view.onSnapshot(snapshot);
+        QTRY_COMPARE(sensors->topLevelItem(0)->text(1), QStringLiteral("9"));
+    }
+
+    void recordingCanStartByItself()
+    {
+        Settings::instance().setValue("flightRecorder/autoStart", false);
+        startFlightRecorderIfEnabled(*m_hub);
+        QVERIFY(!FlightRecorder::shared(*m_hub).isRecording());
+        Settings::instance().setValue("flightRecorder/autoStart", true);
+        startFlightRecorderIfEnabled(*m_hub);
+        QVERIFY(FlightRecorder::shared(*m_hub).isRecording());
+        FlightRecorder::shared(*m_hub).stop();
+        Settings::instance().setValue("flightRecorder/autoStart", false);
     }
 
     void alwaysOnTopIsAppliedAtStart()

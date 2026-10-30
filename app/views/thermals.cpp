@@ -3,8 +3,10 @@
 #include "../format.h"
 #include "../widgets/graph.h"
 #include "../widgets/infogrid.h"
+#include "../widgets/sortitem.h"
 
 #include <QHBoxLayout>
+#include <QHeaderView>
 #include <QLabel>
 #include <QLocale>
 #include <QSplitter>
@@ -54,6 +56,9 @@ ThermalsView::ThermalsView()
 
     m_sensors->setRootIsDecorated(false);
     m_sensors->setUniformRowHeights(true);
+    // No column chosen yet, so rows stay in the system's order until a header is clicked.
+    m_sensors->header()->setSortIndicator(-1, Qt::AscendingOrder);
+    m_sensors->setSortingEnabled(true);
     m_sensors->setHeaderLabels({tr("Chip"), tr("Sensor"), tr("Now"), tr("Lowest"), tr("Highest"), tr("Limit"), tr("Margin"), tr("State")});
     m_sensors->setAccessibleName(tr("Temperature sensors. Choose one to see its history in the graph."));
     const int unit = fontMetrics().averageCharWidth();
@@ -163,15 +168,17 @@ void ThermalsView::onSnapshot(const Snapshot& snapshot)
                 tightest = &sensor;
         }
 
-        QTreeWidgetItem* row = m_sensors->topLevelItem(static_cast<int>(i));
-        if (!row) {
-            row = new QTreeWidgetItem(m_sensors);
+        // Sorting moves rows around, so each sensor keeps hold of its own.
+        if (i == m_rows.size()) {
+            auto* row = new SortItem(m_sensors);
+            m_rows.push_back(row);
             row->setData(0, kSensorRole, static_cast<int>(i));
             row->setText(ChipColumn, QString::fromStdString(sensor.chip));
             row->setText(NameColumn, QString::fromStdString(sensor.label));
             for (const int column : {NowColumn, LowColumn, HighColumn, LimitColumn, MarginColumn})
                 row->setTextAlignment(column, Qt::AlignRight | Qt::AlignVCenter);
         }
+        SortItem* row = m_rows[i];
         const auto setIfChanged = [row](int column, const QString& text) {
             if (row->text(column) != text)
                 row->setText(column, text);
@@ -182,9 +189,17 @@ void ThermalsView::onSnapshot(const Snapshot& snapshot)
         setIfChanged(LimitColumn, Format::temperature(sensor.limitC));
         setIfChanged(MarginColumn, sensor.tempC.known() && sensor.limitC.known() ? degreesApart(sensor.limitC.value - sensor.tempC.value) : Format::why(sensor.limitC.known() ? sensor.tempC.state : sensor.limitC.state));
         setIfChanged(StateColumn, statusOf(sensor));
+        constexpr double kUnknownSortsLast = -1e9;
+        row->setSortValue(NowColumn, sensor.tempC.known() ? sensor.tempC.value : kUnknownSortsLast);
+        row->setSortValue(LowColumn, tracked.lowest.value_or(kUnknownSortsLast));
+        row->setSortValue(HighColumn, tracked.highest.value_or(kUnknownSortsLast));
+        row->setSortValue(LimitColumn, sensor.limitC.known() ? sensor.limitC.value : kUnknownSortsLast);
+        row->setSortValue(MarginColumn, sensor.tempC.known() && sensor.limitC.known() ? sensor.limitC.value - sensor.tempC.value : kUnknownSortsLast);
     }
-    while (m_sensors->topLevelItemCount() > static_cast<int>(thermal.sensors.size()))
-        delete m_sensors->takeTopLevelItem(m_sensors->topLevelItemCount() - 1);
+    while (m_rows.size() > thermal.sensors.size()) {
+        delete m_rows.back();
+        m_rows.pop_back();
+    }
 
     m_grid->set(tr("CPU hotspot:"), Format::temperature(thermal.cpuHotspotC));
     m_grid->set(tr("Hottest sensor:"), hottest ? tr("%1 %2: %3").arg(QString::fromStdString(hottest->chip), QString::fromStdString(hottest->label), Format::temperature(hottest->tempC)) : Format::why(Availability::Unsupported));

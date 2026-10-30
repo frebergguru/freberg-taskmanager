@@ -14,6 +14,7 @@ namespace {
 
 constexpr std::uint64_t kSectorBytes = 512; // /proc/diskstats always counts in 512-byte units
 constexpr std::int64_t kFilesystemRefreshMs = 30000;
+constexpr std::int64_t kWifiRefreshMs = 10000;
 
 bool exists(const std::string& path)
 {
@@ -257,7 +258,19 @@ void NetworkSampler::sample(std::int64_t nowMs, std::vector<NetworkSample>& out)
                                          : Reading<double>::missing(Availability::Unsupported);
 
         net.wifiSignalDbm = net.wifiQualityPct = Reading<double>::missing(Availability::Unsupported);
+        net.wifiNetwork = Reading<std::string>::missing(Availability::Unsupported);
         if (net.wireless) {
+            // With a fake root in tests there is no kernel behind it, so ask only the real one.
+            if (m_root.empty()) {
+                KnownWifi& known = m_wifi[net.name];
+                if (known.atMs == 0 || nowMs - known.atMs >= kWifiRefreshMs) {
+                    known.link = readWifiLink(net.name);
+                    known.atMs = nowMs;
+                }
+                net.wifiNetwork = known.link.network;
+                if (known.link.sendMbps.known())
+                    net.linkMbps = known.link.sendMbps;
+            }
             const std::string key = net.name + ":";
             const std::size_t at = wireless.find(key);
             if (at != std::string::npos) {
