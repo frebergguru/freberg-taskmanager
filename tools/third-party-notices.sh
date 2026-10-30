@@ -38,9 +38,9 @@ Freberg.guru - Task manager is under the GNU General Public License, version 3 o
 later. See usr/share/licenses/freberg-taskmanager/LICENSE. Its own source code is
 released next to this AppImage as freberg-taskmanager-<version>-source.tar.gz.
 
-This AppImage also carries the libraries below, unchanged, as built by the Linux
-distribution named for each one. Each keeps its own license, copied into the folder
-with its package's name beside this file.
+This AppImage also carries the libraries below, as built by Arch Linux, with only their
+symbols stripped. Each keeps its own license, copied into the folder with its package's
+name beside this file.
 
 Source code: the Upstream line is where a library's project publishes it, and the
 Build recipe line holds the distribution's build files and patches for that exact
