@@ -66,7 +66,7 @@ ProcessesView::ProcessesView(SamplerHub& hub)
         m_tree->setColumnWidth(ProcessModel::Cpu, unit * 8);
         m_tree->setColumnWidth(ProcessModel::Memory, unit * 11);
         m_tree->setColumnWidth(ProcessModel::Disk, unit * 15);
-        m_tree->setColumnWidth(ProcessModel::Energy, unit * 13);
+        m_tree->setColumnWidth(ProcessModel::Energy, unit * 19);
         m_tree->setColumnHidden(ProcessModel::Network, true);
         m_tree->setColumnHidden(ProcessModel::Gpu, true);
         m_tree->setColumnHidden(ProcessModel::Group, true);

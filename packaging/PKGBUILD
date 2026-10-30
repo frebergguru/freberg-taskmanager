@@ -1,0 +1,19 @@
+# Builds from this source tree: run makepkg in packaging/.
+pkgname=freberg-taskmanager
+pkgver=0.1.0
+pkgrel=1
+pkgdesc='Small system monitor and task manager with a classic desktop look'
+arch=('x86_64' 'aarch64')
+depends=('qt6-base')
+makedepends=('cmake' 'qt6-tools')
+optdepends=('smartmontools: disk health check' 'polkit: disk health check and uninstalling apps')
+options=('strip')
+
+build() {
+    cmake -S "$startdir/.." -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr -DFG_BUILD_TESTS=OFF
+    cmake --build build -j2
+}
+
+package() {
+    DESTDIR="$pkgdir" cmake --install build --strip
+}

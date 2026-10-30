@@ -92,6 +92,11 @@ qt_add_translations(freberg-taskmanager
     LUPDATE_OPTIONS -no-obsolete
 )
 
+include(GNUInstallDirs)
+install(TARGETS freberg-taskmanager RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(FILES packaging/guru.freberg.TaskManager.desktop DESTINATION ${CMAKE_INSTALL_DATADIR}/applications)
+install(FILES packaging/guru.freberg.TaskManager.png DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/256x256/apps)
+
 option(FG_BUILD_TESTS "Build the tests" ON)
 if(FG_BUILD_TESTS)
     enable_testing()

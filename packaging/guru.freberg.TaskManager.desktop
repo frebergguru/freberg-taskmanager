@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=Freberg.guru - Task manager
+Name[nb]=Freberg.guru - Task manager
+GenericName=Task Manager
+GenericName[nb]=Oppgavebehandler
+Comment=See and manage what your computer is doing
+Comment[nb]=Se og styr hva datamaskinen gjør
+Exec=freberg-taskmanager
+Icon=guru.freberg.TaskManager
+Terminal=false
+Categories=System;Monitor;Qt;
+Keywords=process;monitor;cpu;memory;system;prosess;minne;

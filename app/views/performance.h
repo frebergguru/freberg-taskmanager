@@ -28,6 +28,9 @@ public:
     Subsystems wants() const override;
     void onSnapshot(const Snapshot& snapshot) override;
 
+protected:
+    void changeEvent(QEvent* event) override;
+
 private:
     struct Page {
         QString key;

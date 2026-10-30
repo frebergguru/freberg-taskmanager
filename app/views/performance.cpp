@@ -7,6 +7,7 @@
 #include "../widgets/infogrid.h"
 
 #include <QComboBox>
+#include <QEvent>
 #include <QGridLayout>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -48,6 +49,13 @@ PerformanceView::PerformanceView(SamplerHub& hub) : m_hub(hub), m_list(new QList
     m_list->setFixedWidth(fontMetrics().averageCharWidth() * 24);
     m_list->setAccessibleName(tr("Device"));
     connect(m_list, &QListWidget::currentRowChanged, this, &PerformanceView::selectionChanged);
+}
+
+void PerformanceView::changeEvent(QEvent* event)
+{
+    if (event->type() == QEvent::FontChange)
+        m_list->setFixedWidth(fontMetrics().averageCharWidth() * 24);
+    View::changeEvent(event);
 }
 
 Subsystems PerformanceView::wants() const
