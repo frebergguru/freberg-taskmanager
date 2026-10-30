@@ -22,7 +22,7 @@ A small system monitor and task manager for Linux, with the look of a classic la
 | Benchmarks | CPU, memory and disk tests with saved results |
 | Flight Recorder | Record, save, open, scrub and replay; ask "why was it slow?"; compare recordings; CSV and JSON export; save automatically on a CPU spike |
 
-Also: a small popout readout with skins, a full-screen load view (F12), a tray meter, threshold alerts, ten colour schemes, text size from 100% to 200%, English and Norwegian.
+Also: a small popout readout with skins, a full-screen load view (F12), a tray meter, threshold alerts, ten colour schemes (with an option to follow the system's light, dark and high contrast settings), text size from 100% to 200%, English and Norwegian.
 
 ## What you can rely on
 

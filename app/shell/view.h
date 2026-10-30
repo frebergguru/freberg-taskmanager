@@ -17,6 +17,8 @@ public:
 
     virtual Subsystems wants() const { return SubNone; }
     virtual void onSnapshot(const Snapshot&) {}
+    // For a view that keeps the sample, so that it needs no copy.
+    virtual void onSnapshotShared(const SnapshotPtr& snapshot) { onSnapshot(*snapshot); }
 
     // Called whenever the page is opened. Views with no timer load their data here.
     virtual void opened() {}

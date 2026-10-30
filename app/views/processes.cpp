@@ -120,7 +120,7 @@ void ProcessesView::applyHighlightSetting()
     m_tree->setSelectionBehavior(Settings::instance().rowHighlight() ? QAbstractItemView::SelectRows : QAbstractItemView::SelectItems);
 }
 
-void ProcessesView::onSnapshot(const Snapshot& snapshot)
+void ProcessesView::onSnapshotShared(const SnapshotPtr& snapshot)
 {
     m_model->update(snapshot);
     for (const QModelIndex& parent : m_model->newParents())

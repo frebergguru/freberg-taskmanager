@@ -29,6 +29,9 @@
 #include <QWindow>
 #include <qdrawutil.h>
 #include <sys/resource.h>
+#ifdef __GLIBC__
+#include <malloc.h>
+#endif
 
 namespace fg {
 
@@ -199,6 +202,9 @@ void MainWindow::onCurrentChanged(int index)
 {
     if (m_currentIndex >= 0 && m_views[m_currentIndex])
         m_views[m_currentIndex]->closed();
+#ifdef __GLIBC__
+    ::malloc_trim(0); // what the page just dropped goes back to the system
+#endif
     m_currentIndex = index;
     Settings::instance().setValue("app/lastView", index);
 
@@ -252,7 +258,7 @@ void MainWindow::onSampled(const SnapshotPtr& snapshot)
     }
 
     if (m_currentIndex >= 0 && m_views[m_currentIndex])
-        m_views[m_currentIndex]->onSnapshot(*snapshot);
+        m_views[m_currentIndex]->onSnapshotShared(snapshot);
 }
 
 void MainWindow::togglePopout()

@@ -43,7 +43,7 @@ OptionsDialog::OptionsDialog(QWidget* parent) : QDialog(parent)
     connect(text, &QComboBox::currentIndexChanged, this, [text, &settings] { settings.setValue("appearance/textPercent", text->currentData()); });
     appearanceForm->addRow(tr("&Text size:"), text);
 
-    auto* follow = new QCheckBox(tr("&Follow the system's light or dark setting"), appearance);
+    auto* follow = new QCheckBox(tr("&Follow the system's light, dark and high contrast settings"), appearance);
     follow->setChecked(settings.followSystem());
     connect(follow, &QCheckBox::toggled, this, [&settings](bool on) { settings.setValue("appearance/followSystem", on); });
     appearanceForm->addRow(follow);

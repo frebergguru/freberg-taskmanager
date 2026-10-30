@@ -20,7 +20,7 @@ public:
     explicit ProcessesView(SamplerHub& hub);
 
     Subsystems wants() const override;
-    void onSnapshot(const Snapshot& snapshot) override;
+    void onSnapshotShared(const SnapshotPtr& snapshot) override;
     void closed() override;
     void goToProcess(const ProcessId& id) override;
 

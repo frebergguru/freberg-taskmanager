@@ -8,6 +8,9 @@
 #include <QGuiApplication>
 #include <QHeaderView>
 #include <QStyleHints>
+#if QT_VERSION >= QT_VERSION_CHECK(6, 10, 0)
+#include <QAccessibilityHints>
+#endif
 #include <QWidget>
 
 namespace fg {
@@ -20,8 +23,13 @@ Scheme chosenScheme()
 {
     const Settings& settings = Settings::instance();
     QString id = settings.scheme();
-    if (settings.followSystem())
+    if (settings.followSystem()) {
         id = QGuiApplication::styleHints()->colorScheme() == Qt::ColorScheme::Dark ? QStringLiteral("dark") : QStringLiteral("standard");
+#if QT_VERSION >= QT_VERSION_CHECK(6, 10, 0)
+        if (QGuiApplication::styleHints()->accessibility()->contrastPreference() == Qt::ContrastPreference::HighContrast)
+            id = QStringLiteral("contrast");
+#endif
+    }
     return withSaturation(schemeById(id), settings.saturation());
 }
 

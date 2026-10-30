@@ -1,6 +1,9 @@
 // Drives the real window without showing anything. Settings and data go to a folder
 // next to the test, so the user's own are never touched.
 #include "app/hub.h"
+#include "app/recorder.h"
+#include "app/views/startup.h"
+#include "core/benchmark.h"
 #include "app/popout/popout.h"
 #include "app/popout/skin.h"
 #include "app/settings.h"
@@ -23,8 +26,20 @@
 #include <QTemporaryDir>
 #include <QTest>
 #include <QTreeView>
+#include <QTreeWidget>
+#include <cmath>
 
 using namespace fg;
+
+namespace {
+// Runs before anything reads a path, so that the user's own settings are never touched.
+const bool g_isolated = [] {
+    static QTemporaryDir home(QDir::currentPath() + "/fixture-home-XXXXXX");
+    qputenv("XDG_CONFIG_HOME", (home.path() + "/config").toUtf8());
+    qputenv("XDG_DATA_HOME", (home.path() + "/data").toUtf8());
+    return home.isValid();
+}();
+} // namespace
 
 class TestUi : public QObject {
     Q_OBJECT
@@ -33,7 +48,8 @@ class TestUi : public QObject {
 private slots:
     void initTestCase()
     {
-        QStandardPaths::setTestModeEnabled(true);
+        QVERIFY(g_isolated);
+        QVERIFY(Settings::instance().fileName().contains(QLatin1String("fixture-home")));
         installAccessibility();
         installAppearance();
         m_hub = new SamplerHub(this);
@@ -147,6 +163,71 @@ private slots:
             settings.setValue(QLatin1String(key), before);
         }
         settings.sync();
+    }
+
+    void flightRecorderRecordsSavesAndReopens()
+    {
+        FlightRecorder& recorder = FlightRecorder::shared(*m_hub);
+        recorder.clear();
+        recorder.start();
+        QCOMPARE(m_hub->wanted() & SubAll, Subsystems(SubAll));
+        m_hub->refreshNow();
+        QTRY_VERIFY_WITH_TIMEOUT(recorder.buffer().frames().size() >= 2, 5000);
+        recorder.stop();
+        QCOMPARE(m_hub->wanted(), Subsystems(SubNone));
+
+        const QString path = QDir::currentPath() + "/fixture-home-recording.fgtrace";
+        std::string error;
+        QVERIFY2(saveTrace(path.toStdString(), recorder.buffer().frames(), error), error.c_str());
+        std::deque<TraceFrame> loaded;
+        QVERIFY2(loadTrace(path.toStdString(), loaded, error), error.c_str());
+        QFile::remove(path);
+        QCOMPARE(loaded.size(), recorder.buffer().frames().size());
+        QVERIFY(!std::isnan(loaded.back().cpuPct));
+        QVERIFY(!loaded.back().top.empty());
+    }
+
+    void benchmarksGiveNumbersAndCanBeCancelled()
+    {
+        std::atomic<bool> go{false};
+        QVERIFY(benchCpu(1, 0.05, go) > 0);
+        QVERIFY(benchMemoryBandwidth(1024 * 1024, 0.05, go) > 0);
+        QVERIFY(benchMemoryLatency(1024 * 1024, 0.05, go) > 0);
+        const auto disk = benchDisk(QDir::currentPath().toStdString(), 4 * 1024 * 1024, go);
+        QVERIFY(disk.has_value());
+        QVERIFY(disk->readMBs > 0 && disk->writeMBs > 0);
+        QVERIFY(!benchDisk("/nonexistent-folder", 1024 * 1024, go).has_value());
+        std::atomic<bool> stop{true};
+        QCOMPARE(benchCpu(1, 10.0, stop), 0.0); // stops at once
+    }
+
+    void startupToggleWritesAUserOverrideOnly()
+    {
+        const QString dir = QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation) + "/autostart";
+        QVERIFY(dir.contains(QLatin1String("fixture-home")));
+        QDir().mkpath(dir);
+        QFile file(dir + "/fixture-thing.desktop");
+        QVERIFY(file.open(QIODevice::WriteOnly));
+        file.write("[Desktop Entry]\nName=Fixture Thing\nExec=/bin/true\n");
+        file.close();
+
+        StartupView view;
+        view.opened();
+        const auto lists = view.findChildren<QTreeWidget*>();
+        QCOMPARE(lists.size(), 1);
+        QTreeWidgetItem* found = nullptr;
+        for (int i = 0; i < lists[0]->topLevelItemCount(); ++i)
+            if (lists[0]->topLevelItem(i)->text(0) == QLatin1String("Fixture Thing"))
+                found = lists[0]->topLevelItem(i);
+        QVERIFY(found);
+        lists[0]->setCurrentItem(found);
+        const auto buttons = view.findChildren<QPushButton*>();
+        const auto disable = std::find_if(buttons.begin(), buttons.end(), [](QPushButton* b) { return b->text().contains(QLatin1String("Disable")); });
+        QVERIFY(disable != buttons.end());
+        (*disable)->click();
+
+        QVERIFY(file.open(QIODevice::ReadOnly));
+        QVERIFY(file.readAll().contains("Hidden=true"));
     }
 
     void builtInSkinsAllLoad()

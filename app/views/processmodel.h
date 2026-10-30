@@ -17,7 +17,7 @@ public:
 
     explicit ProcessModel(QObject* parent = nullptr);
 
-    void update(const Snapshot& snapshot);
+    void update(const SnapshotPtr& snapshot);
     void setFilter(const QString& filter);
     void setTree(bool tree);
     bool isTree() const { return m_tree; }

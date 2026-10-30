@@ -15,6 +15,9 @@
 #include <QTimer>
 #include <QTranslator>
 #include <cstdlib>
+#ifdef __GLIBC__
+#include <malloc.h>
+#endif
 #include <cstring>
 
 using namespace fg;
@@ -83,6 +86,10 @@ void takeSkinShots(SamplerHub& hub, const QString& directory)
 
 int main(int argc, char** argv)
 {
+#ifdef __GLIBC__
+    ::mallopt(M_ARENA_MAX, 1); // a second thread gets no separate memory pool of its own
+#endif
+
     // Recording needs no window, so it must also work with no display at all.
     for (int i = 1; i + 1 < argc; ++i)
         if (std::strcmp(argv[i], "--record") == 0) {
@@ -112,10 +119,11 @@ int main(int argc, char** argv)
     QCommandLineOption textOption("text-sizes", "Comma-separated text sizes for --screenshots.", "percent", "100");
     QCommandLineOption viewOption("view", "Open this view number at start.", "number");
     QCommandLineOption skinShotsOption("skin-screenshots", "Save a picture of the popout in every skin into this folder, then quit.", "folder");
+    QCommandLineOption startTestOption("start-test", "Quit as soon as the first window has been drawn, to measure start time.");
     QCommandLineOption recordOption("record", "Record to this .fgtrace file with no window, then quit.", "file");
     QCommandLineOption secondsOption("seconds", "How long --record runs. Without it, until interrupted.", "seconds");
     QCommandLineOption intervalOption("interval-ms", "Time between samples for --record.", "ms");
-    parser.addOptions({shotsOption, schemesOption, textOption, viewOption, skinShotsOption, recordOption, secondsOption, intervalOption});
+    parser.addOptions({shotsOption, schemesOption, textOption, viewOption, skinShotsOption, startTestOption, recordOption, secondsOption, intervalOption});
     parser.process(app);
 
     QTranslator translator;
@@ -141,6 +149,8 @@ int main(int argc, char** argv)
             sizes << size.toInt();
         takeScreenshots(window, parser.value(shotsOption), parser.value(schemesOption).split(','), sizes);
     }
+    if (parser.isSet(startTestOption))
+        QTimer::singleShot(0, &app, &QApplication::quit);
     if (parser.isSet(skinShotsOption))
         takeSkinShots(hub, parser.value(skinShotsOption));
     return QApplication::exec();

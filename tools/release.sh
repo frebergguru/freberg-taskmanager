@@ -59,7 +59,7 @@ cp -a "$STAGE/usr/." "$APPDIR/usr/"
 LIBS=$APPDIR/usr/lib
 PLUGINS=$APPDIR/usr/plugins
 mkdir -p "$LIBS" "$PLUGINS"
-QT_PLUGINS=$(qtpaths6 --query QT_INSTALL_PLUGINS)
+QT_PLUGINS=$(qmake6 -query QT_INSTALL_PLUGINS)
 for group in platforms:libqoffscreen.so platforms:libqwayland.so platforms:libqxcb.so sqldrivers:libqsqlite.so imageformats:libqjpeg.so; do
     dir=${group%%:*}
     file=${group##*:}

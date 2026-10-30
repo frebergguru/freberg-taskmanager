@@ -16,6 +16,7 @@ public:
     QVariant value(const QString& key, const QVariant& fallback = {}) const { return m_store.value(key, fallback); }
     void setValue(const QString& key, const QVariant& value);
     void sync() { m_store.sync(); }
+    QString fileName() const { return m_store.fileName(); }
 
     QString scheme() const { return value("appearance/scheme", "standard").toString(); }
     int saturation() const { return value("appearance/saturation", 10).toInt(); }

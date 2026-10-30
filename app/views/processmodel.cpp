@@ -98,10 +98,9 @@ QString ProcessModel::userName(unsigned uid) const
     return name;
 }
 
-void ProcessModel::update(const Snapshot& snapshot)
+void ProcessModel::update(const SnapshotPtr& snapshot)
 {
-    // Holding the pointer keeps every process name alive without copying them.
-    m_snapshot = std::make_shared<const Snapshot>(snapshot);
+    m_snapshot = snapshot;
     rebuild();
 }
 
@@ -255,15 +254,17 @@ void ProcessModel::rebuild()
     }
     changePersistentIndexList(persistent, updated);
 
+    // Only what is alive now is remembered, so this can't grow over a long run.
     m_newParents.clear();
+    QSet<std::uint64_t> seenNow;
+    seenNow.reserve(static_cast<qsizetype>(m_nodes.size()));
     for (std::size_t i = 0; i < m_nodes.size(); ++i) {
         const std::uint64_t key = keyOf(m_nodes[i].sample.info->id);
-        if (m_seen.contains(key))
-            continue;
-        m_seen.insert(key);
-        if (!m_nodes[i].children.empty())
+        seenNow.insert(key);
+        if (!m_seen.contains(key) && !m_nodes[i].children.empty())
             m_newParents << createIndex(m_nodes[i].row, 0, static_cast<quintptr>(i));
     }
+    m_seen.swap(seenNow);
 
     emit layoutChanged();
 }
