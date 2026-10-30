@@ -1,0 +1,170 @@
+// One sampler per subsystem. Each one owns its previous counters and open files,
+// and is constructed the first time it is asked for, so unused ones cost nothing.
+#pragma once
+
+#include "../../core/parse.h"
+#include "../../core/snapshot.h"
+#include "file.h"
+
+#include <cstdint>
+#include <string>
+#include <unordered_map>
+#include <vector>
+
+namespace fg {
+
+class CpuSampler {
+public:
+    explicit CpuSampler(const std::string& root);
+    void sample(CpuSample& out);
+    CpuTopology readTopology() const;
+
+private:
+    std::string m_root;
+    CachedFile m_stat;
+    std::vector<CachedFile> m_freq;
+    std::vector<CpuTimes> m_previous, m_current;
+    std::string m_buffer;
+};
+
+class MemorySampler {
+public:
+    explicit MemorySampler(const std::string& root);
+    void sample(MemorySample& out);
+
+private:
+    std::string m_root;
+    CachedFile m_meminfo;
+    std::string m_buffer;
+};
+
+class DiskSampler {
+public:
+    explicit DiskSampler(const std::string& root);
+    void sample(std::int64_t nowMs, std::vector<DiskSample>& out);
+
+private:
+    struct Previous {
+        std::uint64_t sectorsRead, sectorsWritten, ioTicksMs;
+    };
+    struct Identity {
+        std::string model;
+        bool physical = false, rotational = false, removable = false;
+    };
+    const Identity& identity(const std::string& name);
+    void refreshFilesystems();
+
+    std::string m_root;
+    CachedFile m_diskstats;
+    std::string m_buffer;
+    std::vector<DiskCounters> m_counters;
+    std::unordered_map<std::string, Previous> m_previous;
+    std::unordered_map<std::string, Identity> m_identity;
+    std::int64_t m_previousMs = 0;
+    std::int64_t m_filesystemsAtMs = 0;
+    struct Filesystems {
+        std::uint64_t total = 0, free = 0;
+        std::vector<std::string> mounts;
+    };
+    std::unordered_map<std::string, Filesystems> m_filesystems;
+};
+
+class NetworkSampler {
+public:
+    explicit NetworkSampler(const std::string& root);
+    void sample(std::int64_t nowMs, std::vector<NetworkSample>& out);
+
+private:
+    struct Previous {
+        std::uint64_t rx, tx;
+    };
+    std::string m_root;
+    CachedFile m_netdev;
+    std::string m_buffer;
+    std::vector<NetCounters> m_counters;
+    std::unordered_map<std::string, Previous> m_previous;
+    std::int64_t m_previousMs = 0;
+};
+
+class GpuSampler {
+public:
+    explicit GpuSampler(const std::string& root);
+    void sample(std::vector<GpuSample>& out);
+
+private:
+    struct Card {
+        std::string name, driver, device, hwmon, gtFreq;
+    };
+    std::string m_root;
+    std::vector<Card> m_cards;
+    std::string m_buffer;
+};
+
+class ThermalSampler {
+public:
+    explicit ThermalSampler(const std::string& root);
+    void sample(ThermalSample& out);
+
+private:
+    struct Sensor {
+        std::string chip, label;
+        CachedFile input;
+        bool cpu = false;
+    };
+    std::string m_root;
+    std::vector<Sensor> m_sensors;
+    std::vector<std::string> m_throttle;
+    std::string m_buffer;
+};
+
+class PowerSampler {
+public:
+    explicit PowerSampler(const std::string& root);
+    void sample(std::int64_t nowMs, PowerSample& out);
+
+private:
+    std::string m_root;
+    std::string m_buffer;
+    std::string m_raplDomain;
+    std::uint64_t m_raplRange = 0;
+    std::uint64_t m_previousEnergy = 0;
+    std::int64_t m_previousMs = 0;
+};
+
+class PressureSampler {
+public:
+    explicit PressureSampler(const std::string& root);
+    void sample(PressureSample& out);
+
+private:
+    CachedFile m_cpu, m_memory, m_io;
+    std::string m_buffer;
+};
+
+class ProcessSampler {
+public:
+    explicit ProcessSampler(const std::string& root);
+    void sample(std::int64_t nowMs, std::uint64_t totalCpuTicksDelta, std::vector<ProcessSample>& out);
+
+    // Start time of a PID right now, or 0 when it is gone.
+    std::uint64_t currentStartTicks(int pid);
+
+private:
+    struct Known {
+        std::shared_ptr<const ProcessInfo> info;
+        std::uint64_t cpuTicks = 0;
+        std::uint64_t readBytes = 0, writeBytes = 0;
+        bool haveIo = false;
+        std::uint64_t seenAt = 0;
+        std::int64_t atMs = 0;
+    };
+    std::shared_ptr<const ProcessInfo> readInfo(int pid, const PidStat& stat);
+
+    std::string m_root;
+    std::string m_buffer;
+    std::unordered_map<int, Known> m_known;
+    std::uint64_t m_pass = 0;
+    long m_pageSize;
+};
+
+} // namespace fg

@@ -1,0 +1,344 @@
+#include "mainwindow.h"
+
+#include "../format.h"
+#include "../settings.h"
+#include "../style/appearance.h"
+#include "../widgets/icons.h"
+#include "options.h"
+#include "sheet.h"
+#include "titlebar.h"
+
+#include <QActionGroup>
+#include <QApplication>
+#include <QEvent>
+#include <QKeyEvent>
+#include <QLabel>
+#include <QMenuBar>
+#include <QMessageBox>
+#include <QPainter>
+#include <QScreen>
+#include <QStatusBar>
+#include <QToolBar>
+#include <QVBoxLayout>
+#include <QWindow>
+#include <qdrawutil.h>
+#include <sys/resource.h>
+
+namespace fg {
+
+namespace {
+constexpr int kFrameWidth = 4;
+constexpr int kBaseWidth = 760;
+constexpr int kBaseHeight = 560;
+}
+
+MainWindow::MainWindow(SamplerHub& hub) : QWidget(nullptr, Qt::Window | Qt::FramelessWindowHint), m_hub(hub), m_defs(allViews())
+{
+    setWindowTitle(QStringLiteral("Freberg.guru - Task manager"));
+    setWindowIcon(Icons::app());
+    setMouseTracking(true);
+
+    m_title = new TitleBar(this);
+    m_menus = new QMenuBar(this);
+    m_tools = new QToolBar(this);
+    m_sheet = new Sheet(this);
+    m_status = new QStatusBar(this);
+
+    auto* layout = new QVBoxLayout(this);
+    layout->setContentsMargins(kFrameWidth, kFrameWidth, kFrameWidth, kFrameWidth);
+    layout->setSpacing(1);
+    layout->addWidget(m_title);
+    layout->addWidget(m_menus);
+    layout->addWidget(m_tools);
+    layout->addWidget(m_sheet, 1);
+    layout->addWidget(m_status);
+
+    buildMenus();
+    buildToolBar();
+    buildStatusBar();
+
+    // Views are not created until opened, only their tabs exist.
+    m_views.fill(nullptr, m_defs.size());
+    for (const ViewDef& def : std::as_const(m_defs))
+        m_sheet->addPage(def.title, new QWidget);
+
+    connect(m_sheet, &Sheet::currentChanged, this, &MainWindow::onCurrentChanged);
+    connect(&m_hub, &SamplerHub::sampled, this, &MainWindow::onSampled);
+    connect(&Settings::instance(), &Settings::changed, this, [this](const QString& key) {
+        if (key.startsWith(QLatin1String("appearance/")))
+            applyAppearance();
+        else if (key == QLatin1String("general/updateMs"))
+            m_hub.setIntervalMs(Settings::instance().updateMs());
+    });
+
+    m_hub.setIntervalMs(Settings::instance().updateMs());
+    resize(kBaseWidth, kBaseHeight);
+    applyAppearance();
+    m_sheet->setCurrentIndex(Settings::instance().value("general/lastView", 0).toInt());
+}
+
+void MainWindow::openView(int index)
+{
+    m_sheet->setCurrentIndex(index);
+}
+
+void MainWindow::applyAppearance()
+{
+    fg::applyAppearance();
+    const double scale = Settings::instance().textPercent() / 100.0;
+    const int iconSize = qRound(16 * scale);
+    m_tools->setIconSize(QSize(iconSize, iconSize));
+    m_title->updateGeometry();
+    m_title->update();
+
+    // Larger text needs a larger window, as far as the screen allows.
+    layout()->activate();
+    if (!isMaximized()) {
+        QSize wanted = QSize(qRound(kBaseWidth * scale), qRound(kBaseHeight * scale)).expandedTo(minimumSizeHint());
+        if (const QScreen* where = screen())
+            wanted = wanted.boundedTo(where->availableSize());
+        if (wanted.width() > width() || wanted.height() > height())
+            resize(wanted.expandedTo(size()));
+    }
+    update();
+}
+
+void MainWindow::buildMenus()
+{
+    QMenu* file = m_menus->addMenu(tr("&File"));
+    file->addAction(tr("E&xit"), QKeySequence(Qt::ALT | Qt::Key_F4), this, &QWidget::close);
+
+    QMenu* options = m_menus->addMenu(tr("&Options"));
+    QAction* onTop = options->addAction(tr("&Always On Top"));
+    onTop->setCheckable(true);
+    onTop->setChecked(Settings::instance().value("general/alwaysOnTop", false).toBool());
+    connect(onTop, &QAction::toggled, this, [this](bool on) {
+        Settings::instance().setValue("general/alwaysOnTop", on);
+        setWindowFlag(Qt::WindowStaysOnTopHint, on);
+        show();
+    });
+    options->addSeparator();
+    options->addAction(tr("&Settings..."), this, &MainWindow::showOptions);
+
+    QMenu* view = m_menus->addMenu(tr("&View"));
+    view->addAction(tr("&Refresh Now"), QKeySequence(Qt::Key_F5), this, [this] {
+        m_hub.refreshNow();
+        if (m_currentIndex >= 0 && m_views[m_currentIndex])
+            m_views[m_currentIndex]->refresh();
+    });
+    QMenu* speed = view->addMenu(tr("&Update Speed"));
+    auto* speeds = new QActionGroup(this);
+    const struct {
+        const char* label;
+        int ms;
+    } choices[] = {{QT_TR_NOOP("&High (every 1/2 second)"), 500}, {QT_TR_NOOP("&Normal (every second)"), 1000}, {QT_TR_NOOP("&Low (every 4 seconds)"), 4000}, {QT_TR_NOOP("&Paused"), 0}};
+    for (const auto& choice : choices) {
+        QAction* action = speed->addAction(tr(choice.label));
+        action->setCheckable(true);
+        action->setChecked(Settings::instance().updateMs() == choice.ms);
+        speeds->addAction(action);
+        connect(action, &QAction::triggered, this, [this, ms = choice.ms] { setUpdateSpeed(ms); });
+    }
+
+    QMenu* help = m_menus->addMenu(tr("&Help"));
+    help->addAction(tr("&Accessibility Statement..."), this, &MainWindow::showAccessibility);
+    help->addSeparator();
+    help->addAction(tr("&About..."), this, &MainWindow::showAbout);
+}
+
+void MainWindow::buildToolBar()
+{
+    m_tools->setFloatable(false);
+    m_tools->setMovable(false);
+    m_tools->addAction(Icons::refresh(), tr("Refresh Now"), this, [this] {
+        m_hub.refreshNow();
+        if (m_currentIndex >= 0 && m_views[m_currentIndex])
+            m_views[m_currentIndex]->refresh();
+    });
+    m_tools->addSeparator();
+    m_tools->addAction(Icons::settings(), tr("Settings"), this, &MainWindow::showOptions);
+}
+
+void MainWindow::buildStatusBar()
+{
+    m_status->setSizeGripEnabled(false);
+    m_statusCpu = new QLabel(this);
+    m_statusMemory = new QLabel(this);
+    m_statusSelf = new QLabel(this);
+    m_status->addWidget(m_statusCpu);
+    m_status->addWidget(m_statusMemory);
+    m_status->addWidget(m_statusSelf, 1);
+}
+
+void MainWindow::onCurrentChanged(int index)
+{
+    if (m_currentIndex >= 0 && m_views[m_currentIndex])
+        m_views[m_currentIndex]->closed();
+    m_currentIndex = index;
+    Settings::instance().setValue("general/lastView", index);
+
+    if (!m_views[index]) {
+        m_views[index] = m_defs[index].create(m_hub);
+        m_sheet->setPage(index, m_views[index]);
+        connect(m_views[index], &View::wantsChanged, this, &MainWindow::updateWanted);
+        connect(m_views[index], &View::openProcess, this, [this](const ProcessId& id) {
+            const int processes = 2;
+            openView(processes);
+            m_views[processes]->goToProcess(id);
+        });
+    }
+    m_views[index]->opened();
+    updateWanted();
+}
+
+bool MainWindow::isOnScreen() const
+{
+    const QWindow* handle = windowHandle();
+    return isVisible() && !isMinimized() && handle && handle->isExposed();
+}
+
+void MainWindow::updateWanted()
+{
+    Subsystems wanted = SubNone;
+    if (isOnScreen()) {
+        wanted = SubCpu | SubMemory;
+        if (m_currentIndex >= 0 && m_views[m_currentIndex])
+            wanted |= m_views[m_currentIndex]->wants();
+    }
+    m_hub.setWanted(this, wanted);
+}
+
+void MainWindow::onSampled(const SnapshotPtr& snapshot)
+{
+    if (!isOnScreen())
+        return;
+    if (snapshot->collected & SubCpu)
+        m_statusCpu->setText(tr("CPU Usage: %1").arg(Format::percent(snapshot->cpu.usagePct)));
+    if (snapshot->collected & SubMemory)
+        m_statusMemory->setText(tr("Memory: %1 / %2").arg(Format::bytes(snapshot->memory.used), Format::bytes(snapshot->memory.total)));
+
+    if (Settings::instance().selfMonitor()) {
+        rusage usage{};
+        ::getrusage(RUSAGE_SELF, &usage);
+        const double cpuSeconds = static_cast<double>(usage.ru_utime.tv_sec + usage.ru_stime.tv_sec) + static_cast<double>(usage.ru_utime.tv_usec + usage.ru_stime.tv_usec) / 1e6;
+        m_statusSelf->setText(tr("This app: %1 s CPU, peak %2").arg(QLocale().toString(cpuSeconds, 'f', 1), Format::bytes(static_cast<std::uint64_t>(usage.ru_maxrss) * 1024)));
+    } else if (!m_statusSelf->text().isEmpty()) {
+        m_statusSelf->clear();
+    }
+
+    if (m_currentIndex >= 0 && m_views[m_currentIndex])
+        m_views[m_currentIndex]->onSnapshot(*snapshot);
+}
+
+void MainWindow::setUpdateSpeed(int intervalMs)
+{
+    Settings::instance().setValue("general/updateMs", intervalMs);
+}
+
+void MainWindow::showOptions()
+{
+    OptionsDialog dialog(this);
+    dialog.exec();
+}
+
+void MainWindow::showAbout()
+{
+    QMessageBox::about(this, tr("About"), tr("<b>Freberg.guru - Task manager</b><br>Version %1<br><br>Sends no usage data, hardware details or process information anywhere.").arg(QApplication::applicationVersion()));
+}
+
+void MainWindow::showAccessibility()
+{
+    QMessageBox::information(this, tr("Accessibility Statement"),
+                             tr("This app aims for full keyboard use, screen reader support through AT-SPI, WCAG AA contrast in every colour scheme, text size from 100% to 200%, and no information conveyed by colour or sound alone.\n\nKnown limits are listed in the README."));
+}
+
+Qt::Edges MainWindow::edgesAt(const QPoint& position) const
+{
+    if (isMaximized())
+        return {};
+    Qt::Edges edges;
+    if (position.x() < kFrameWidth)
+        edges |= Qt::LeftEdge;
+    if (position.x() >= width() - kFrameWidth)
+        edges |= Qt::RightEdge;
+    if (position.y() < kFrameWidth)
+        edges |= Qt::TopEdge;
+    if (position.y() >= height() - kFrameWidth)
+        edges |= Qt::BottomEdge;
+    return edges;
+}
+
+void MainWindow::mousePressEvent(QMouseEvent* event)
+{
+    const Qt::Edges edges = edgesAt(event->position().toPoint());
+    if (event->button() == Qt::LeftButton && edges && windowHandle())
+        windowHandle()->startSystemResize(edges);
+}
+
+void MainWindow::mouseMoveEvent(QMouseEvent* event)
+{
+    const Qt::Edges edges = edgesAt(event->position().toPoint());
+    if (edges == (Qt::LeftEdge | Qt::TopEdge) || edges == (Qt::RightEdge | Qt::BottomEdge))
+        setCursor(Qt::SizeFDiagCursor);
+    else if (edges == (Qt::RightEdge | Qt::TopEdge) || edges == (Qt::LeftEdge | Qt::BottomEdge))
+        setCursor(Qt::SizeBDiagCursor);
+    else if (edges & (Qt::LeftEdge | Qt::RightEdge))
+        setCursor(Qt::SizeHorCursor);
+    else if (edges & (Qt::TopEdge | Qt::BottomEdge))
+        setCursor(Qt::SizeVerCursor);
+    else
+        unsetCursor();
+}
+
+void MainWindow::paintEvent(QPaintEvent*)
+{
+    QPainter p(this);
+    const QBrush face = palette().brush(QPalette::Window);
+    qDrawWinButton(&p, rect(), palette(), false, &face);
+}
+
+void MainWindow::changeEvent(QEvent* event)
+{
+    if (event->type() == QEvent::WindowStateChange) {
+        const int margin = isMaximized() ? 0 : kFrameWidth;
+        layout()->setContentsMargins(margin, margin, margin, margin);
+        m_title->syncState();
+        updateWanted();
+    } else if (event->type() == QEvent::ActivationChange) {
+        m_title->update();
+    }
+    QWidget::changeEvent(event);
+}
+
+void MainWindow::showEvent(QShowEvent* event)
+{
+    QWidget::showEvent(event);
+    if (QWindow* handle = windowHandle())
+        handle->installEventFilter(this); // installing twice is harmless, Qt keeps one
+    updateWanted();
+}
+
+void MainWindow::hideEvent(QHideEvent* event)
+{
+    QWidget::hideEvent(event);
+    updateWanted();
+}
+
+bool MainWindow::eventFilter(QObject* watched, QEvent* event)
+{
+    // Covered or minimized: the compositor stops exposing us, so sampling stops too.
+    if (watched == windowHandle() && event->type() == QEvent::Expose)
+        QMetaObject::invokeMethod(this, &MainWindow::updateWanted, Qt::QueuedConnection);
+    return QWidget::eventFilter(watched, event);
+}
+
+void MainWindow::keyPressEvent(QKeyEvent* event)
+{
+    if (event->key() == Qt::Key_Space && event->modifiers() == Qt::AltModifier) {
+        m_title->showSystemMenu(mapToGlobal(m_title->geometry().bottomLeft()));
+        return;
+    }
+    QWidget::keyPressEvent(event);
+}
+
+} // namespace fg

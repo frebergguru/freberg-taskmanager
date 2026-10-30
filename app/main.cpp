@@ -1,0 +1,98 @@
+#include "settings.h"
+#include "shell/mainwindow.h"
+#include "style/appearance.h"
+#include "style/style.h"
+#include "views/apphistory.h"
+
+#include <QApplication>
+#include <QCommandLineParser>
+#include <QDir>
+#include <QLibraryInfo>
+#include <QLocale>
+#include <QTimer>
+#include <QTranslator>
+
+using namespace fg;
+
+namespace {
+
+// Hidden test aid: saves a picture of every view in every scheme, then quits.
+void takeScreenshots(MainWindow& window, const QString& directory, const QStringList& schemeIds, const QList<int>& textSizes)
+{
+    QDir().mkpath(directory);
+    struct Shot {
+        QString scheme;
+        int text;
+        int view;
+    };
+    auto shots = std::make_shared<QList<Shot>>();
+    for (const QString& scheme : schemeIds)
+        for (const int text : textSizes)
+            for (int view = 0; view < window.viewCount(); ++view)
+                shots->append({scheme, text, view});
+
+    auto next = std::make_shared<std::function<void()>>();
+    *next = [&window, directory, shots, next] {
+        if (shots->isEmpty()) {
+            QApplication::quit();
+            return;
+        }
+        const Shot shot = shots->takeFirst();
+        Settings::instance().setValue("appearance/scheme", shot.scheme);
+        Settings::instance().setValue("appearance/textPercent", shot.text);
+        window.applyAppearance();
+        window.openView(shot.view);
+        // Two samples, so that rates have something to show.
+        QTimer::singleShot(1500, &window, [&window, directory, shot, next] {
+            window.grab().save(QStringLiteral("%1/%2-%3-%4.png").arg(directory, shot.scheme).arg(shot.text).arg(shot.view, 2, 10, QLatin1Char('0')));
+            (*next)();
+        });
+    };
+    QTimer::singleShot(0, &window, *next);
+}
+
+} // namespace
+
+int main(int argc, char** argv)
+{
+    QApplication::setAttribute(Qt::AA_DontCreateNativeWidgetSiblings);
+    QApplication app(argc, argv);
+    QApplication::setApplicationName(QStringLiteral("Freberg.guru - Task manager"));
+    QApplication::setOrganizationName(QStringLiteral("Freberg.guru"));
+    QApplication::setDesktopFileName(QStringLiteral("guru.freberg.TaskManager"));
+    QApplication::setApplicationVersion(QStringLiteral(FG_VERSION));
+
+    QCommandLineParser parser;
+    parser.addHelpOption();
+    parser.addVersionOption();
+    QCommandLineOption shotsOption("screenshots", "Save a picture of every view into this folder, then quit.", "folder");
+    QCommandLineOption schemesOption("schemes", "Comma-separated schemes for --screenshots.", "ids", "standard");
+    QCommandLineOption textOption("text-sizes", "Comma-separated text sizes for --screenshots.", "percent", "100");
+    QCommandLineOption viewOption("view", "Open this view number at start.", "number");
+    parser.addOptions({shotsOption, schemesOption, textOption, viewOption});
+    parser.process(app);
+
+    QTranslator translator;
+    const QString language = Settings::instance().language();
+    const QLocale locale = language.isEmpty() ? QLocale::system() : QLocale(language);
+    if (translator.load(locale, QStringLiteral("freberg-taskmanager"), QStringLiteral("_"), QStringLiteral(":/i18n")))
+        QApplication::installTranslator(&translator);
+    QLocale::setDefault(locale);
+
+    installAppearance();
+
+    SamplerHub hub;
+    MainWindow window(hub);
+    startAppHistoryIfEnabled(hub);
+    if (parser.isSet(viewOption))
+        window.openView(parser.value(viewOption).toInt());
+    window.show();
+
+    if (parser.isSet(shotsOption)) {
+        QList<int> sizes;
+        for (const QString& size : parser.value(textOption).split(','))
+            sizes << size.toInt();
+        takeScreenshots(window, parser.value(shotsOption), parser.value(schemesOption).split(','), sizes);
+    }
+    return QApplication::exec();
+}
