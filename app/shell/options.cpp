@@ -90,6 +90,7 @@ OptionsDialog::OptionsDialog(QWidget* parent) : QDialog(parent)
         connect(box, &QCheckBox::toggled, this, [key, &settings](bool on) { settings.setValue(key, on); });
         generalForm->addRow(box);
     };
+    addCheck(tr("Open menus when &pointing at them"), "app/hoverMenus", settings.hoverMenus());
     addCheck(tr("&Highlight process rows"), "app/rowHighlight", settings.rowHighlight());
     addCheck(tr("&Close to the notification area"), "app/closeToTray", settings.closeToTray());
     addCheck(tr("Show this app's &own cost"), "app/selfMonitor", settings.selfMonitor());

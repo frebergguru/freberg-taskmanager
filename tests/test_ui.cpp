@@ -9,6 +9,7 @@
 #include "app/settings.h"
 #include "app/shell/accessible.h"
 #include "app/shell/mainwindow.h"
+#include "app/shell/menubar.h"
 #include "app/shell/sheet.h"
 #include "app/style/appearance.h"
 #include "app/style/style.h"
@@ -18,7 +19,10 @@
 #include <QAccessible>
 #include <QApplication>
 #include <QSettings>
+#include <QAction>
+#include <QCursor>
 #include <QDir>
+#include <QMenu>
 #include <QProcess>
 #include <QPushButton>
 #include <QSignalSpy>
@@ -250,6 +254,78 @@ private slots:
         }
         Settings::instance().setValue("appearance/scheme", QStringLiteral("standard"));
         window.applyAppearance();
+    }
+
+    void menusFollowThePointerWithNoClicks()
+    {
+        MainWindow window(*m_hub);
+        window.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&window));
+        auto* bar = window.findChild<HoverMenuBar*>();
+        QVERIFY(bar);
+        const QList<QAction*> top = bar->actions();
+        QVERIFY(top.size() >= 4);
+
+        // Pointing opens the menu.
+        QAction* viewAction = top[2];
+        QTest::mouseMove(bar, bar->actionGeometry(viewAction).center());
+        QTRY_VERIFY_WITH_TIMEOUT(viewAction->menu()->isVisible(), 2000);
+
+        // A submenu opens from pointing at it as well.
+        QMenu* view = viewAction->menu();
+        QAction* theme = nullptr;
+        for (QAction* action : view->actions())
+            if (action->menu() && action->text().contains(QLatin1String("Theme")))
+                theme = action;
+        QVERIFY(theme);
+        QTest::mouseMove(view, view->actionGeometry(theme).center());
+        QTRY_VERIFY_WITH_TIMEOUT(theme->menu()->isVisible(), 2000);
+        QTest::mouseMove(view, view->actionGeometry(view->actions().first()).center());
+        QTRY_VERIFY_WITH_TIMEOUT(!theme->menu()->isVisible(), 3000);
+
+        // Moving well away closes everything.
+        QCursor::setPos(window.mapToGlobal(QPoint(window.width() / 2, window.height() - 20)));
+        QTRY_VERIFY_WITH_TIMEOUT(!view->isVisible(), 3000);
+        QVERIFY(!QApplication::activePopupWidget());
+    }
+
+    void passingOverTheBarOpensNothing()
+    {
+        MainWindow window(*m_hub);
+        window.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&window));
+        auto* bar = window.findChild<HoverMenuBar*>();
+        QTest::mouseMove(bar, bar->actionGeometry(bar->actions()[0]).center());
+        QCursor::setPos(window.mapToGlobal(QPoint(window.width() / 2, window.height() - 20))); // gone again at once
+        QTest::qWait(300);
+        QVERIFY(!QApplication::activePopupWidget());
+    }
+
+    void aMenuOpenedByKeyboardStaysOpenWherever()
+    {
+        MainWindow window(*m_hub);
+        window.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&window));
+        auto* bar = window.findChild<HoverMenuBar*>();
+        QCursor::setPos(window.mapToGlobal(QPoint(window.width() / 2, window.height() - 20)));
+        bar->setActiveAction(bar->actions()[1]);
+        QTRY_VERIFY(bar->actions()[1]->menu()->isVisible());
+        QTest::qWait(700); // past the close delay
+        QVERIFY(bar->actions()[1]->menu()->isVisible());
+        bar->actions()[1]->menu()->close();
+    }
+
+    void hoverCanBeTurnedOff()
+    {
+        Settings::instance().setValue("app/hoverMenus", false);
+        MainWindow window(*m_hub);
+        window.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&window));
+        auto* bar = window.findChild<HoverMenuBar*>();
+        QTest::mouseMove(bar, bar->actionGeometry(bar->actions()[0]).center());
+        QTest::qWait(300);
+        QVERIFY(!QApplication::activePopupWidget());
+        Settings::instance().setValue("app/hoverMenus", true);
     }
 
     void builtInSkinsAllLoad()

@@ -6,6 +6,7 @@
 #include "../style/style.h"
 #include "../widgets/icons.h"
 #include "../popout/popout.h"
+#include "menubar.h"
 #include "options.h"
 #include "screensaver.h"
 #include "sheet.h"
@@ -20,7 +21,6 @@
 #include <QInputDialog>
 #include <QKeyEvent>
 #include <QLabel>
-#include <QMenuBar>
 #include <QMessageBox>
 #include <QPainter>
 #include <QProcess>
@@ -50,7 +50,7 @@ MainWindow::MainWindow(SamplerHub& hub) : QWidget(nullptr, Qt::Window | Qt::Fram
     setMouseTracking(true);
 
     m_title = new TitleBar(this);
-    m_menus = new QMenuBar(this);
+    m_menus = new HoverMenuBar(this);
     m_tools = new QToolBar(this);
     m_sheet = new Sheet(this);
     m_status = new QStatusBar(this);

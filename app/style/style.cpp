@@ -198,6 +198,14 @@ int Style::pixelMetric(PixelMetric metric, const QStyleOption* option, const QWi
 int Style::styleHint(StyleHint hint, const QStyleOption* option, const QWidget* widget, QStyleHintReturn* result) const
 {
     switch (hint) {
+    // Menus follow the pointer. A submenu opens with no click, and passing across a
+    // parent menu's items on the way into a submenu doesn't close it.
+    case SH_Menu_SubMenuPopupDelay: return 80;
+    case SH_Menu_MouseTracking:
+    case SH_MenuBar_MouseTracking:
+    case SH_Menu_SloppySubMenus: return 1;
+    case SH_Menu_SubMenuSloppyCloseTimeout: return 300;
+    case SH_Menu_FlashTriggeredItem: return 0;
     case SH_EtchDisabledText:
     case SH_DitherDisabledText:
     case SH_Widget_Animation_Duration:

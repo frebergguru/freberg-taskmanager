@@ -51,6 +51,7 @@ add_library(fg_app STATIC
     app/popout/skin.cpp
     app/shell/accessible.cpp
     app/shell/mainwindow.cpp
+    app/shell/menubar.cpp
     app/shell/screensaver.cpp
     app/shell/tray.cpp
     app/shell/options.cpp

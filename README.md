@@ -24,6 +24,8 @@ A small system monitor and task manager for Linux, with the look of a classic la
 
 Also: a small popout readout with skins, a full-screen load view (F12), a tray meter, threshold alerts, eleven themes, each in light and dark (the classic ones, Modern with no effects, and a separate Neon Glow), with an option to follow the system's light, dark and high contrast settings, text size from 100% to 200%, English and Norwegian.
 
+Menus open when you point at them and close when you move away, with no clicks needed. Keyboard use is unchanged, and the Settings dialog can turn the pointing off.
+
 ## What you can rely on
 
 - **It never shows a zero it did not measure.** Each reading is either measured, estimated (and labelled so), not supported, access denied, or still being measured.

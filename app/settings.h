@@ -28,6 +28,7 @@ public:
     bool networkBits() const { return value("app/networkBits", false).toBool(); }
     bool rowHighlight() const { return value("app/rowHighlight", true).toBool(); }
     bool closeToTray() const { return value("app/closeToTray", false).toBool(); }
+    bool hoverMenus() const { return value("app/hoverMenus", true).toBool(); }
     bool selfMonitor() const { return value("app/selfMonitor", false).toBool(); }
 
 signals:

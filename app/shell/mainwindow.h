@@ -8,13 +8,13 @@
 #include <QWidget>
 
 class QLabel;
-class QMenuBar;
 class QProgressBar;
 class QStatusBar;
 class QToolBar;
 
 namespace fg {
 
+class HoverMenuBar;
 class Popout;
 class Screensaver;
 class Sheet;
@@ -66,7 +66,7 @@ private:
     QList<View*> m_views;
     int m_currentIndex = -1;
     TitleBar* m_title;
-    QMenuBar* m_menus;
+    HoverMenuBar* m_menus;
     QToolBar* m_tools;
     Sheet* m_sheet;
     QStatusBar* m_status;

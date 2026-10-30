@@ -1526,57 +1526,62 @@ Kjente begrensninger står i README-filen.</translation>
     </message>
     <message>
         <location filename="../app/shell/options.cpp" line="93" />
+        <source>Open menus when &amp;pointing at them</source>
+        <translation>Åpne menyer når du &amp;peker på dem</translation>
+    </message>
+    <message>
+        <location filename="../app/shell/options.cpp" line="94" />
         <source>&amp;Highlight process rows</source>
         <translation>&amp;Marker prosessrader</translation>
     </message>
     <message>
-        <location filename="../app/shell/options.cpp" line="94" />
+        <location filename="../app/shell/options.cpp" line="95" />
         <source>&amp;Close to the notification area</source>
         <translation>&amp;Lukk til varslingsområdet</translation>
     </message>
     <message>
-        <location filename="../app/shell/options.cpp" line="95" />
+        <location filename="../app/shell/options.cpp" line="96" />
         <source>Show this app's &amp;own cost</source>
         <translation>Vis appens &amp;eget forbruk</translation>
     </message>
     <message>
-        <location filename="../app/shell/options.cpp" line="96" />
+        <location filename="../app/shell/options.cpp" line="97" />
         <source>Show a CPU &amp;meter in the notification area</source>
         <translation>Vis en CPU-&amp;måler i varslingsområdet</translation>
     </message>
     <message>
-        <location filename="../app/shell/options.cpp" line="99" />
+        <location filename="../app/shell/options.cpp" line="100" />
         <source>Alerts</source>
         <translation>Varsler</translation>
     </message>
     <message>
-        <location filename="../app/shell/options.cpp" line="105" />
+        <location filename="../app/shell/options.cpp" line="106" />
         <source>Off</source>
         <translation>Av</translation>
     </message>
     <message>
-        <location filename="../app/shell/options.cpp" line="110" />
+        <location filename="../app/shell/options.cpp" line="111" />
         <source>CPU &amp;use above:</source>
         <translation>CPU-&amp;bruk over:</translation>
     </message>
     <message>
-        <location filename="../app/shell/options.cpp" line="110" />
         <location filename="../app/shell/options.cpp" line="111" />
+        <location filename="../app/shell/options.cpp" line="112" />
         <source>%</source>
         <translation>%</translation>
     </message>
     <message>
-        <location filename="../app/shell/options.cpp" line="111" />
+        <location filename="../app/shell/options.cpp" line="112" />
         <source>Memory us&amp;e above:</source>
         <translation>Minneb&amp;ruk over:</translation>
     </message>
     <message>
-        <location filename="../app/shell/options.cpp" line="112" />
+        <location filename="../app/shell/options.cpp" line="113" />
         <source>Tem&amp;perature above:</source>
         <translation>Tem&amp;peratur over:</translation>
     </message>
     <message>
-        <location filename="../app/shell/options.cpp" line="112" />
+        <location filename="../app/shell/options.cpp" line="113" />
         <source> °C</source>
         <translation> °C</translation>
     </message>
@@ -2140,47 +2145,47 @@ Kjente begrensninger står i README-filen.</translation>
         <translation>%1 %2</translation>
     </message>
     <message>
-        <location filename="../app/popout/popout.cpp" line="468" />
+        <location filename="../app/popout/popout.cpp" line="475" />
         <source>System</source>
         <translation>System</translation>
     </message>
     <message>
-        <location filename="../app/popout/popout.cpp" line="532" />
+        <location filename="../app/popout/popout.cpp" line="539" />
         <source>&amp;Skin</source>
         <translation>&amp;Drakt</translation>
     </message>
     <message>
-        <location filename="../app/popout/popout.cpp" line="546" />
+        <location filename="../app/popout/popout.cpp" line="553" />
         <source>&amp;Reload Skins</source>
         <translation>&amp;Last drakter på nytt</translation>
     </message>
     <message>
-        <location filename="../app/popout/popout.cpp" line="547" />
+        <location filename="../app/popout/popout.cpp" line="554" />
         <source>&amp;Open Skins Folder</source>
         <translation>&amp;Åpne draktmappen</translation>
     </message>
     <message>
-        <location filename="../app/popout/popout.cpp" line="549" />
+        <location filename="../app/popout/popout.cpp" line="556" />
         <source>Skin &amp;Problems (%1)...</source>
         <translation>Drakt&amp;problemer (%1) ...</translation>
     </message>
     <message>
-        <location filename="../app/popout/popout.cpp" line="552" />
+        <location filename="../app/popout/popout.cpp" line="559" />
         <source>%1: %2</source>
         <translation>%1: %2</translation>
     </message>
     <message>
-        <location filename="../app/popout/popout.cpp" line="553" />
+        <location filename="../app/popout/popout.cpp" line="560" />
         <source>Skin Problems</source>
         <translation>Draktproblemer</translation>
     </message>
     <message>
-        <location filename="../app/popout/popout.cpp" line="556" />
+        <location filename="../app/popout/popout.cpp" line="563" />
         <source>&amp;Keep Above Other Windows</source>
         <translation>&amp;Hold over andre vinduer</translation>
     </message>
     <message>
-        <location filename="../app/popout/popout.cpp" line="561" />
+        <location filename="../app/popout/popout.cpp" line="568" />
         <source>&amp;Close</source>
         <translation>&amp;Lukk</translation>
     </message>
