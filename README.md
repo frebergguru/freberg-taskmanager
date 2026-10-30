@@ -40,6 +40,10 @@ Only what is on screen is read. Hidden or minimized, the app has no timers runni
 
 Measure it yourself with `tools/measure-idle.sh build/freberg-taskmanager`, or turn on "Show this app's own cost" in the settings.
 
+## Download
+
+Packages are on the [releases page](https://github.com/frebergguru/freberg-taskmanager/releases): an AppImage that runs on most Linux systems, a `.deb` and a `.tar.gz`. Each release also has its complete source and a `SHA256SUMS` file.
+
 ## Build
 
 You need CMake 3.21 or later, a C++20 compiler and Qt 6.4 or later (Core, Gui, Widgets, DBus, Sql and LinguistTools).

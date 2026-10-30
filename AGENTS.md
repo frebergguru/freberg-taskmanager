@@ -40,12 +40,12 @@ A task manager for Linux in C++20 and Qt 6 Widgets, in English and Norwegian. Se
 - Nothing is sent anywhere. The app makes no network requests, and any future one needs a generic User-Agent and no personal data.
 
 **Git**
-- Commit locally, and don't push unless asked.
+- The project lives at https://github.com/frebergguru/freberg-taskmanager. Commit locally, and don't push unless asked.
 - Commits use this repo's local identity with the GitLab private address. Don't change it, and never use a personal address.
 
 **Releases**
 - Everything shipped must be stripped. `tools/release.sh` stops if `tools/check-stripped.sh` finds anything else.
-- The app is under GPL-3.0-or-later. `tools/release.sh` releases only committed code, puts the matching source next to the packages, and stops if `tools/third-party-notices.sh` can't name the license of a bundled library. Publish the source package with the others.
+- The app is under GPL-3.0-or-later. `tools/release.sh` releases only committed code, puts the matching source next to the packages, and stops if `tools/third-party-notices.sh` can't name the license of a bundled library. Publish the source package with the others: `gh release create` with every file in `dist/`.
 
 ## Shared machine
 
