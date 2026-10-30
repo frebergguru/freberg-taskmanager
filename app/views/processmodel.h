@@ -13,7 +13,7 @@ namespace fg {
 class ProcessModel final : public QAbstractItemModel {
     Q_OBJECT
 public:
-    enum Column { Name, Pid, User, Status, Cpu, Memory, Disk, Threads, Nice, Command, ColumnCount };
+    enum Column { Name, Pid, User, Status, Cpu, Memory, Disk, Energy, Network, Gpu, Threads, Nice, Group, Command, ColumnCount };
 
     explicit ProcessModel(QObject* parent = nullptr);
 
@@ -50,6 +50,7 @@ private:
     void sortSiblings(std::vector<int>& siblings);
     bool lessThan(const Node& a, const Node& b) const;
     QString userName(unsigned uid) const;
+    Reading<double> energyOf(const ProcessSample& s) const;
 
     SnapshotPtr m_snapshot;
     std::vector<Node> m_nodes;

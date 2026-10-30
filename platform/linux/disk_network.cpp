@@ -1,5 +1,7 @@
 #include "samplers.h"
 
+#include <algorithm>
+#include <optional>
 #include <sys/stat.h>
 #include <sys/statvfs.h>
 
@@ -177,6 +179,10 @@ void NetworkSampler::sample(std::int64_t nowMs, std::vector<NetworkSample>& out)
         return;
     parseNetDev(m_buffer, m_counters);
 
+    // Face | status | link | level | noise ...  The trailing dots are part of the format.
+    std::string wireless;
+    readFile(m_root + "/proc/net/wireless", wireless);
+
     const double seconds = m_previousMs ? static_cast<double>(nowMs - m_previousMs) / 1000.0 : 0;
     for (const NetCounters& counters : m_counters) {
         NetworkSample net;
@@ -195,6 +201,32 @@ void NetworkSampler::sample(std::int64_t nowMs, std::vector<NetworkSample>& out)
         // Wi-Fi and down links report -1 or fail with EINVAL. That is not a speed of 0.
         net.linkMbps = mbps && *mbps > 0 ? Reading<double>::measured(static_cast<double>(*mbps))
                                          : Reading<double>::missing(Availability::Unsupported);
+
+        net.wifiSignalDbm = net.wifiQualityPct = Reading<double>::missing(Availability::Unsupported);
+        if (net.wireless) {
+            const std::string key = net.name + ":";
+            const std::size_t at = wireless.find(key);
+            if (at != std::string::npos) {
+                const std::size_t end = wireless.find('\n', at);
+                std::string_view line = std::string_view(wireless).substr(at + key.size(), end - at - key.size());
+                std::string_view fields[3];
+                for (std::string_view& field : fields) {
+                    line = trimmed(line);
+                    const std::size_t gap = line.find(' ');
+                    field = line.substr(0, gap);
+                    line = gap == std::string_view::npos ? std::string_view{} : line.substr(gap);
+                }
+                const auto number = [](std::string_view text) -> std::optional<std::int64_t> {
+                    if (!text.empty() && text.back() == '.')
+                        text.remove_suffix(1);
+                    return parseI64(text);
+                };
+                if (const auto link = number(fields[1]))
+                    net.wifiQualityPct = Reading<double>::measured(std::min(100.0, static_cast<double>(*link) * 100.0 / 70.0)); // the scale most drivers use
+                if (const auto level = number(fields[2]))
+                    net.wifiSignalDbm = Reading<double>::measured(static_cast<double>(*level));
+            }
+        }
 
         const auto previous = m_previous.find(net.name);
         if (previous != m_previous.end() && seconds > 0) {

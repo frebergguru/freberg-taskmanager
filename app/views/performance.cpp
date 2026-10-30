@@ -11,10 +11,15 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QListWidget>
+#include <QMessageBox>
+#include <QProcess>
+#include <QPushButton>
+#include <QStandardPaths>
 #include <QProgressBar>
 #include <QStackedWidget>
 #include <QVBoxLayout>
 #include <algorithm>
+#include <cmath>
 
 namespace fg {
 
@@ -238,6 +243,7 @@ void PerformanceView::updateMemory(const Snapshot& snapshot)
     p.grid->set(tr("Compressed (zswap):"), tr("%1 stored in %2").arg(Format::bytes(m.zswapStored), Format::bytes(m.zswapCompressed)));
     const auto pressure = [](const PressureLine& line) { return tr("%1 some, %2 full").arg(Format::percent(line.some10), Format::percent(line.full10)); };
     p.grid->set(tr("Pressure:"), pressure(snapshot.pressure.memory));
+    p.grid->set(tr("Out-of-memory kills since start:"), m.oomKills.known() ? QString::number(m.oomKills.value) : Format::why(m.oomKills.state));
 }
 
 void PerformanceView::updateDisks(const Snapshot& snapshot)
@@ -250,6 +256,24 @@ void PerformanceView::updateDisks(const Snapshot& snapshot)
         if (p.graph->accessibleDescription().isEmpty() && p.first.size() == 0) {
             p.graph->addSeries(&p.second, true);
             p.subheading->setText(QString::fromStdString(disk.model));
+            // Reading health needs root, so it asks only when the user presses this.
+            auto* health = new QPushButton(tr("Check &Health..."), p.widget);
+            static_cast<QVBoxLayout*>(p.widget->layout())->addWidget(health, 0, Qt::AlignRight);
+            connect(health, &QPushButton::clicked, this, [this, name, health] {
+                if (QStandardPaths::findExecutable(QStringLiteral("smartctl")).isEmpty()) {
+                    QMessageBox::information(this, tr("Disk Health"), tr("Reading disk health needs the smartctl tool from the smartmontools package, which is not installed."));
+                    return;
+                }
+                health->setEnabled(false);
+                auto* process = new QProcess(this);
+                connect(process, &QProcess::finished, this, [this, process, name, health] {
+                    health->setEnabled(true);
+                    const QString text = QString::fromLocal8Bit(process->readAllStandardOutput()) + QString::fromLocal8Bit(process->readAllStandardError());
+                    QMessageBox::information(this, tr("Disk Health: %1").arg(name), text.trimmed().isEmpty() ? tr("No answer from the disk.") : text.trimmed());
+                    process->deleteLater();
+                });
+                process->start(QStringLiteral("pkexec"), {QStringLiteral("smartctl"), QStringLiteral("-H"), QStringLiteral("/dev/") + name});
+            });
         }
         p.first.push(disk.readBps);
         p.second.push(disk.writeBps);
@@ -313,6 +337,10 @@ void PerformanceView::updateNetworks(const Snapshot& snapshot)
         p.grid->set(tr("Sent in total:"), Format::bytes(net.txTotal));
         p.grid->set(tr("Link speed:"), net.linkMbps.known() ? tr("%1 Mbit/s").arg(net.linkMbps.value) : Format::why(net.linkMbps.state));
         p.grid->set(tr("State:"), QString::fromStdString(net.operState));
+        if (net.wireless) {
+            p.grid->set(tr("Wi-Fi signal:"), net.wifiSignalDbm.known() ? tr("%1 dBm").arg(net.wifiSignalDbm.value) : Format::why(net.wifiSignalDbm.state));
+            p.grid->set(tr("Wi-Fi quality:"), Format::percent(net.wifiQualityPct));
+        }
         p.grid->set(tr("Hardware address:"), QString::fromStdString(net.mac));
     }
 }

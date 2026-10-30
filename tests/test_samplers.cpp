@@ -248,6 +248,42 @@ private slots:
         QVERIFY(found);
     }
 
+    void wifiSignalIsRead()
+    {
+        put("/proc/net/dev", "h\nh\n  wlan0: 1 0 0 0 0 0 0 0 2 0 0 0 0 0 0 0\n");
+        put("/sys/class/net/wlan0/wireless/x", "");
+        put("/proc/net/wireless", "Inter-| sta-|\n face | tus |\nwlan0: 0000   35.  -65.  -256        0      0      0      0      0        0\n");
+        const auto snapshot = backend()->sample(SubNetwork);
+        QCOMPARE(snapshot->networks[0].wifiSignalDbm.value, -65.0);
+        QCOMPARE(snapshot->networks[0].wifiQualityPct.value, 50.0);
+    }
+
+    void oomKillsAreReadAndMissingIsNotZero()
+    {
+        put("/proc/meminfo", "MemTotal: 100 kB\n");
+        QCOMPARE(backend()->sample(SubMemory)->memory.oomKills.state, Availability::Unsupported);
+        put("/proc/vmstat", "pgfault 5\noom_kill 3\nnext 1\n");
+        QCOMPARE(backend()->sample(SubMemory)->memory.oomKills.value, std::uint64_t(3));
+    }
+
+    void processGpuAddsEnginesAndCountsClientsOnce()
+    {
+        const QByteArray stat = "42 (game) S 1 42 42 0 -1 0 0 0 0 0 1 0 0 0 20 0 1 0 500 1000 10 0 0";
+        put("/proc/stat", "cpu  1000 0 0 0 0 0 0 0 0 0\n");
+        put("/proc/42/stat", stat);
+        put("/proc/42/fdinfo/5", "drm-client-id:\t7\ndrm-engine-gfx:\t1000000000 ns\ndrm-engine-capacity-gfx:\t2\n");
+        put("/proc/42/fdinfo/6", "drm-client-id:\t7\ndrm-engine-gfx:\t1000000000 ns\n");
+        auto system = backend();
+        auto first = system->sample(SubProcesses | SubProcessGpu);
+        QCOMPARE(first->processes[0].gpuPct.state, Availability::NotYetSampled);
+        QTest::qWait(1000);
+        put("/proc/42/fdinfo/5", "drm-client-id:\t7\ndrm-engine-gfx:\t1500000000 ns\n");
+        auto second = system->sample(SubProcesses | SubProcessGpu);
+        QVERIFY(second->processes[0].gpuPct.known());
+        QVERIFY(second->processes[0].gpuPct.value > 30 && second->processes[0].gpuPct.value <= 60); // about 50%
+        QCOMPARE(system->sample(SubProcesses)->processes[0].gpuPct.state, Availability::NotYetSampled); // not asked, not read
+    }
+
     void liveSystemAnswers()
     {
         auto system = createLinuxBackend();

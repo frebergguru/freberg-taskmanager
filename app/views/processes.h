@@ -19,7 +19,7 @@ class ProcessesView final : public View {
 public:
     explicit ProcessesView(SamplerHub& hub);
 
-    Subsystems wants() const override { return SubProcesses; }
+    Subsystems wants() const override;
     void onSnapshot(const Snapshot& snapshot) override;
     void closed() override;
     void goToProcess(const ProcessId& id) override;

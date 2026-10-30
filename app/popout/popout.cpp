@@ -148,7 +148,7 @@ QSize Popout::sizeHint() const
     case Skin::Rows:
         return QSize(kBaseWidth + outer, header + outer + count * (line + 6 + m_skin.gap));
     case Skin::Vertical:
-        return QSize(std::max(kBaseWidth, count * 44) + outer, header + outer + 110);
+        return QSize(std::max(kBaseWidth, count * (fontMetrics().horizontalAdvance(tr("Memory")) + 10 + m_skin.gap)) + outer, header + outer + 110);
     default: {
         const int columns = count <= 2 ? count : 2;
         const int rows = (count + columns - 1) / std::max(1, columns);

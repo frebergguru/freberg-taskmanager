@@ -1,9 +1,11 @@
 #include "samplers.h"
 
+#include <algorithm>
 #include <climits>
 #include <dirent.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <unordered_map>
 
 namespace fg {
 
@@ -47,8 +49,68 @@ std::shared_ptr<const ProcessInfo> ProcessSampler::readInfo(int pid, const PidSt
     return info;
 }
 
-void ProcessSampler::sample(std::int64_t nowMs, std::uint64_t totalCpuTicksDelta, std::vector<ProcessSample>& out)
+// Adds up time on all GPU engines from the DRM fdinfo files. A client's descriptors
+// can share one context, which is counted once by its drm-client-id.
+Reading<double> ProcessSampler::gpuShare(int pid, Known& known, double seconds)
 {
+    const std::string dir = m_root + "/proc/" + std::to_string(pid) + "/fdinfo/";
+    DIR* fds = ::opendir(dir.c_str());
+    if (!fds)
+        return Reading<double>::missing(Availability::AccessDenied);
+    std::vector<std::string> clients;
+    std::uint64_t total = 0;
+    bool any = false;
+    std::string text;
+    while (const dirent* entry = ::readdir(fds)) {
+        if (entry->d_name[0] == '.' || readFile(dir + entry->d_name, text) != ReadStatus::Ok)
+            continue;
+        const std::size_t client = text.find("drm-client-id:");
+        if (client == std::string::npos)
+            continue;
+        const std::string id(trimmed(std::string_view(text).substr(client + 14, text.find('\n', client) - client - 14)));
+        if (std::find(clients.begin(), clients.end(), id) != clients.end())
+            continue;
+        clients.push_back(id);
+        std::string_view rest = text;
+        while (!rest.empty()) {
+            const std::size_t end = rest.find('\n');
+            const std::string_view line = rest.substr(0, end);
+            rest = end == std::string_view::npos ? std::string_view{} : rest.substr(end + 1);
+            if (!line.starts_with("drm-engine-") || line.starts_with("drm-engine-capacity-"))
+                continue;
+            const std::size_t colon = line.find(':');
+            if (colon == std::string_view::npos)
+                continue;
+            std::string_view value = trimmed(line.substr(colon + 1));
+            if (value.ends_with(" ns"))
+                value.remove_suffix(3);
+            if (const auto ns = parseU64(value)) {
+                total += *ns;
+                any = true;
+            }
+        }
+    }
+    ::closedir(fds);
+    if (!any)
+        return Reading<double>::measured(0.0); // this process has no GPU contexts at all
+
+    Reading<double> share;
+    if (known.haveGpu && seconds > 0 && total >= known.gpuNs)
+        share = Reading<double>::measured(std::min(100.0, static_cast<double>(total - known.gpuNs) / (seconds * 1e7)));
+    known.gpuNs = total;
+    known.haveGpu = true;
+    return share;
+}
+
+void ProcessSampler::sample(std::int64_t nowMs, std::uint64_t totalCpuTicksDelta, Subsystems wanted, std::vector<ProcessSample>& out)
+{
+    // TCP byte counts per process, only while that column is on screen.
+    std::unordered_map<int, std::uint64_t> networkBytes;
+    if (wanted & SubProcessNetwork)
+        for (const NetworkConnection& connection : readConnections(m_root))
+            if (connection.owner.pid != 0 && connection.sent.known() && connection.received.known())
+                networkBytes[connection.owner.pid] += connection.sent.value + connection.received.value;
+
     DIR* proc = ::opendir((m_root + "/proc").c_str());
     if (!proc)
         return;
@@ -113,6 +175,22 @@ void ProcessSampler::sample(std::int64_t nowMs, std::uint64_t totalCpuTicksDelta
             sample.readBps = sample.writeBps = Reading<double>::missing(toAvailability(ioStatus));
         } else {
             sample.readBps = sample.writeBps = Reading<double>::missing(Availability::Unsupported);
+        }
+        const double elapsed = known.atMs != 0 && nowMs > known.atMs ? static_cast<double>(nowMs - known.atMs) / 1000.0 : 0;
+        if (wanted & SubProcessGpu)
+            sample.gpuPct = gpuShare(static_cast<int>(*pid), known, elapsed);
+        if (wanted & SubProcessNetwork) {
+            // A process with no TCP sockets is not at 0: we only know about TCP.
+            const auto bytes = networkBytes.find(static_cast<int>(*pid));
+            if (bytes == networkBytes.end()) {
+                sample.networkBps = Reading<double>::missing(Availability::Unsupported);
+                known.haveNetwork = false;
+            } else {
+                if (known.haveNetwork && elapsed > 0)
+                    sample.networkBps = Reading<double>::measured(bytes->second >= known.networkBytes ? static_cast<double>(bytes->second - known.networkBytes) / elapsed : 0.0);
+                known.networkBytes = bytes->second;
+                known.haveNetwork = true;
+            }
         }
         known.atMs = nowMs;
         known.seenAt = m_pass;

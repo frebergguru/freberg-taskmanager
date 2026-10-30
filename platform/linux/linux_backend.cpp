@@ -79,7 +79,7 @@ public:
         if (wanted & SubPressure)
             lazily(m_pressure, m_root).sample(snapshot->pressure);
         if (wanted & SubProcesses)
-            lazily(m_processes, m_root).sample(now, totalTicksDelta(), snapshot->processes);
+            lazily(m_processes, m_root).sample(now, totalTicksDelta(), wanted, snapshot->processes);
         return snapshot;
     }
 

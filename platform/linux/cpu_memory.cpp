@@ -188,6 +188,19 @@ void MemorySampler::sample(MemorySample& out)
     else
         out.swapUsed = Reading<std::uint64_t>::missing(Availability::Unsupported);
 
+    const ReadStatus vmstat = readFile(m_root + "/proc/vmstat", m_buffer);
+    out.oomKills = Reading<std::uint64_t>::missing(toAvailability(vmstat));
+    if (vmstat == ReadStatus::Ok) {
+        const std::size_t key = m_buffer.find("oom_kill ");
+        if (key != std::string::npos) {
+            const std::size_t end = m_buffer.find('\n', key);
+            if (const auto kills = parseU64(std::string_view(m_buffer).substr(key + 9, end - key - 9)))
+                out.oomKills = Reading<std::uint64_t>::measured(*kills);
+        } else {
+            out.oomKills = Reading<std::uint64_t>::missing(Availability::Unsupported);
+        }
+    }
+
     // zram: mm_stat starts with original size, then compressed size.
     std::uint64_t original = 0, compressed = 0;
     bool anyZram = false;

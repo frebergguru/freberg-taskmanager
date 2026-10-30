@@ -36,7 +36,7 @@ SummaryView::SummaryView() : m_top(new QTreeWidget(this))
         out.value = new QLabel(box);
         out.value->setAccessibleName(name);
         out.value->setWordWrap(true);
-        out.value->setMinimumHeight(fontMetrics().lineSpacing() * 2 + 2); // read and write fill two lines
+        out.value->setMinimumHeight(fontMetrics().lineSpacing() * 3 + 2); // the longest tile needs three lines
         out.value->setAlignment(Qt::AlignLeft | Qt::AlignTop);
         out.bar = new QProgressBar(box);
         out.bar->setTextVisible(false);
@@ -131,6 +131,12 @@ void SummaryView::onSnapshot(const Snapshot& snapshot)
     m_pressure.value->setText(tr("CPU %1, memory %2, disk %3").arg(Format::percent(pressure.cpu.some10), Format::percent(pressure.memory.some10), Format::percent(pressure.io.some10)));
     const double worst = std::max({pressure.cpu.some10.value, pressure.memory.some10.value, pressure.io.some10.value});
     setBar(m_pressure, worst, pressure.cpu.some10.known() || pressure.memory.some10.known() || pressure.io.some10.known());
+
+    int stuck = 0;
+    for (const ProcessSample& process : snapshot.processes)
+        if (process.state == 'D')
+            ++stuck;
+    m_pressure.value->setText(m_pressure.value->text() + QLatin1Char('\n') + tr("%n process(es) waiting on disk", nullptr, stuck));
 
     std::vector<const ProcessSample*> busiest;
     busiest.reserve(snapshot.processes.size());

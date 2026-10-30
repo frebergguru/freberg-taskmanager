@@ -23,6 +23,9 @@ enum Subsystem : unsigned {
     SubPressure = 1u << 7,
     SubProcesses = 1u << 8,
     SubAll = (1u << 9) - 1,
+    // Costly extras, kept out of SubAll. They are read only while their column is shown.
+    SubProcessGpu = 1u << 9,
+    SubProcessNetwork = 1u << 10,
 };
 using Subsystems = unsigned;
 
@@ -49,6 +52,7 @@ struct MemorySample {
     Reading<std::uint64_t> swapTotal, swapUsed;
     Reading<std::uint64_t> zswapStored, zswapCompressed;
     Reading<std::uint64_t> zramOriginal, zramCompressed;
+    Reading<std::uint64_t> oomKills; // since boot
 };
 
 struct DiskSample {
@@ -72,6 +76,8 @@ struct NetworkSample {
     Reading<double> linkMbps;
     Reading<double> rxBps, txBps;
     std::uint64_t rxTotal = 0, txTotal = 0;
+    Reading<double> wifiSignalDbm;
+    Reading<double> wifiQualityPct;
 };
 
 struct GpuSample {
@@ -139,6 +145,8 @@ struct ProcessSample {
     Reading<double> cpuPct; // share of the whole machine
     Reading<std::uint64_t> rssBytes;
     Reading<double> readBps, writeBps;
+    Reading<double> gpuPct;     // only with SubProcessGpu
+    Reading<double> networkBps; // only with SubProcessNetwork; TCP only
 };
 
 struct Snapshot {

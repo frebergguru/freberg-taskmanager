@@ -149,7 +149,7 @@ private:
 class ProcessSampler {
 public:
     explicit ProcessSampler(const std::string& root);
-    void sample(std::int64_t nowMs, std::uint64_t totalCpuTicksDelta, std::vector<ProcessSample>& out);
+    void sample(std::int64_t nowMs, std::uint64_t totalCpuTicksDelta, Subsystems wanted, std::vector<ProcessSample>& out);
 
     // Start time of a PID right now, or 0 when it is gone.
     std::uint64_t currentStartTicks(int pid);
@@ -160,10 +160,15 @@ private:
         std::uint64_t cpuTicks = 0;
         std::uint64_t readBytes = 0, writeBytes = 0;
         bool haveIo = false;
+        std::uint64_t gpuNs = 0;
+        bool haveGpu = false;
+        std::uint64_t networkBytes = 0;
+        bool haveNetwork = false;
         std::uint64_t seenAt = 0;
         std::int64_t atMs = 0;
     };
     std::shared_ptr<const ProcessInfo> readInfo(int pid, const PidStat& stat);
+    Reading<double> gpuShare(int pid, Known& known, double seconds);
 
     std::string m_root;
     std::string m_buffer;

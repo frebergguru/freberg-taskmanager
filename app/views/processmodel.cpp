@@ -7,6 +7,7 @@
 #include <QSet>
 #include <algorithm>
 #include <pwd.h>
+#include <utility>
 #include <unistd.h>
 #include <unordered_map>
 
@@ -38,6 +39,23 @@ double readingOrLow(const Reading<double>& r)
     return r.known() ? r.value : -1.0;
 }
 
+// The last part of a cgroup path, shortened for the common container kinds.
+QString groupName(const ProcessSample& s)
+{
+    if (!s.info->cgroup.known())
+        return Format::why(s.info->cgroup.state);
+    const QString path = QString::fromStdString(s.info->cgroup.value);
+    const QString last = path.mid(path.lastIndexOf(QLatin1Char('/')) + 1);
+    const auto container = [&last](const char* prefix, const char* label) {
+        const QString start = QLatin1String(prefix);
+        return last.startsWith(start) ? QStringLiteral("%1 %2").arg(QLatin1String(label), last.mid(start.size(), 12)) : QString();
+    };
+    for (const auto& [prefix, label] : {std::pair{"docker-", "Docker"}, std::pair{"libpod-", "Podman"}, std::pair{"lxc-", "LXC"}})
+        if (const QString named = container(prefix, label); !named.isEmpty())
+            return named;
+    return last.isEmpty() ? path : last;
+}
+
 double diskTotal(const ProcessSample& s)
 {
     if (!s.readBps.known() && !s.writeBps.known())
@@ -53,6 +71,20 @@ ProcessModel::ProcessModel(QObject* parent) : QAbstractItemModel(parent)
     m_sortColumn = settings.value("processes/sortColumn", Cpu).toInt();
     m_sortOrder = static_cast<Qt::SortOrder>(settings.value("processes/sortOrder", Qt::DescendingOrder).toInt());
     m_tree = settings.value("processes/tree", true).toBool();
+}
+
+// Linux has no per-process power counter, so this is a share of the package figure.
+Reading<double> ProcessModel::energyOf(const ProcessSample& s) const
+{
+    if (!m_snapshot)
+        return {};
+    const Reading<double>& package = m_snapshot->power.cpuPackageW;
+    const Reading<double>& usage = m_snapshot->cpu.usagePct;
+    if (!package.known())
+        return Reading<double>::missing(package.state);
+    if (!usage.known() || !s.cpuPct.known())
+        return {};
+    return Reading<double>::estimated(usage.value > 0 ? package.value * s.cpuPct.value / usage.value : 0.0);
 }
 
 QString ProcessModel::userName(unsigned uid) const
@@ -113,6 +145,10 @@ bool ProcessModel::lessThan(const Node& a, const Node& b) const
     case Cpu: return readingOrLow(x.cpuPct) < readingOrLow(y.cpuPct);
     case Memory: return x.rssBytes.value < y.rssBytes.value;
     case Disk: return diskTotal(x) < diskTotal(y);
+    case Energy: return readingOrLow(energyOf(x)) < readingOrLow(energyOf(y));
+    case Network: return readingOrLow(x.networkBps) < readingOrLow(y.networkBps);
+    case Gpu: return readingOrLow(x.gpuPct) < readingOrLow(y.gpuPct);
+    case Group: return groupName(x) < groupName(y);
     case Threads: return x.threads < y.threads;
     case Nice: return x.nice < y.nice;
     case Command: return x.info->commandLine < y.info->commandLine;
@@ -305,6 +341,9 @@ QVariant ProcessModel::data(const QModelIndex& index, int role) const
         case Cpu:
         case Memory:
         case Disk:
+        case Energy:
+        case Network:
+        case Gpu:
         case Threads:
         case Nice:
             return QVariant(Qt::AlignRight | Qt::AlignVCenter);
@@ -329,6 +368,13 @@ QVariant ProcessModel::data(const QModelIndex& index, int role) const
             return Format::why(s->readBps.state);
         return Format::diskRate(diskTotal(*s));
     }
+    case Energy: {
+        const Reading<double> energy = energyOf(*s);
+        return energy.known() ? Format::watts(energy.value) : Format::why(energy.state);
+    }
+    case Network: return Format::rate(s->networkBps);
+    case Gpu: return Format::percent(s->gpuPct);
+    case Group: return groupName(*s);
     case Threads: return s->threads;
     case Nice: return s->nice;
     case Command: return QString::fromStdString(s->info->commandLine);
@@ -348,6 +394,10 @@ QVariant ProcessModel::headerData(int section, Qt::Orientation orientation, int 
     case Cpu: return tr("CPU");
     case Memory: return tr("Memory");
     case Disk: return tr("Disk");
+    case Energy: return tr("Energy (estimated)");
+    case Network: return tr("Network (TCP)");
+    case Gpu: return tr("GPU");
+    case Group: return tr("Group");
     case Threads: return tr("Threads");
     case Nice: return tr("Nice");
     case Command: return tr("Command line");

@@ -66,6 +66,10 @@ ProcessesView::ProcessesView(SamplerHub& hub)
         m_tree->setColumnWidth(ProcessModel::Cpu, unit * 8);
         m_tree->setColumnWidth(ProcessModel::Memory, unit * 11);
         m_tree->setColumnWidth(ProcessModel::Disk, unit * 15);
+        m_tree->setColumnWidth(ProcessModel::Energy, unit * 13);
+        m_tree->setColumnHidden(ProcessModel::Network, true);
+        m_tree->setColumnHidden(ProcessModel::Gpu, true);
+        m_tree->setColumnHidden(ProcessModel::Group, true);
         m_tree->setColumnHidden(ProcessModel::Threads, true);
         m_tree->setColumnHidden(ProcessModel::Nice, true);
     } else {
@@ -98,6 +102,17 @@ ProcessesView::ProcessesView(SamplerHub& hub)
     connect(m_tree, &QTreeView::customContextMenuRequested, this, &ProcessesView::showContextMenu);
     connect(m_tree, &QTreeView::activated, this, &ProcessesView::showProperties);
     connect(header, &QHeaderView::customContextMenuRequested, this, &ProcessesView::showHeaderMenu);
+}
+
+Subsystems ProcessesView::wants() const
+{
+    Subsystems wanted = SubProcesses | SubCpu | SubPower;
+    // These two cost far more than the rest, so they run only while they can be seen.
+    if (!m_tree->isColumnHidden(ProcessModel::Gpu))
+        wanted |= SubProcessGpu;
+    if (!m_tree->isColumnHidden(ProcessModel::Network))
+        wanted |= SubProcessNetwork;
+    return wanted;
 }
 
 void ProcessesView::applyHighlightSetting()
@@ -340,7 +355,10 @@ void ProcessesView::showHeaderMenu(const QPoint& position)
         action->setCheckable(true);
         action->setChecked(!m_tree->isColumnHidden(column));
         action->setEnabled(column != ProcessModel::Name);
-        connect(action, &QAction::toggled, this, [this, column](bool on) { m_tree->setColumnHidden(column, !on); });
+        connect(action, &QAction::toggled, this, [this, column](bool on) {
+            m_tree->setColumnHidden(column, !on);
+            emit wantsChanged();
+        });
     }
     menu.exec(m_tree->header()->mapToGlobal(position));
 }
