@@ -21,7 +21,7 @@ Denne appen skal kunne brukes med skjermleser, med bare tastatur og med nedsatt 
 
 ## Testing
 
-Sjekket med automatiske tester og ved å gå gjennom grensesnittet med AT-SPI. Den er ennå ikke testet av folk som er avhengige av skjermleser, så virkelig bruk kan avdekke problemer disse sjekkene ikke finner.
+Sjekket med automatiske tester, som går gjennom tilgjengelighetstreet på hver side og krever at hver kontroll har rolle og navn, og som sjekker kontrasten i hvert skjema. Den er ennå ikke kjørt med en virkelig skjermleser eller testet av folk som er avhengige av en, så virkelig bruk kan avdekke problemer disse sjekkene ikke finner.
 
 ## Si fra
 

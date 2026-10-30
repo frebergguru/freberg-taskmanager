@@ -21,7 +21,7 @@ This app aims to be usable with a screen reader, with the keyboard alone, and wi
 
 ## Testing
 
-Checked with automated tests and by walking the interface through AT-SPI. It has not yet been tested by people who rely on screen readers, so real use may show problems that these checks can't.
+Checked with automated tests, which walk every page's accessibility tree and require each control to have a role and a name, and which check contrast in every scheme. It has not yet been run with a real screen reader, or tested by people who rely on one, so real use may show problems that these checks can't.
 
 ## Tell us
 
