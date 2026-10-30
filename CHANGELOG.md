@@ -29,3 +29,16 @@
 - A placeholder limit of 65,262 °C from NVMe drives no longer shows as a real limit.
 - The desktop portal message about an unknown app ID no longer appears when running a build that isn't installed.
 - Tab stops between page tabs no longer depend on the platform.
+- Disks now count filesystems on encrypted, LVM and RAID volumes, and mount paths with spaces. A mount that can't be asked is no longer shown as 0 bytes.
+- Set Priority, Disk Priority and Affinity now reach every thread of a process, not only its first.
+- A process that calls exec now shows its new name, path and command line.
+- Services no longer lists aliases as stopped when the service behind them is running.
+- Connections calls a Unix socket listening only when it really accepts connections.
+- Startup says when an entry is for another desktop, instead of showing it as enabled.
+- Number columns in Connections, Drivers and App History sort by value.
+- Opening a process from Summary now selects it, even the first time Processes opens.
+- Always On Top is applied at start, and the Processes column layout is saved on exit.
+- Graphs show a gap for time when nothing was measured, on every page and in the popout.
+- Network totals no longer count the same traffic twice through bridges and tunnels.
+- Wi-Fi quality is marked as estimated, since it assumes a scale.
+- Process export leaves out GPU and network columns that weren't being measured.

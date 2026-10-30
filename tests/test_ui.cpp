@@ -2,7 +2,10 @@
 // next to the test, so the user's own are never touched.
 #include "app/hub.h"
 #include "app/recorder.h"
+#include "app/views/drivers.h"
+#include "app/views/services.h"
 #include "app/views/startup.h"
+#include "app/views/summary.h"
 #include "core/benchmark.h"
 #include "app/popout/popout.h"
 #include "app/popout/skin.h"
@@ -41,6 +44,7 @@ const bool g_isolated = [] {
     static QTemporaryDir home(QDir::currentPath() + "/fixture-home-XXXXXX");
     qputenv("XDG_CONFIG_HOME", (home.path() + "/config").toUtf8());
     qputenv("XDG_DATA_HOME", (home.path() + "/data").toUtf8());
+    qputenv("QT_NO_XDG_DESKTOP_PORTAL", "1"); // or the test wakes desktop services that outlive it
     return home.isValid();
 }();
 } // namespace
@@ -166,6 +170,7 @@ private slots:
             QCOMPARE(reader.value(QLatin1String(key)).toString(), QStringLiteral("marker"));
             settings.setValue(QLatin1String(key), before);
         }
+        settings.setValue("app/updateMs", 1000); // an empty value would read as paused for later tests
         settings.sync();
     }
 
@@ -232,6 +237,87 @@ private slots:
 
         QVERIFY(file.open(QIODevice::ReadOnly));
         QVERIFY(file.readAll().contains("Hidden=true"));
+    }
+
+    void startupSaysWhenAnEntryIsForAnotherDesktop()
+    {
+        const QString dir = QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation) + "/autostart";
+        QVERIFY(dir.contains(QLatin1String("fixture-home")));
+        QDir().mkpath(dir);
+        const auto write = [&dir](const char* file, const char* name, const char* line) {
+            QFile out(dir + "/" + file);
+            QVERIFY(out.open(QIODevice::WriteOnly));
+            out.write(QByteArray("[Desktop Entry]\nName=") + name + "\nExec=/bin/true\n" + line + "\n");
+        };
+        write("fixture-only.desktop", "Fixture Only", "OnlyShowIn=OtherDesktop;");
+        write("fixture-not.desktop", "Fixture Not", "NotShowIn=FixtureDesktop;");
+        write("fixture-here.desktop", "Fixture Here", "OnlyShowIn=FixtureDesktop;");
+        const QByteArray saved = qgetenv("XDG_CURRENT_DESKTOP");
+        qputenv("XDG_CURRENT_DESKTOP", "FixtureDesktop");
+        StartupView view;
+        view.opened();
+        qputenv("XDG_CURRENT_DESKTOP", saved);
+        QTreeWidget* list = view.findChild<QTreeWidget*>();
+        const auto status = [list](const char* name) {
+            const auto found = list->findItems(QLatin1String(name), Qt::MatchExactly);
+            return found.isEmpty() ? QString() : found.first()->text(1);
+        };
+        QCOMPARE(status("Fixture Here"), view.tr("Enabled"));
+        QVERIFY(status("Fixture Only") != view.tr("Enabled") && !status("Fixture Only").isEmpty());
+        QVERIFY(status("Fixture Not") != view.tr("Enabled") && !status("Fixture Not").isEmpty());
+    }
+
+    void servicesListNoAliasAsStopped()
+    {
+        ServicesView view;
+        view.opened();
+        for (QTreeWidget* list : view.findChildren<QTreeWidget*>())
+            for (int i = 0; i < list->topLevelItemCount(); ++i)
+                QVERIFY(list->topLevelItem(i)->text(3) != QLatin1String("alias"));
+    }
+
+    void numberColumnsSortByValue()
+    {
+        DriversView view(*m_hub);
+        view.opened();
+        QTreeWidget* list = view.findChild<QTreeWidget*>();
+        if (list->topLevelItemCount() < 2)
+            QSKIP("no kernel modules are listed here");
+        list->sortByColumn(2, Qt::DescendingOrder);
+        for (int i = 1; i < list->topLevelItemCount(); ++i)
+            QVERIFY(list->topLevelItem(i - 1)->text(2).toInt() >= list->topLevelItem(i)->text(2).toInt());
+    }
+
+    void summaryOpensTheChosenProcessEvenTheFirstTime()
+    {
+        Settings::instance().setValue("app/lastView", 0);
+        Settings::instance().setValue("app/updateMs", 500);
+        MainWindow window(*m_hub);
+        window.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&window));
+        window.openView(0);
+        SummaryView* summary = window.findChild<SummaryView*>();
+        QVERIFY(summary);
+        QTreeWidget* top = summary->findChild<QTreeWidget*>();
+        QTRY_VERIFY_WITH_TIMEOUT(top->topLevelItemCount() > 0, 6000);
+        const QString pid = top->topLevelItem(0)->text(1);
+        emit top->itemActivated(top->topLevelItem(0), 0);
+        ProcessesView* processes = window.findChild<ProcessesView*>();
+        QVERIFY(processes);
+        QTreeView* tree = processes->findChild<QTreeView*>();
+        QTRY_VERIFY_WITH_TIMEOUT(tree->currentIndex().isValid(), 6000);
+        QCOMPARE(tree->currentIndex().siblingAtColumn(1).data().toString(), pid);
+        Settings::instance().setValue("app/updateMs", 1000);
+    }
+
+    void alwaysOnTopIsAppliedAtStart()
+    {
+        Settings::instance().setValue("app/alwaysOnTop", true);
+        {
+            MainWindow window(*m_hub);
+            QVERIFY(window.windowFlags() & Qt::WindowStaysOnTopHint);
+        }
+        Settings::instance().setValue("app/alwaysOnTop", false);
     }
 
     void everyThemeOpensEveryPageAndCanBeLeft()

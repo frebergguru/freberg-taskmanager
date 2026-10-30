@@ -15,6 +15,7 @@
 #include <QTextStream>
 #include <QTreeWidget>
 #include <QVBoxLayout>
+#include <algorithm>
 
 namespace fg {
 
@@ -28,6 +29,7 @@ enum Kind { AutostartFile, UserUnit };
 struct DesktopEntry {
     QString name, exec;
     bool enabled = true;
+    QStringList onlyShowIn, notShowIn;
 };
 
 // A plain reader: QSettings would rewrite keys and lose localized names.
@@ -56,12 +58,26 @@ DesktopEntry readDesktop(const QString& path, bool* found)
             entry.name = value;
         else if (key == QLatin1String("Exec"))
             entry.exec = value;
+        else if (key == QLatin1String("OnlyShowIn"))
+            entry.onlyShowIn = value.split(QLatin1Char(';'), Qt::SkipEmptyParts);
+        else if (key == QLatin1String("NotShowIn"))
+            entry.notShowIn = value.split(QLatin1Char(';'), Qt::SkipEmptyParts);
         else if (key == QLatin1String("Hidden") && value == QLatin1String("true"))
             entry.enabled = false;
         else if (key == QLatin1String("X-GNOME-Autostart-enabled") && value == QLatin1String("false"))
             entry.enabled = false;
     }
     return entry;
+}
+
+// A desktop skips an entry that names other desktops, however it is otherwise set.
+bool runsOnThisDesktop(const DesktopEntry& entry)
+{
+    const QStringList desktops = qEnvironmentVariable("XDG_CURRENT_DESKTOP").split(QLatin1Char(':'), Qt::SkipEmptyParts);
+    if (desktops.isEmpty())
+        return true; // nothing to go by
+    const auto names = [&desktops](const QStringList& list) { return std::any_of(desktops.begin(), desktops.end(), [&list](const QString& desktop) { return list.contains(desktop); }); };
+    return (entry.onlyShowIn.isEmpty() || names(entry.onlyShowIn)) && !names(entry.notShowIn);
 }
 
 QString userAutostartDir()
@@ -163,7 +179,7 @@ void StartupView::refresh()
         const DesktopEntry entry = readDesktop(it.value(), &found);
         if (!found)
             continue;
-        auto* item = new QTreeWidgetItem(m_list, {entry.name.isEmpty() ? it.key() : entry.name, entry.enabled ? tr("Enabled") : tr("Disabled"), tr("Autostart file"), Format::why(Availability::NotYetSampled), entry.exec});
+        auto* item = new QTreeWidgetItem(m_list, {entry.name.isEmpty() ? it.key() : entry.name, !entry.enabled ? tr("Disabled") : (runsOnThisDesktop(entry) ? tr("Enabled") : tr("Not on this desktop")), tr("Autostart file"), Format::why(Availability::NotYetSampled), entry.exec});
         item->setData(0, kKindRole, AutostartFile);
         item->setData(0, kKeyRole, it.key());
         item->setText(3, QString());

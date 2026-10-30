@@ -69,6 +69,7 @@ private:
     std::int64_t m_filesystemsAtMs = 0;
     struct Filesystems {
         std::uint64_t total = 0, free = 0;
+        bool measured = false; // a mount we could not ask about is not 0 bytes
         std::vector<std::string> mounts;
     };
     std::unordered_map<std::string, Filesystems> m_filesystems;

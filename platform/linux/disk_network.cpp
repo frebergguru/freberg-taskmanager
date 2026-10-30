@@ -1,6 +1,9 @@
 #include "samplers.h"
 
 #include <algorithm>
+#include <climits>
+#include <cstdlib>
+#include <dirent.h>
 #include <optional>
 #include <sys/stat.h>
 #include <sys/statvfs.h>
@@ -33,21 +36,68 @@ bool isNetworkOrVirtualFs(std::string_view type)
         || type == "tmpfs" || type == "proc" || type == "sysfs" || type == "devtmpfs" || type == "overlay" || type == "squashfs";
 }
 
-// /dev/nvme0n1p2 -> nvme0n1, /dev/sda3 -> sda, using sysfs to find the parent.
-std::string parentDisk(const std::string& root, std::string_view device)
+// /proc/self/mounts writes a space in a path as \\040, and likewise tab, newline and backslash.
+std::string unescapedMount(std::string_view text)
 {
-    if (!device.starts_with("/dev/"))
-        return {};
-    std::string name(device.substr(5));
-    if (exists(root + "/sys/block/" + name))
-        return name;
+    std::string out;
+    out.reserve(text.size());
+    for (std::size_t i = 0; i < text.size(); ++i) {
+        if (text[i] == '\\' && i + 3 < text.size() && text[i + 1] >= '0' && text[i + 1] <= '3' && text[i + 2] >= '0' && text[i + 2] <= '7' && text[i + 3] >= '0' && text[i + 3] <= '7') {
+            out += static_cast<char>((text[i + 1] - '0') * 64 + (text[i + 2] - '0') * 8 + (text[i + 3] - '0'));
+            i += 3;
+        } else {
+            out += text[i];
+        }
+    }
+    return out;
+}
+
+// nvme0n1p2 -> nvme0n1 and sda3 -> sda. An encrypted, LVM or RAID volume such as dm-0
+// lists what holds it under slaves, so this follows those down to the disks.
+void collectDisks(const std::string& root, const std::string& name, std::vector<std::string>& disks, int depth = 0)
+{
+    constexpr int kMaxLayers = 8;
+    if (depth > kMaxLayers)
+        return;
+    const std::string block = root + "/sys/block/";
+    if (exists(block + name)) {
+        bool layered = false;
+        if (DIR* slaves = ::opendir((block + name + "/slaves").c_str())) {
+            while (const dirent* entry = ::readdir(slaves))
+                if (entry->d_name[0] != '.') {
+                    layered = true;
+                    collectDisks(root, entry->d_name, disks, depth + 1);
+                }
+            ::closedir(slaves);
+        }
+        if (!layered && std::find(disks.begin(), disks.end(), name) == disks.end())
+            disks.push_back(name);
+        return;
+    }
     std::string candidate = name;
     while (!candidate.empty()) {
         candidate.pop_back();
-        if (exists(root + "/sys/block/" + candidate + "/" + name))
-            return candidate;
+        if (exists(block + candidate + "/" + name)) {
+            collectDisks(root, candidate, disks, depth + 1);
+            return;
+        }
     }
-    return {};
+}
+
+std::vector<std::string> disksUnder(const std::string& root, std::string_view device)
+{
+    std::vector<std::string> disks;
+    if (!device.starts_with("/dev/"))
+        return disks;
+    // /dev/mapper/name is a link to /dev/dm-0.
+    std::string name(device.substr(5));
+    char resolved[PATH_MAX];
+    if (::realpath((root + std::string(device)).c_str(), resolved)) {
+        const std::string_view path(resolved);
+        name = std::string(path.substr(path.rfind('/') + 1));
+    }
+    collectDisks(root, name, disks);
+    return disks;
 }
 
 } // namespace
@@ -79,7 +129,7 @@ void DiskSampler::refreshFilesystems()
     if (readFile(m_root + "/proc/self/mounts", mounts) != ReadStatus::Ok)
         return;
     std::string_view text = mounts;
-    std::unordered_map<std::string, bool> seenDevice;
+    std::unordered_map<std::string, bool> countedDevice;
     while (!text.empty()) {
         const std::size_t end = text.find('\n');
         std::string_view line = text.substr(0, end);
@@ -93,24 +143,25 @@ void DiskSampler::refreshFilesystems()
             continue;
         const std::size_t c = line.find(' ', b + 1);
         const std::string_view device = line.substr(0, a);
-        const std::string mountPoint(line.substr(a + 1, b - a - 1));
+        const std::string mountPoint = unescapedMount(line.substr(a + 1, b - a - 1));
         const std::string_view type = line.substr(b + 1, c == std::string_view::npos ? c : c - b - 1);
         if (isNetworkOrVirtualFs(type))
             continue;
 
-        const std::string disk = parentDisk(m_root, device);
-        if (disk.empty())
-            continue;
-        Filesystems& fs = m_filesystems[disk];
-        fs.mounts.push_back(mountPoint);
-        // A btrfs volume is mounted many times; count its space only once.
-        if (seenDevice[std::string(device)])
-            continue;
-        seenDevice[std::string(device)] = true;
-        struct statvfs info;
-        if (::statvfs((m_root + mountPoint).c_str(), &info) == 0) {
-            fs.total += static_cast<std::uint64_t>(info.f_blocks) * info.f_frsize;
-            fs.free += static_cast<std::uint64_t>(info.f_bavail) * info.f_frsize;
+        for (const std::string& disk : disksUnder(m_root, device)) {
+            Filesystems& fs = m_filesystems[disk];
+            fs.mounts.push_back(mountPoint);
+            // A btrfs volume is mounted many times; count its space only once.
+            bool& counted = countedDevice[disk + " " + std::string(device)];
+            if (counted)
+                continue;
+            struct statvfs info;
+            if (::statvfs((m_root + mountPoint).c_str(), &info) == 0) {
+                counted = true;
+                fs.measured = true;
+                fs.total += static_cast<std::uint64_t>(info.f_blocks) * info.f_frsize;
+                fs.free += static_cast<std::uint64_t>(info.f_bavail) * info.f_frsize;
+            }
         }
     }
 }
@@ -161,6 +212,8 @@ void DiskSampler::sample(std::int64_t nowMs, std::vector<DiskSample>& out)
         const auto fs = m_filesystems.find(name);
         if (fs != m_filesystems.end()) {
             disk.mounts = fs->second.mounts;
+        }
+        if (fs != m_filesystems.end() && fs->second.measured) {
             disk.fsTotal = Reading<std::uint64_t>::measured(fs->second.total);
             disk.fsFree = Reading<std::uint64_t>::measured(fs->second.free);
         } else {
@@ -192,6 +245,7 @@ void NetworkSampler::sample(std::int64_t nowMs, std::vector<NetworkSample>& out)
         net.mac = readTrimmed(dir + "/address");
         net.operState = readTrimmed(dir + "/operstate");
         net.wireless = exists(dir + "/wireless") || exists(dir + "/phy80211");
+        net.hasDevice = exists(dir + "/device");
         net.rxTotal = counters.rxBytes;
         net.txTotal = counters.txBytes;
 
@@ -222,7 +276,7 @@ void NetworkSampler::sample(std::int64_t nowMs, std::vector<NetworkSample>& out)
                     return parseI64(text);
                 };
                 if (const auto link = number(fields[1]))
-                    net.wifiQualityPct = Reading<double>::measured(std::min(100.0, static_cast<double>(*link) * 100.0 / 70.0)); // the scale most drivers use
+                    net.wifiQualityPct = Reading<double>::estimated(std::min(100.0, static_cast<double>(*link) * 100.0 / 70.0)); // assumes the scale most drivers use
                 if (const auto level = number(fields[2]))
                     net.wifiSignalDbm = Reading<double>::measured(static_cast<double>(*level));
             }

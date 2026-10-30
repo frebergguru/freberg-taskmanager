@@ -5,10 +5,17 @@
 #include <QDir>
 #include <QFile>
 #include <QProcess>
+#include <QScopeGuard>
 #include <QTcpServer>
 #include <QTemporaryDir>
 #include <QTest>
+#include <csignal>
+#include <sched.h>
+#include <sys/prctl.h>
+#include <sys/resource.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
+#include <thread>
 #include <unistd.h>
 
 using namespace fg;
@@ -223,6 +230,127 @@ private slots:
         QCOMPARE(list[0].sent.state, Availability::Unsupported);
     }
 
+    void onlyAcceptingUnixSocketsAreListening()
+    {
+        put("/proc/net/unix", "Num RefCount Protocol Flags Type St Inode Path\n"
+                              "0000: 00000002 00000000 00000000 0002 01 1 /run/datagram.sock\n"
+                              "0001: 00000002 00000000 00000000 0001 03 2 /run/talking.sock\n");
+        const auto list = backend()->connections();
+        QCOMPARE(list.size(), std::size_t(2));
+        QCOMPARE(list[0].state, std::string("UNCONNECTED"));
+        QCOMPARE(list[1].state, std::string("CONNECTED"));
+    }
+
+    void encryptedVolumeCountsTowardItsDisk()
+    {
+        put("/proc/diskstats", "259 0 nvme0n1 1 0 2 0 3 0 4 0 0 5 0\n");
+        put("/sys/block/nvme0n1/device/model", "Fixture\n");
+        put("/sys/block/nvme0n1/nvme0n1p2/size", "1\n");
+        put("/sys/block/dm-0/slaves/nvme0n1p2", "");
+        put("/dev/dm-0", "");
+        QDir().mkpath(m_dir->path() + "/dev/mapper");
+        QVERIFY(QFile::link("../dm-0", m_dir->path() + "/dev/mapper/secret"));
+        QDir().mkpath(m_dir->path() + "/mnt/my disk");
+        QDir().mkpath(m_dir->path() + "/mnt/home");
+        put("/proc/self/mounts", "/dev/mapper/secret /mnt/my\\040disk btrfs rw 0 0\n/dev/mapper/secret /mnt/home btrfs rw 0 0\n");
+
+        const auto snapshot = backend()->sample(SubDisk);
+        QCOMPARE(snapshot->disks.size(), std::size_t(1));
+        const DiskSample& disk = snapshot->disks[0];
+        QCOMPARE(disk.mounts, (std::vector<std::string>{"/mnt/my disk", "/mnt/home"}));
+        QCOMPARE(disk.fsTotal.state, Availability::Measured);
+        QVERIFY(disk.fsTotal.value > 0);
+    }
+
+    void aMountWeCannotAskAboutIsNotZeroBytes()
+    {
+        put("/proc/diskstats", "8 0 sda 1 0 2 0 3 0 4 0 0 5 0\n");
+        put("/sys/block/sda/device/model", "Fixture\n");
+        put("/sys/block/sda/sda1/size", "1\n");
+        put("/proc/self/mounts", "/dev/sda1 /gone ext4 rw 0 0\n");
+        const auto snapshot = backend()->sample(SubDisk);
+        QCOMPARE(snapshot->disks.size(), std::size_t(1));
+        QCOMPARE(snapshot->disks[0].mounts, (std::vector<std::string>{"/gone"}));
+        QCOMPARE(snapshot->disks[0].fsTotal.state, Availability::Unsupported);
+    }
+
+    void execChangesNameAndCommandLine()
+    {
+        const auto stat = [](const char* name) { return QByteArray("4242 (") + name + ") S 1 1 1 0 -1 0 0 0 0 0 1 1 0 0 20 0 1 0 777 0 5 0 0 0\n"; };
+        put("/proc/stat", "cpu 1 0 1 1 0 0 0 0 0 0\n");
+        put("/proc/4242/stat", stat("bash"));
+        put("/proc/4242/cmdline", QByteArray("bash\0-c\0x\0", 11));
+        auto system = backend();
+        QCOMPARE(system->sample(SubProcesses)->processes.at(0).info->name, std::string("bash"));
+
+        put("/proc/4242/stat", stat("sleep"));
+        put("/proc/4242/cmdline", QByteArray("sleep\09\0", 8));
+        const auto renamed = system->sample(SubProcesses);
+        QCOMPARE(renamed->processes.at(0).info->name, std::string("sleep"));
+        QCOMPARE(renamed->processes.at(0).info->commandLine, std::string("sleep 9"));
+        QCOMPARE(renamed->processes.at(0).info->id.startTicks, std::uint64_t(777));
+
+        // The same name with new arguments shows up within the refresh period.
+        put("/proc/4242/cmdline", QByteArray("sleep\0" "10\0", 9));
+        std::string line;
+        for (int pass = 0; pass < 30; ++pass)
+            line = system->sample(SubProcesses)->processes.at(0).info->commandLine;
+        QCOMPARE(line, std::string("sleep 10"));
+    }
+
+    void actionsReachEveryThread()
+    {
+        const pid_t child = ::fork();
+        QVERIFY(child >= 0);
+        if (child == 0) {
+            ::prctl(PR_SET_PDEATHSIG, SIGKILL); // never outlives this test, even if it fails
+            std::thread([] { ::pause(); }).detach();
+            std::thread([] { ::pause(); }).detach();
+            ::pause();
+            ::_exit(0);
+        }
+        const auto stopChild = qScopeGuard([child] {
+            ::kill(child, SIGKILL);
+            ::waitpid(child, nullptr, 0);
+        });
+        const QString tasks = QStringLiteral("/proc/%1/task").arg(child);
+        const auto threads = [&tasks] { return QDir(tasks).entryList(QDir::Dirs | QDir::NoDotAndDotDot); };
+        QTRY_COMPARE(threads().size(), 3);
+
+        auto system = createLinuxBackend();
+        ProcessId id{child, 0};
+        for (const ProcessSample& process : system->sample(SubProcesses)->processes)
+            if (process.info->id.pid == child)
+                id = process.info->id;
+        QVERIFY(id.startTicks != 0);
+        // Lower than now, since raising it is refused however the test was started.
+        const int niceness = std::min(19, ::getpriority(PRIO_PROCESS, 0) + 3);
+        QVERIFY(system->setPriority(id, niceness).ok());
+        QVERIFY(system->setAffinity(id, {0}).ok());
+        for (const QString& thread : threads()) {
+            QFile file(tasks + "/" + thread + "/stat");
+            QVERIFY(file.open(QIODevice::ReadOnly));
+            const QByteArray text = file.readAll();
+            QCOMPARE(text.mid(text.lastIndexOf(')') + 2).split(' ').value(16), QByteArray::number(niceness));
+            cpu_set_t set;
+            QCOMPARE(::sched_getaffinity(thread.toInt(), sizeof set, &set), 0);
+            QCOMPARE(CPU_COUNT(&set), 1);
+        }
+    }
+
+    void trafficTotalsLeaveOutLinksOverHardware()
+    {
+        NetworkSample wifi, bridge, loop;
+        wifi.hasDevice = true;
+        loop.loopback = true;
+        const std::vector<NetworkSample> laptop{wifi, bridge, loop};
+        QVERIFY(countsTowardTotal(wifi, laptop));
+        QVERIFY(!countsTowardTotal(bridge, laptop));
+        QVERIFY(!countsTowardTotal(loop, laptop));
+        // Inside a container a virtual link is all there is.
+        QVERIFY(countsTowardTotal(bridge, {bridge, loop}));
+    }
+
     void kernelModulesParse()
     {
         put("/proc/modules", "amdgpu 123456 7 foo,bar, Live 0x0\nsnd 4096 0 - Live 0x0\n");
@@ -307,6 +435,7 @@ private slots:
         const auto snapshot = backend()->sample(SubNetwork);
         QCOMPARE(snapshot->networks[0].wifiSignalDbm.value, -65.0);
         QCOMPARE(snapshot->networks[0].wifiQualityPct.value, 50.0);
+        QCOMPARE(snapshot->networks[0].wifiQualityPct.state, Availability::Estimated); // assumes a scale
     }
 
     void oomKillsAreReadAndMissingIsNotZero()

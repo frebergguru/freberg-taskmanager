@@ -22,7 +22,7 @@ public:
     // Cheap: a few small files. Nothing here walks the processes.
     Subsystems wants() const override { return SubThermal; }
     void onSnapshot(const Snapshot& snapshot) override;
-    void opened() override;
+    void samplesMissed() override;
 
 private:
     struct Tracked {

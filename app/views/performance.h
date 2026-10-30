@@ -27,6 +27,7 @@ public:
 
     Subsystems wants() const override;
     void onSnapshot(const Snapshot& snapshot) override;
+    void samplesMissed() override;
 
 protected:
     void changeEvent(QEvent* event) override;

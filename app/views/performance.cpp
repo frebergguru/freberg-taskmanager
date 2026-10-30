@@ -117,6 +117,18 @@ PerformanceView::Page& PerformanceView::page(const QString& key, const QString& 
     return created;
 }
 
+void PerformanceView::samplesMissed()
+{
+    for (Page& shown : m_pages)
+        if (shown.first.size() > 0) {
+            shown.first.push(History::gap());
+            shown.second.push(History::gap());
+            shown.graph->update();
+        }
+    for (History& history : m_coreHistory)
+        history.push(History::gap());
+}
+
 void PerformanceView::onSnapshot(const Snapshot& snapshot)
 {
     updateCpu(snapshot);

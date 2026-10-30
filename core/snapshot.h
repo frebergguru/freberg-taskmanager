@@ -4,6 +4,7 @@
 
 #include "reading.h"
 
+#include <algorithm>
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -73,12 +74,22 @@ struct NetworkSample {
     std::string operState;
     bool wireless = false;
     bool loopback = false;
+    bool hasDevice = false; // false for bridges, tunnels and container links
     Reading<double> linkMbps;
     Reading<double> rxBps, txBps;
     std::uint64_t rxTotal = 0, txTotal = 0;
     Reading<double> wifiSignalDbm;
     Reading<double> wifiQualityPct;
 };
+
+// Whether a link belongs in a traffic total. Bridges and tunnels carry the same bytes as
+// the hardware under them, so they count only where there is no hardware at all.
+inline bool countsTowardTotal(const NetworkSample& net, const std::vector<NetworkSample>& all)
+{
+    if (net.loopback)
+        return false;
+    return net.hasDevice || std::none_of(all.begin(), all.end(), [](const NetworkSample& other) { return other.hasDevice; });
+}
 
 struct GpuSample {
     std::string card;
@@ -135,7 +146,8 @@ struct PressureSample {
     PressureLine cpu, memory, io;
 };
 
-// Facts that do not change while a process lives. Shared between samples.
+// Slow-changing facts about a process, shared between samples. A process can replace
+// them by calling exec, so the sampler reads them again from time to time.
 struct ProcessInfo {
     ProcessId id;
     std::string name;

@@ -41,6 +41,7 @@ namespace {
 constexpr int kFrameWidth = 4;
 constexpr int kBaseWidth = 1000;
 constexpr int kBaseHeight = 720;
+constexpr std::int64_t kMinimumGapMs = 3000;
 }
 
 MainWindow::MainWindow(SamplerHub& hub) : QWidget(nullptr, Qt::Window | Qt::FramelessWindowHint), m_hub(hub), m_defs(allViews())
@@ -90,6 +91,7 @@ MainWindow::MainWindow(SamplerHub& hub) : QWidget(nullptr, Qt::Window | Qt::Fram
         if (!m_tray && (key.startsWith(QLatin1String("alerts/")) || key == QLatin1String("app/closeToTray") || key == QLatin1String("app/trayMeter")))
             m_tray = new TrayAndAlerts(m_hub, this);
     });
+    setWindowFlag(Qt::WindowStaysOnTopHint, Settings::instance().value("app/alwaysOnTop", false).toBool());
     resize(kBaseWidth, kBaseHeight);
     applyAppearance();
     m_sheet->setCurrentIndex(Settings::instance().value("app/lastView", 0).toInt());
@@ -253,6 +255,7 @@ void MainWindow::onCurrentChanged(int index)
             m_views[kProcessesView]->goToProcess(id);
         });
     }
+    m_views[index]->samplesMissed();
     m_views[index]->opened();
     updateWanted();
 }
@@ -292,8 +295,16 @@ void MainWindow::onSampled(const SnapshotPtr& snapshot)
         m_statusSelf->clear();
     }
 
-    if (m_currentIndex >= 0 && m_views[m_currentIndex])
+    // Hidden, covered or paused: nothing was measured, so the graphs must not join across it.
+    const std::int64_t longestWaitMs = std::max<std::int64_t>(kMinimumGapMs, Settings::instance().updateMs() * 3);
+    const bool missed = m_lastSampleMs != 0 && snapshot->monotonicMs - m_lastSampleMs > longestWaitMs;
+    m_lastSampleMs = snapshot->monotonicMs;
+
+    if (m_currentIndex >= 0 && m_views[m_currentIndex]) {
+        if (missed)
+            m_views[m_currentIndex]->samplesMissed();
         m_views[m_currentIndex]->onSnapshotShared(snapshot);
+    }
 }
 
 void MainWindow::togglePopout()
@@ -337,6 +348,8 @@ void MainWindow::closeEvent(QCloseEvent* event)
         event->ignore();
         return;
     }
+    if (m_currentIndex >= 0 && m_views[m_currentIndex])
+        m_views[m_currentIndex]->closed(); // pages save their layout here
     if (m_popout)
         m_popout->close();
     if (m_screensaver)

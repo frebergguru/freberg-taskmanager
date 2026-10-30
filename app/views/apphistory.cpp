@@ -3,6 +3,7 @@
 #include "../format.h"
 #include "../hub.h"
 #include "../settings.h"
+#include "../widgets/sortitem.h"
 
 #include <QCheckBox>
 #include <QDateTime>
@@ -200,16 +201,22 @@ void AppHistoryView::closed()
 
 void AppHistoryView::refresh()
 {
+    m_list->setSortingEnabled(false);
     m_list->clear();
     const QList<AppHistoryLog::Row> rows = m_log->rows();
     const QLocale locale;
     for (const AppHistoryLog::Row& row : rows) {
         const int minutes = static_cast<int>(row.cpuSeconds / 60);
         const QString cpu = minutes > 0 ? tr("%1 h %2 min").arg(minutes / 60).arg(minutes % 60) : tr("%1 s").arg(locale.toString(row.cpuSeconds, 'f', 1));
-        new QTreeWidgetItem(m_list, {row.app, cpu, Format::bytes(static_cast<std::uint64_t>(row.diskBytes)), tr("Not measured"),
-                                     locale.toString(QDateTime::fromSecsSinceEpoch(row.firstSeen), QLocale::ShortFormat),
-                                     locale.toString(QDateTime::fromSecsSinceEpoch(row.lastSeen), QLocale::ShortFormat)});
+        auto* item = new SortItem(m_list, {row.app, cpu, Format::bytes(static_cast<std::uint64_t>(row.diskBytes)), tr("Not measured"),
+                                           locale.toString(QDateTime::fromSecsSinceEpoch(row.firstSeen), QLocale::ShortFormat),
+                                           locale.toString(QDateTime::fromSecsSinceEpoch(row.lastSeen), QLocale::ShortFormat)});
+        item->setSortValue(1, row.cpuSeconds);
+        item->setSortValue(2, row.diskBytes);
+        item->setSortValue(4, static_cast<double>(row.firstSeen));
+        item->setSortValue(5, static_cast<double>(row.lastSeen));
     }
+    m_list->setSortingEnabled(true);
     if (rows.isEmpty())
         m_message->setText(m_log->isEnabled() ? tr("Collecting. Figures appear within a minute.") : tr("App history is off, so nothing is being collected."));
     else

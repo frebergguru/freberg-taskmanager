@@ -48,6 +48,16 @@ PowerFreqView::PowerFreqView(SamplerHub& hub)
     layout->addLayout(tables, 2);
 }
 
+void PowerFreqView::samplesMissed()
+{
+    if (m_freqHistory.size() > 0) {
+        m_freqHistory.push(History::gap());
+        m_powerHistory.push(History::gap());
+        m_freqGraph->update();
+        m_powerGraph->update();
+    }
+}
+
 void PowerFreqView::refresh()
 {
     const PowerDetails details = m_hub.backend().powerDetails();

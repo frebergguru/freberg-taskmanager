@@ -8,9 +8,8 @@
 ## Not exercised yet on real targets
 
 - [ ] Uninstalling an app. The commands are written, but only ever shown, never run here.
-- [ ] Services: start, stop, restart, enable and disable. A throwaway user service would be a safe test.
+- [ ] Services: start, stop, restart, enable and disable from the page, on the system bus. The same calls work on a throwaway user service.
 - [ ] Users: lock and sign out.
-- [ ] Disk Space: move to trash, from the page itself.
 - [ ] Disk health, which needs `smartctl`.
 - [ ] Installing the `.deb` on Debian or Ubuntu, and using the AppImage on an older system.
 - [ ] `tools/grant-sensor-access.sh`.
@@ -41,6 +40,8 @@ Measured offscreen, on a busy machine:
 
 ## Smaller things
 
+- [ ] Memory modules: a slot whose size the firmware reports as unknown shows as empty. Needs a fixture, since the table is root-only here.
+- [ ] App History leaves out a process's first and last update, so short runs read low: a 6 s job showed 5.0 s.
 - [ ] The saved last page is a number, so a changed page order opens the wrong page once.
 - [ ] Modern: the sidebar leaves less room for Processes' columns at the default window size.
 - [ ] Performance also has a small Thermals page, now that a full one exists. Keep it, or link to the new one?

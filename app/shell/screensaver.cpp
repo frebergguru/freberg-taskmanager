@@ -58,6 +58,11 @@ Screensaver::~Screensaver()
 void Screensaver::showEvent(QShowEvent* event)
 {
     QWidget::showEvent(event);
+    // Nothing was measured while hidden, so that stretch stays a gap.
+    if (m_cpu.size() > 0) {
+        m_cpu.push(History::gap());
+        m_memory.push(History::gap());
+    }
     m_hub.setWanted(this, SubCpu | SubMemory | SubThermal | SubPower);
     setFocus();
 }

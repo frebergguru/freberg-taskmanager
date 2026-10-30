@@ -101,7 +101,7 @@ void SummaryView::onSnapshot(const Snapshot& snapshot)
     double linkUse = 0;
     bool netKnown = false;
     for (const NetworkSample& net : snapshot.networks) {
-        if (net.loopback || !net.rxBps.known() || !net.txBps.known())
+        if (!countsTowardTotal(net, snapshot.networks) || !net.rxBps.known() || !net.txBps.known())
             continue;
         rx += net.rxBps.value;
         tx += net.txBps.value;

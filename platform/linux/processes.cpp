@@ -9,6 +9,12 @@
 
 namespace fg {
 
+namespace {
+// exec keeps the PID and start time but changes everything else. A new name shows at once.
+// The same name with new arguments is caught by reading a few processes again on each pass.
+constexpr std::uint64_t kInfoRefreshPasses = 30;
+}
+
 ProcessSampler::ProcessSampler(const std::string& root) : m_root(root), m_pageSize(::sysconf(_SC_PAGESIZE)) {}
 
 std::shared_ptr<const ProcessInfo> ProcessSampler::readInfo(int pid, const PidStat& stat)
@@ -140,6 +146,8 @@ void ProcessSampler::sample(std::int64_t nowMs, std::uint64_t totalCpuTicksDelta
             // New process, or this PID was reused: forget every previous counter.
             known = {};
             known.info = readInfo(static_cast<int>(*pid), stat);
+        } else if (stat.state != 'Z' && (stat.comm != known.info->name || (m_pass + static_cast<std::uint64_t>(*pid)) % kInfoRefreshPasses == 0)) {
+            known.info = readInfo(static_cast<int>(*pid), stat); // a zombie has nothing left to read
         }
 
         ProcessSample sample;

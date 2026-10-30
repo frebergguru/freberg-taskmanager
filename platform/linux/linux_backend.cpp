@@ -191,9 +191,7 @@ public:
         const FdGuard pidfd(static_cast<int>(::syscall(SYS_pidfd_open, id.pid, 0)));
         if (const ActionResult check = verified(pidfd, id); !check.ok())
             return check;
-        if (::setpriority(PRIO_PROCESS, static_cast<id_t>(id.pid), nice) != 0)
-            return failure();
-        return {};
+        return forEachThread(id.pid, [nice](int thread) { return ::setpriority(PRIO_PROCESS, static_cast<id_t>(thread), nice); });
     }
 
     ActionResult setIoPriority(const ProcessId& id, IoPriority priority, int level) override
@@ -204,9 +202,7 @@ public:
         constexpr int kWhoProcess = 1;
         constexpr int kClassShift = 13;
         const int ioClass = priority == IoPriority::Realtime ? 1 : (priority == IoPriority::BestEffort ? 2 : 3);
-        if (::syscall(SYS_ioprio_set, kWhoProcess, id.pid, (ioClass << kClassShift) | level) != 0)
-            return failure();
-        return {};
+        return forEachThread(id.pid, [ioClass, level](int thread) { return static_cast<int>(::syscall(SYS_ioprio_set, kWhoProcess, thread, (ioClass << kClassShift) | level)); });
     }
 
     ActionResult setAffinity(const ProcessId& id, const std::vector<int>& cpus) override
@@ -218,9 +214,7 @@ public:
         CPU_ZERO(&set);
         for (const int cpu : cpus)
             CPU_SET(cpu, &set);
-        if (::sched_setaffinity(id.pid, sizeof set, &set) != 0)
-            return failure();
-        return {};
+        return forEachThread(id.pid, [&set](int thread) { return ::sched_setaffinity(thread, sizeof set, &set); });
     }
 
     ActionResult currentAffinity(const ProcessId& id, std::vector<int>& cpus) override
@@ -294,6 +288,26 @@ public:
     }
 
 private:
+    // Linux keeps priority and affinity per thread, and these calls change only the one
+    // named. A thread that ended meanwhile is not a failure.
+    template <class Apply>
+    ActionResult forEachThread(int pid, Apply apply)
+    {
+        std::vector<int> threads;
+        if (DIR* tasks = ::opendir((m_root + "/proc/" + std::to_string(pid) + "/task").c_str())) {
+            while (const dirent* entry = ::readdir(tasks))
+                if (const auto thread = parseI64(entry->d_name))
+                    threads.push_back(static_cast<int>(*thread));
+            ::closedir(tasks);
+        }
+        if (threads.empty())
+            threads.push_back(pid);
+        for (const int thread : threads)
+            if (apply(thread) != 0 && errno != ESRCH)
+                return failure();
+        return {};
+    }
+
     // Taking the pidfd first pins the process, so the start time check cannot go stale.
     ActionResult verified(const FdGuard& pidfd, const ProcessId& id)
     {

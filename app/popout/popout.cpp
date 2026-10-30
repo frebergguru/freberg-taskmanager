@@ -193,6 +193,10 @@ Subsystems Popout::subsystemsFor(const QStringList& channels) const
 void Popout::showEvent(QShowEvent* event)
 {
     QWidget::showEvent(event);
+    // Nothing was measured while hidden, so that stretch stays a gap.
+    for (Channel& channel : m_channels)
+        if (channel.history.size() > 0)
+            channel.history.push(History::gap());
     m_hub.setWanted(this, subsystemsFor(m_skin.quadrants));
     emit visibilityChanged(true);
 }
@@ -242,7 +246,7 @@ void Popout::onSampled(const SnapshotPtr& snapshot)
         } else if (channel.key == QLatin1String("network") && (got & SubNetwork)) {
             double total = -1;
             for (const NetworkSample& net : snapshot->networks)
-                if (!net.loopback && net.rxBps.known() && net.txBps.known())
+                if (countsTowardTotal(net, snapshot->networks) && net.rxBps.known() && net.txBps.known())
                     total = std::max(total, 0.0) + net.rxBps.value + net.txBps.value;
             const auto reading = total >= 0 ? Reading<double>::measured(total) : Reading<double>::missing(Availability::NotYetSampled);
             // No fixed top exists for traffic, so the scale is logarithmic up to 1 GB/s.

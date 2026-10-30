@@ -2,6 +2,7 @@
 
 #include "../format.h"
 #include "../hub.h"
+#include "../widgets/sortitem.h"
 
 #include <QHBoxLayout>
 #include <QLabel>
@@ -64,7 +65,9 @@ void DriversView::refresh()
         QStringList devices;
         for (const std::string& device : module.devices)
             devices << QString::fromStdString(device);
-        new QTreeWidgetItem(m_list, {QString::fromStdString(module.name), Format::bytes(module.sizeBytes), QString::number(module.useCount), QString::fromStdString(module.usedBy), devices.join(QStringLiteral(", "))});
+        auto* item = new SortItem(m_list, {QString::fromStdString(module.name), Format::bytes(module.sizeBytes), QString::number(module.useCount), QString::fromStdString(module.usedBy), devices.join(QStringLiteral(", "))});
+        item->setSortValue(1, static_cast<double>(module.sizeBytes));
+        item->setSortValue(2, module.useCount);
     }
     m_list->setSortingEnabled(true);
     applyFilter();

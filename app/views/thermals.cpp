@@ -90,9 +90,8 @@ ThermalsView::ThermalsView()
     showSelected();
 }
 
-void ThermalsView::opened()
+void ThermalsView::samplesMissed()
 {
-    // Nothing was measured while the page was closed, so that stretch stays a gap.
     if (m_hotspot.size() > 0) {
         m_hotspot.push(History::gap());
         for (Tracked& tracked : m_tracked)

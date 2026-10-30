@@ -192,7 +192,8 @@ void readUnixSockets(const std::string& root, const std::unordered_map<std::uint
         NetworkConnection connection;
         connection.protocol = "unix";
         connection.local = count > 7 ? std::string(fields[7]) : std::string();
-        connection.state = fields[5] == "01" ? "LISTEN" : (fields[5] == "03" ? "CONNECTED" : std::string(fields[5]));
+        // State 01 only says unconnected. A listening socket also has the accept flag set.
+        connection.state = fields[3] == "00010000" ? "LISTEN" : (fields[5] == "03" ? "CONNECTED" : (fields[5] == "01" ? "UNCONNECTED" : std::string(fields[5])));
         connection.sent = connection.received = Reading<std::uint64_t>::missing(Availability::Unsupported);
         if (const auto inode = parseU64(fields[6]))
             if (const auto owner = owners.find(*inode); owner != owners.end()) {

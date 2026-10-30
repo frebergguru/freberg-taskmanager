@@ -109,9 +109,10 @@ void ServicesView::refresh()
         if (unit.name == previous)
             m_list->setCurrentItem(item);
     }
-    // Services that are not running are only known from their files.
+    // Services that are not running are only known from their files. An alias says nothing
+    // about itself: the unit it points to is listed under its real name.
     for (auto it = enabledState.constBegin(); it != enabledState.constEnd(); ++it)
-        if (it.key().endsWith(QLatin1String(".service")) && !it.key().contains(QLatin1Char('@')) && !listed.contains(it.key()))
+        if (it.key().endsWith(QLatin1String(".service")) && !it.key().contains(QLatin1Char('@')) && !listed.contains(it.key()) && it.value() != QLatin1String("alias"))
             new QTreeWidgetItem(m_list, {it.key(), tr("inactive"), tr("dead"), it.value(), QString()});
     applyFilter();
 }

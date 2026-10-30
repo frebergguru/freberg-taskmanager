@@ -65,6 +65,7 @@ private:
     QList<ViewDef> m_defs;
     QList<View*> m_views;
     int m_currentIndex = -1;
+    std::int64_t m_lastSampleMs = 0;
     TitleBar* m_title;
     HoverMenuBar* m_menus;
     QToolBar* m_tools;

@@ -2,6 +2,8 @@
 
 #include "../shell/view.h"
 
+#include <optional>
+
 class QCheckBox;
 class QLabel;
 class QLineEdit;
@@ -25,6 +27,7 @@ public:
     void goToProcess(const ProcessId& id) override;
 
 private:
+    std::optional<ProcessId> m_pendingGoTo;
     const ProcessSample* currentProcess() const;
     void showContextMenu(const QPoint& position);
     void showHeaderMenu(const QPoint& position);

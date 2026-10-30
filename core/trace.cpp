@@ -209,7 +209,7 @@ TraceFrame frameFromSnapshot(const Snapshot& snapshot, std::size_t topCount)
     std::vector<NetworkSample> external;
     frame.netRxBps = frame.netTxBps = kGap;
     for (const NetworkSample& net : snapshot.networks) {
-        if (net.loopback)
+        if (!countsTowardTotal(net, snapshot.networks))
             continue;
         if (net.rxBps.known())
             frame.netRxBps = (std::isnan(frame.netRxBps) ? 0.0f : frame.netRxBps) + static_cast<float>(net.rxBps.value);

@@ -125,6 +125,11 @@ void ProcessesView::onSnapshotShared(const SnapshotPtr& snapshot)
     m_model->update(snapshot);
     for (const QModelIndex& parent : m_model->newParents())
         m_tree->expand(parent);
+    if (m_pendingGoTo) {
+        const ProcessId id = *m_pendingGoTo;
+        m_pendingGoTo.reset();
+        goToProcess(id);
+    }
 }
 
 void ProcessesView::closed()
@@ -148,7 +153,8 @@ void ProcessesView::goToProcess(const ProcessId& id)
     } else if (m_model->existsUnfiltered(id)) {
         m_message->setText(tr("That process is hidden by the current filter."));
     } else if (m_model->rowCount() == 0) {
-        // The first sample has not arrived; it will be shown once it does.
+        // The first sample has not arrived; onSnapshotShared comes back here once it does.
+        m_pendingGoTo = id;
         m_message->setText(tr("Looking for process %1...").arg(id.pid));
     } else {
         m_message->setText(tr("Process %1 has ended.").arg(id.pid));
@@ -165,7 +171,7 @@ void ProcessesView::report(const QString& action, const ActionResult& result)
         m_message->setText(tr("%1: the process has already ended.").arg(action));
         break;
     case ActionResult::AccessDenied:
-        m_message->setText(tr("%1: access denied. This process belongs to another user.").arg(action));
+        m_message->setText(tr("%1: access denied.").arg(action));
         break;
     default:
         m_message->setText(tr("%1: failed (%2).").arg(action, QString::fromStdString(result.detail)));
@@ -326,15 +332,20 @@ void ProcessesView::exportList()
         m_message->setText(tr("Could not export: %1").arg(file.errorString()));
         return;
     }
-    QStringList header;
+    // GPU and network are read only while shown, so a hidden one has nothing true to export.
+    QList<int> columns;
     for (int column = 0; column < ProcessModel::ColumnCount; ++column)
+        if (!m_tree->isColumnHidden(column) || (column != ProcessModel::Gpu && column != ProcessModel::Network))
+            columns << column;
+    QStringList header;
+    for (const int column : std::as_const(columns))
         header << m_model->headerData(column, Qt::Horizontal).toString();
     file.write(header.join(QLatin1Char(',')).toUtf8() + '\n');
     const std::function<void(const QModelIndex&)> writeRows = [&](const QModelIndex& parent) {
         for (int row = 0; row < m_model->rowCount(parent); ++row) {
             const QModelIndex first = m_model->index(row, 0, parent);
             QStringList cells;
-            for (int column = 0; column < ProcessModel::ColumnCount; ++column) {
+            for (const int column : std::as_const(columns)) {
                 QString cell = m_model->index(row, column, parent).data().toString();
                 cell.replace(QLatin1Char('"'), QStringLiteral("\"\""));
                 cells << QLatin1Char('"') + cell + QLatin1Char('"');

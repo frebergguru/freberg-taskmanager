@@ -2,6 +2,7 @@
 
 #include "../format.h"
 #include "../hub.h"
+#include "../widgets/sortitem.h"
 
 #include <QCheckBox>
 #include <QHBoxLayout>
@@ -99,9 +100,12 @@ void ConnectionsView::refresh()
         const bool knownOwner = c.owner.pid != 0;
         if (!knownOwner)
             ++hidden;
-        auto* item = new QTreeWidgetItem(m_list, {QString::fromStdString(c.protocol), QString::fromStdString(c.local), QString::fromStdString(c.remote), QString::fromStdString(c.state),
+        auto* item = new SortItem(m_list, {QString::fromStdString(c.protocol), QString::fromStdString(c.local), QString::fromStdString(c.remote), QString::fromStdString(c.state),
                                                   knownOwner ? QString::fromStdString(c.ownerName) : tr("Hidden (other user)"), knownOwner ? QString::number(c.owner.pid) : QString(),
                                                   Format::bytes(c.sent), Format::bytes(c.received)});
+        item->setSortValue(5, c.owner.pid);
+        item->setSortValue(6, c.sent.known() ? static_cast<double>(c.sent.value) : -1.0);
+        item->setSortValue(7, c.received.known() ? static_cast<double>(c.received.value) : -1.0);
         item->setData(0, kPidRole, c.owner.pid);
         item->setData(0, kStartRole, QVariant::fromValue<qulonglong>(c.owner.startTicks));
         if (selectedPid != 0 && c.owner.pid == selectedPid && item->text(1) == selectedLocal)

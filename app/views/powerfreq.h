@@ -21,6 +21,7 @@ public:
     Subsystems wants() const override { return SubCpu | SubPower; }
     void onSnapshot(const Snapshot& snapshot) override;
     void opened() override { refresh(); }
+    void samplesMissed() override;
     void refresh() override;
 
 private:

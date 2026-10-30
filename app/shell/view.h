@@ -22,6 +22,8 @@ public:
 
     // Called whenever the page is opened. Views with no timer load their data here.
     virtual void opened() {}
+    // Time passed with no samples. Views that keep a history mark the gap here.
+    virtual void samplesMissed() {}
     // Called when the page is left. Heavy views drop their data here.
     virtual void closed() {}
     // The user asked for fresh data.
