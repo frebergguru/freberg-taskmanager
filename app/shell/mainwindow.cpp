@@ -249,9 +249,8 @@ void MainWindow::onCurrentChanged(int index)
         m_sheet->setPage(index, m_views[index]);
         connect(m_views[index], &View::wantsChanged, this, &MainWindow::updateWanted);
         connect(m_views[index], &View::openProcess, this, [this](const ProcessId& id) {
-            const int processes = 2;
-            openView(processes);
-            m_views[processes]->goToProcess(id);
+            openView(kProcessesView);
+            m_views[kProcessesView]->goToProcess(id);
         });
     }
     m_views[index]->opened();

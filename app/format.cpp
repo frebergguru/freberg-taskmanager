@@ -60,6 +60,13 @@ QString Format::temperature(double celsius)
     return tr("%1 °C").arg(QLocale().toString(celsius, 'f', 0));
 }
 
+QString Format::temperatureDifference(double celsius)
+{
+    if (Settings::instance().fahrenheit())
+        return tr("%1 °F").arg(QLocale().toString(celsius * 9.0 / 5.0, 'f', 0));
+    return tr("%1 °C").arg(QLocale().toString(celsius, 'f', 0));
+}
+
 QString Format::megahertz(double value)
 {
     if (value >= 1000.0)

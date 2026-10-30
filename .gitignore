@@ -1,0 +1,11 @@
+/build/
+/build-release/
+/dist/
+/scratchpad/
+/packaging/pkg/
+/packaging/src/
+/packaging/*.pkg.tar*
+fixture-*/
+.cache/
+compile_commands.json
+*.user

@@ -70,7 +70,7 @@ private slots:
             QTest::qWait(30);
         }
         // Back on a light page, the process walk has to stop.
-        window.openView(4); // System Info
+        window.openView(5); // System Info
         QTest::qWait(30);
         QVERIFY(!(m_hub->wanted() & SubProcesses));
         QVERIFY(m_hub->wanted() & SubCpu);
@@ -256,6 +256,41 @@ private slots:
         window.applyAppearance();
     }
 
+    void thermalsSitsBetweenPerformanceAndProcesses()
+    {
+        MainWindow window(*m_hub);
+        QCOMPARE(window.viewTitle(1), QStringLiteral("Performance"));
+        QCOMPARE(window.viewTitle(2), QStringLiteral("Thermals"));
+        QCOMPARE(window.viewTitle(kProcessesView), QStringLiteral("Processes"));
+    }
+
+    void thermalsPageShowsEverySensorAndSamplesOnlyThat()
+    {
+        MainWindow window(*m_hub);
+        window.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&window));
+        window.openView(2);
+        QTest::qWait(30);
+        QVERIFY(m_hub->wanted() & SubThermal);
+        QVERIFY(!(m_hub->wanted() & SubProcesses));
+        const auto trees = window.findChildren<QTreeWidget*>();
+        QTreeWidget* sensors = nullptr;
+        for (QTreeWidget* tree : trees)
+            if (tree->accessibleName().startsWith(QLatin1String("Temperature sensors")))
+                sensors = tree;
+        QVERIFY(sensors);
+        m_hub->refreshNow();
+        const int expected = static_cast<int>(m_hub->backend().sample(SubThermal)->thermal.sensors.size());
+        QTRY_COMPARE_WITH_TIMEOUT(sensors->topLevelItemCount(), expected, 3000);
+        if (expected > 0) {
+            // Choosing a sensor keeps its row, and refreshing must not lose the choice.
+            sensors->setCurrentItem(sensors->topLevelItem(expected - 1));
+            m_hub->refreshNow();
+            QTest::qWait(100);
+            QCOMPARE(sensors->currentItem(), sensors->topLevelItem(expected - 1));
+        }
+    }
+
     void menusFollowThePointerWithNoClicks()
     {
         MainWindow window(*m_hub);
@@ -374,12 +409,14 @@ private slots:
         MainWindow window(*m_hub);
         window.show();
         QVERIFY(QTest::qWaitForWindowExposed(&window));
-        const QSize small = window.size();
+        const QSize small = window.minimumSizeHint();
         Settings::instance().setValue("appearance/textPercent", 200);
         window.applyAppearance();
         QTest::qWait(20);
-        QVERIFY(window.width() > small.width());
-        QVERIFY(window.height() > small.height());
+        // How far the window itself grows depends on the screen. What it needs must grow, and it must get that.
+        QVERIFY(window.minimumSizeHint().height() > small.height());
+        QVERIFY(window.width() >= window.minimumSizeHint().width());
+        QVERIFY(window.height() >= window.minimumSizeHint().height());
         Settings::instance().setValue("appearance/textPercent", 100);
         window.applyAppearance();
     }

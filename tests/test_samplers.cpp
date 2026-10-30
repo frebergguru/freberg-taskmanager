@@ -248,6 +248,57 @@ private slots:
         QVERIFY(found);
     }
 
+    void sensorLimitsAreTheLowerOneAndMissingIsNotZero()
+    {
+        put("/sys/class/hwmon/hwmon0/name", "nvme\n");
+        put("/sys/class/hwmon/hwmon0/temp1_input", "40000\n");
+        put("/sys/class/hwmon/hwmon0/temp1_max", "80000\n");
+        put("/sys/class/hwmon/hwmon0/temp1_crit", "90000\n");
+        put("/sys/class/hwmon/hwmon0/temp2_input", "41000\n");
+        put("/sys/class/hwmon/hwmon0/temp2_max", "0\n"); // this chip's way of saying no limit
+        put("/sys/class/hwmon/hwmon0/temp3_input", "42000\n");
+        put("/sys/class/hwmon/hwmon0/temp3_max", "65261850\n"); // the placeholder NVMe drives really send
+        const auto thermal = backend()->sample(SubThermal)->thermal;
+        QCOMPARE(thermal.sensors.size(), std::size_t(3));
+        QCOMPARE(thermal.sensors[0].limitC.value, 80.0);
+        QCOMPARE(thermal.sensors[1].limitC.state, Availability::Unsupported);
+        QCOMPARE(thermal.sensors[2].limitC.state, Availability::Unsupported);
+    }
+
+    void fansAreReadAndAMissingFanIsNotZero()
+    {
+        put("/sys/class/hwmon/hwmon0/name", "nct6775\n");
+        put("/sys/class/hwmon/hwmon0/fan1_input", "1200\n");
+        put("/sys/class/hwmon/hwmon0/fan1_label", "CPU Fan\n");
+        put("/sys/class/hwmon/hwmon0/pwm1", "128\n");
+        put("/sys/class/hwmon/hwmon0/fan2_input", "0\n");
+        const auto thermal = backend()->sample(SubThermal)->thermal;
+        QCOMPARE(thermal.fans.size(), std::size_t(2));
+        QCOMPARE(thermal.fans[0].label, std::string("CPU Fan"));
+        QCOMPARE(thermal.fans[0].rpm.value, 1200.0);
+        QVERIFY(thermal.fans[0].dutyPct.value > 50 && thermal.fans[0].dutyPct.value < 51);
+        QCOMPARE(thermal.fans[1].rpm.value, 0.0);                                // a stopped fan really is 0
+        QCOMPARE(thermal.fans[1].dutyPct.state, Availability::Unsupported);      // but its power is unknown
+        QVERIFY(createLinuxBackend((m_dir->path() + "/empty").toStdString())->sample(SubThermal)->thermal.fans.empty());
+    }
+
+    void thermalZonesAddOnlyWhatHwmonLacks()
+    {
+        put("/sys/class/hwmon/hwmon0/name", "acpitz\n");
+        put("/sys/class/hwmon/hwmon0/temp1_input", "30000\n");
+        put("/sys/class/thermal/thermal_zone0/type", "acpitz\n");
+        put("/sys/class/thermal/thermal_zone0/temp", "30000\n");
+        put("/sys/class/thermal/thermal_zone1/type", "cpu-thermal\n");
+        put("/sys/class/thermal/thermal_zone1/temp", "55000\n");
+        put("/sys/class/thermal/thermal_zone1/trip_point_0_type", "critical\n");
+        put("/sys/class/thermal/thermal_zone1/trip_point_0_temp", "95000\n");
+        const auto thermal = backend()->sample(SubThermal)->thermal;
+        QCOMPARE(thermal.sensors.size(), std::size_t(2)); // the second acpitz is the same sensor
+        QCOMPARE(thermal.sensors[1].label, std::string("cpu-thermal"));
+        QCOMPARE(thermal.sensors[1].limitC.value, 95.0);
+        QCOMPARE(thermal.cpuHotspotC.value, 55.0);
+    }
+
     void wifiSignalIsRead()
     {
         put("/proc/net/dev", "h\nh\n  wlan0: 1 0 0 0 0 0 0 0 2 0 0 0 0 0 0 0\n");

@@ -171,6 +171,10 @@ void Sheet::setCurrentIndex(int index)
     const bool tabHadFocus = m_current >= 0 && m_tabs[m_current]->hasFocus();
     m_current = index;
     m_tabs[index]->setChecked(true);
+    // Tab reaches only the chosen tab, and arrows move between tabs. Qt does this on some
+    // platforms, but not reliably on all of them.
+    for (SheetTab* tab : std::as_const(m_tabs))
+        tab->setFocusPolicy(tab == m_tabs[index] ? Qt::StrongFocus : Qt::ClickFocus);
     if (tabHadFocus)
         m_tabs[index]->setFocus(Qt::OtherFocusReason);
     m_stack->setCurrentIndex(index);

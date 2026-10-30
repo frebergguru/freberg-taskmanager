@@ -115,9 +115,16 @@ private:
         std::string chip, label;
         CachedFile input;
         bool cpu = false;
+        Reading<double> limitC;
+    };
+    struct Fan {
+        std::string chip, label;
+        CachedFile input, duty;
+        bool hasDuty = false;
     };
     std::string m_root;
     std::vector<Sensor> m_sensors;
+    std::vector<Fan> m_fans;
     std::vector<std::string> m_throttle;
     std::string m_buffer;
 };

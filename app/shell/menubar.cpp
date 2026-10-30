@@ -4,6 +4,7 @@
 
 #include <QApplication>
 #include <QEvent>
+#include <QGuiApplication>
 #include <QMenu>
 #include <QMouseEvent>
 #include <QTimer>
@@ -59,7 +60,9 @@ void HoverMenuBar::leaveEvent(QEvent* event)
 
 void HoverMenuBar::openPending()
 {
-    if (!m_pending || QApplication::activePopupWidget() || actionAt(mapFromGlobal(QCursor::pos())) != m_pending)
+    // Leaving the bar or moving on has already cleared or changed m_pending. The pointer's
+    // global position is not asked for, as Wayland doesn't reliably give one.
+    if (!m_pending || QApplication::activePopupWidget())
         return;
     setActiveAction(m_pending);
     m_outside.invalidate();
@@ -100,7 +103,9 @@ void HoverMenuBar::watchPointer()
         stopWatching();
         return;
     }
-    if (pointerIsOverMenus() && !m_leftMenus) {
+    // On Wayland only enter and leave can be trusted. Elsewhere the position is a second check.
+    static const bool wayland = QGuiApplication::platformName().startsWith(QLatin1String("wayland"));
+    if (!m_leftMenus && (wayland || pointerIsOverMenus())) {
         m_outside.invalidate();
         return;
     }

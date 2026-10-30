@@ -13,6 +13,7 @@
 #include <QDir>
 #include <QLibraryInfo>
 #include <QLocale>
+#include <QStandardPaths>
 #include <QTimer>
 #include <QTranslator>
 #include <cstdlib>
@@ -24,6 +25,18 @@
 using namespace fg;
 
 namespace {
+
+// Qt's Wayland plugin prints this about a mouse grab Wayland doesn't offer, and nothing
+// can be done about it from here: this app never asks for a grab. Only this exact text
+// is dropped, and every other message is passed on.
+QtMessageHandler g_nextHandler = nullptr;
+
+void messageHandler(QtMsgType type, const QMessageLogContext& context, const QString& message)
+{
+    if (message == QLatin1String("This plugin supports grabbing the mouse only for popup windows"))
+        return;
+    g_nextHandler(type, context, message);
+}
 
 // Hidden test aid: saves a picture of every view in every scheme, then quits.
 void takeScreenshots(MainWindow& window, const QString& directory, const QStringList& schemeIds, const QList<int>& textSizes)
@@ -105,11 +118,15 @@ int main(int argc, char** argv)
             return recordHeadless(argv[i + 1], seconds, intervalMs);
         }
 
+    g_nextHandler = qInstallMessageHandler(messageHandler);
     QApplication::setAttribute(Qt::AA_DontCreateNativeWidgetSiblings);
     QApplication app(argc, argv);
     QApplication::setApplicationName(QStringLiteral("Freberg.guru - Task manager"));
     QApplication::setOrganizationName(QStringLiteral("Freberg.guru"));
-    QApplication::setDesktopFileName(QStringLiteral("guru.freberg.TaskManager"));
+    // Claiming this ID makes Qt register it with the desktop portal, which refuses an ID
+    // with no installed desktop file. So a build run from its own folder doesn't claim it.
+    if (!QStandardPaths::locate(QStandardPaths::ApplicationsLocation, QStringLiteral("guru.freberg.TaskManager.desktop")).isEmpty())
+        QApplication::setDesktopFileName(QStringLiteral("guru.freberg.TaskManager"));
     QApplication::setApplicationVersion(QStringLiteral(FG_VERSION));
 
     QCommandLineParser parser;

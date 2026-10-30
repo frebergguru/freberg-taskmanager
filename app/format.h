@@ -19,6 +19,7 @@ public:
     static QString diskRate(double bytesPerSecond);
     static QString percent(double value);
     static QString temperature(double celsius); // honours the unit setting
+    static QString temperatureDifference(double celsius); // a gap between two temperatures
     static QString megahertz(double value);
     static QString watts(double value);
 

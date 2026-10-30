@@ -41,4 +41,7 @@ struct ViewDef {
 
 QList<ViewDef> allViews();
 
+// Where Processes sits in that list, for "go to details".
+inline constexpr int kProcessesView = 3;
+
 } // namespace fg

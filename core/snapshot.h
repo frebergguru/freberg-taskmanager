@@ -94,12 +94,21 @@ struct ThermalSensor {
     std::string chip;
     std::string label;
     Reading<double> tempC;
+    Reading<double> limitC; // the lowest limit the hardware reports for this sensor
+};
+
+struct FanSample {
+    std::string chip;
+    std::string label;
+    Reading<double> rpm;
+    Reading<double> dutyPct;
 };
 
 struct ThermalSample {
     Reading<double> cpuHotspotC;
     Reading<std::uint64_t> throttleEvents; // thermal pressure, where the kernel counts it
     std::vector<ThermalSensor> sensors;
+    std::vector<FanSample> fans;
 };
 
 struct BatterySample {

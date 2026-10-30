@@ -8,6 +8,7 @@ A small system monitor and task manager for Linux, with the look of a classic la
 |---|---|
 | Summary | Every subsystem at a glance, the busiest processes, system pressure |
 | Performance | CPU (overall, per logical processor, per NUMA node), memory, disks, network, GPU, thermals, energy |
+| Thermals | Every temperature sensor with its lowest, highest and limit, how close each is to that limit, history for any sensor, thermal pressure, fans |
 | Processes | Live tree or list, filter, sort, hide columns, end, force end, end a whole tree, suspend, resume, priority, disk priority, processor affinity, a full properties window, CSV export |
 | App History | Your own per-app record of CPU and disk use (off until you turn it on) |
 | System Info | Hardware and system facts, memory modules, who the app is running as |
@@ -75,6 +76,8 @@ CPU power counters and memory module details are root-only on many systems. The 
 
 ## More documentation
 
+- [What's left to do](TODO.md) and [what has changed](CHANGELOG.md)
+- [Guide for working on the code](AGENTS.md)
 - [Skin format](Docs/skin-format.md)
 - [Recording format](Docs/fgtrace-format.md)
 - [Permissions](Docs/permissions.md)

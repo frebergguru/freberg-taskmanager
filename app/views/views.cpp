@@ -13,6 +13,7 @@
 #include "startup.h"
 #include "summary.h"
 #include "sysinfo.h"
+#include "thermals.h"
 #include "users.h"
 
 #include <QCoreApplication>
@@ -25,6 +26,7 @@ QList<ViewDef> allViews()
     return {
         {title(QT_TRANSLATE_NOOP("fg::Views", "Summary")), [](SamplerHub&) -> View* { return new SummaryView; }},
         {title(QT_TRANSLATE_NOOP("fg::Views", "Performance")), [](SamplerHub& hub) -> View* { return new PerformanceView(hub); }},
+        {title(QT_TRANSLATE_NOOP("fg::Views", "Thermals")), [](SamplerHub&) -> View* { return new ThermalsView; }},
         {title(QT_TRANSLATE_NOOP("fg::Views", "Processes")), [](SamplerHub& hub) -> View* { return new ProcessesView(hub); }},
         {title(QT_TRANSLATE_NOOP("fg::Views", "App History")), [](SamplerHub& hub) -> View* { return new AppHistoryView(hub); }},
         {title(QT_TRANSLATE_NOOP("fg::Views", "System Info")), [](SamplerHub& hub) -> View* { return new SystemInfoView(hub); }},

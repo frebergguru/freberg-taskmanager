@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <climits>
+#include <optional>
 #include <dirent.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -110,21 +111,64 @@ void GpuSampler::sample(std::vector<GpuSample>& out)
 
 ThermalSampler::ThermalSampler(const std::string& root) : m_root(root)
 {
+    constexpr double kHighestRealLimitC = 500.0;
+    const auto unsupported = Reading<double>::missing(Availability::Unsupported);
+    const auto milliToC = [](std::string_view text) -> std::optional<double> {
+        const auto value = parseI64(text);
+        return value ? std::optional<double>(static_cast<double>(*value) / 1000.0) : std::nullopt;
+    };
+
+    std::vector<std::string> chips;
     const std::string base = root + "/sys/class/hwmon/";
     for (const std::string& hwmon : listDir(base)) {
         const std::string dir = base + hwmon + "/";
         const std::string chip = readTrimmed(dir + "name");
+        chips.push_back(chip);
         for (const std::string& file : listDir(dir)) {
-            if (!file.starts_with("temp") || !file.ends_with("_input"))
-                continue;
-            const std::string stem = file.substr(0, file.size() - 6);
-            std::string label = readTrimmed(dir + stem + "_label");
-            if (label.empty())
-                label = stem;
-            const bool cpu = chip == "k10temp" || chip == "coretemp" || chip == "zenpower" || chip == "cpu_thermal";
-            m_sensors.push_back({chip, std::move(label), CachedFile(dir + file), cpu});
+            if (file.starts_with("temp") && file.ends_with("_input")) {
+                const std::string stem = file.substr(0, file.size() - 6);
+                std::string label = readTrimmed(dir + stem + "_label");
+                if (label.empty())
+                    label = stem;
+                const bool cpu = chip == "k10temp" || chip == "coretemp" || chip == "zenpower" || chip == "cpu_thermal";
+                // The lower of the two limits is the one reached first. Chips say they have none
+                // with 0 or a placeholder, such as NVMe's 65261.85 degrees.
+                Reading<double> limit = unsupported;
+                for (const char* kind : {"_crit", "_max"})
+                    if (const auto value = milliToC(readTrimmed(dir + stem + kind)); value && *value > 0 && *value < kHighestRealLimitC)
+                        if (!limit.known() || *value < limit.value)
+                            limit = Reading<double>::measured(*value);
+                m_sensors.push_back({chip, std::move(label), CachedFile(dir + file), cpu, limit});
+            } else if (file.starts_with("fan") && file.ends_with("_input")) {
+                const std::string stem = file.substr(0, file.size() - 6);
+                std::string label = readTrimmed(dir + stem + "_label");
+                if (label.empty())
+                    label = stem;
+                const std::string duty = dir + "pwm" + stem.substr(3);
+                struct stat info;
+                m_fans.push_back({chip, std::move(label), CachedFile(dir + file), CachedFile(duty), ::stat(duty.c_str(), &info) == 0});
+            }
         }
     }
+
+    // Boards with no hwmon driver, such as many Arm systems, report through these.
+    const std::string zones = root + "/sys/class/thermal/";
+    for (const std::string& zone : listDir(zones)) {
+        if (!zone.starts_with("thermal_zone"))
+            continue;
+        const std::string dir = zones + zone + "/";
+        const std::string type = readTrimmed(dir + "type");
+        if (std::find(chips.begin(), chips.end(), type) != chips.end())
+            continue; // the same sensor already came in through hwmon
+        const bool cpu = type == "x86_pkg_temp" || type == "cpu-thermal" || type == "cpu_thermal" || type == "soc_thermal" || type == "cpu";
+        Reading<double> limit = unsupported;
+        for (const std::string& file : listDir(dir))
+            if (file.starts_with("trip_point_") && file.ends_with("_type") && readTrimmed(dir + file) == "critical")
+                if (const auto value = milliToC(readTrimmed(dir + file.substr(0, file.size() - 5) + "_temp")); value && *value > 0 && *value < kHighestRealLimitC)
+                    limit = Reading<double>::measured(*value);
+        m_sensors.push_back({"thermal zone", type.empty() ? zone : type, CachedFile(dir + "temp"), cpu, limit});
+    }
+
     const std::string cpuDir = root + "/sys/devices/system/cpu/";
     for (const std::string& name : listDir(cpuDir)) {
         const std::string path = cpuDir + name + "/thermal_throttle/package_throttle_count";
@@ -140,7 +184,7 @@ void ThermalSampler::sample(ThermalSample& out)
     bool haveHotspot = false;
     out.sensors.reserve(m_sensors.size());
     for (Sensor& sensor : m_sensors) {
-        ThermalSensor reading{sensor.chip, sensor.label, {}};
+        ThermalSensor reading{sensor.chip, sensor.label, {}, sensor.limitC};
         const ReadStatus status = sensor.input.read(m_buffer);
         const auto milli = status == ReadStatus::Ok ? parseI64(m_buffer) : std::nullopt;
         if (milli) {
@@ -154,6 +198,20 @@ void ThermalSampler::sample(ThermalSample& out)
         }
         out.sensors.push_back(std::move(reading));
     }
+    out.fans.reserve(m_fans.size());
+    for (Fan& fan : m_fans) {
+        FanSample reading{fan.chip, fan.label, {}, Reading<double>::missing(Availability::Unsupported)};
+        const ReadStatus status = fan.input.read(m_buffer);
+        const auto rpm = status == ReadStatus::Ok ? parseU64(m_buffer) : std::nullopt;
+        reading.rpm = rpm ? Reading<double>::measured(static_cast<double>(*rpm)) : Reading<double>::missing(toAvailability(status));
+        if (fan.hasDuty) {
+            const ReadStatus dutyStatus = fan.duty.read(m_buffer);
+            const auto duty = dutyStatus == ReadStatus::Ok ? parseU64(m_buffer) : std::nullopt;
+            reading.dutyPct = duty ? Reading<double>::measured(static_cast<double>(*duty) * 100.0 / 255.0) : Reading<double>::missing(toAvailability(dutyStatus));
+        }
+        out.fans.push_back(std::move(reading));
+    }
+
     out.cpuHotspotC = haveHotspot ? Reading<double>::measured(hotspot) : Reading<double>::missing(Availability::Unsupported);
 
     if (m_throttle.empty()) {

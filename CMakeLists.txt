@@ -74,6 +74,7 @@ add_library(fg_app STATIC
     app/views/services.cpp
     app/views/startup.cpp
     app/views/sysinfo.cpp
+    app/views/thermals.cpp
     app/views/users.cpp
     app/views/inspector.cpp
     app/views/performance.cpp

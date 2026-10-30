@@ -1032,31 +1032,33 @@
     </message>
     <message>
         <location filename="../app/format.cpp" line="59" />
+        <location filename="../app/format.cpp" line="66" />
         <source>%1 °F</source>
         <translation>%1 °F</translation>
     </message>
     <message>
         <location filename="../app/format.cpp" line="60" />
+        <location filename="../app/format.cpp" line="67" />
         <source>%1 °C</source>
         <translation>%1 °C</translation>
     </message>
     <message>
-        <location filename="../app/format.cpp" line="66" />
+        <location filename="../app/format.cpp" line="73" />
         <source>%1 GHz</source>
         <translation>%1 GHz</translation>
     </message>
     <message>
-        <location filename="../app/format.cpp" line="67" />
+        <location filename="../app/format.cpp" line="74" />
         <source>%1 MHz</source>
         <translation>%1 MHz</translation>
     </message>
     <message>
-        <location filename="../app/format.cpp" line="72" />
+        <location filename="../app/format.cpp" line="79" />
         <source>%1 W</source>
         <translation>%1 W</translation>
     </message>
     <message>
-        <location filename="../app/format.h" line="40" />
+        <location filename="../app/format.h" line="41" />
         <source>%1 (estimated)</source>
         <translation>%1 (anslått)</translation>
     </message>
@@ -1362,63 +1364,63 @@ Dette kjører:
         <translation>Miniviser</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="283" />
+        <location filename="../app/shell/mainwindow.cpp" line="282" />
         <source>CPU Usage: %1</source>
         <translation>CPU-bruk: %1</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="285" />
+        <location filename="../app/shell/mainwindow.cpp" line="284" />
         <source>Memory: %1 / %2</source>
         <translation>Minne: %1 / %2</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="291" />
+        <location filename="../app/shell/mainwindow.cpp" line="290" />
         <source>This app: %1 s CPU, peak %2</source>
         <translation>Denne appen: %1 s CPU, topp %2</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="317" />
-        <location filename="../app/shell/mainwindow.cpp" line="325" />
+        <location filename="../app/shell/mainwindow.cpp" line="316" />
+        <location filename="../app/shell/mainwindow.cpp" line="324" />
         <source>Create New Task</source>
         <translation>Opprett ny oppgave</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="317" />
+        <location filename="../app/shell/mainwindow.cpp" line="316" />
         <source>Type the name of a program to open:</source>
         <translation>Skriv navnet på et program som skal åpnes:</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="325" />
+        <location filename="../app/shell/mainwindow.cpp" line="324" />
         <source>Could not start %1.</source>
         <translation>Fikk ikke startet %1.</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="331" />
+        <location filename="../app/shell/mainwindow.cpp" line="330" />
         <source>Check for Updates</source>
         <translation>Se etter oppdateringer</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="331" />
+        <location filename="../app/shell/mainwindow.cpp" line="330" />
         <source>This build has no release address set, so it can't check for updates. It sends nothing over the network.</source>
         <translation>Denne utgaven har ingen utgivelsesadresse, så den kan ikke se etter oppdateringer. Den sender ingenting over nettverket.</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="362" />
+        <location filename="../app/shell/mainwindow.cpp" line="361" />
         <source>About</source>
         <translation>Om</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="362" />
+        <location filename="../app/shell/mainwindow.cpp" line="361" />
         <source>&lt;b&gt;Freberg.guru - Task manager&lt;/b&gt;&lt;br&gt;Version %1&lt;br&gt;&lt;br&gt;Sends no usage data, hardware details or process information anywhere.</source>
         <translation>&lt;b&gt;Freberg.guru - Task manager&lt;/b&gt;&lt;br&gt;Versjon %1&lt;br&gt;&lt;br&gt;Sender ikke bruksdata, maskinvaredetaljer eller prosessinformasjon noe sted.</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="367" />
+        <location filename="../app/shell/mainwindow.cpp" line="366" />
         <source>Accessibility Statement</source>
         <translation>Tilgjengelighetserklæring</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="368" />
+        <location filename="../app/shell/mainwindow.cpp" line="367" />
         <source>This app aims for full keyboard use, screen reader support through AT-SPI, WCAG AA contrast in every colour scheme, text size from 100% to 200%, and no information conveyed by colour or sound alone.
 
 Known limits are listed in the README.</source>
@@ -3348,6 +3350,171 @@ Sending %2</translation>
     </message>
 </context>
 <context>
+    <name>fg::ThermalsView</name>
+    <message>
+        <location filename="../app/views/thermals.cpp" line="57" />
+        <location filename="../app/views/thermals.cpp" line="71" />
+        <source>Chip</source>
+        <translation>Brikke</translation>
+    </message>
+    <message>
+        <location filename="../app/views/thermals.cpp" line="57" />
+        <source>Sensor</source>
+        <translation>Sensor</translation>
+    </message>
+    <message>
+        <location filename="../app/views/thermals.cpp" line="57" />
+        <source>Now</source>
+        <translation>Nå</translation>
+    </message>
+    <message>
+        <location filename="../app/views/thermals.cpp" line="57" />
+        <source>Lowest</source>
+        <translation>Lavest</translation>
+    </message>
+    <message>
+        <location filename="../app/views/thermals.cpp" line="57" />
+        <source>Highest</source>
+        <translation>Høyest</translation>
+    </message>
+    <message>
+        <location filename="../app/views/thermals.cpp" line="57" />
+        <source>Limit</source>
+        <translation>Grense</translation>
+    </message>
+    <message>
+        <location filename="../app/views/thermals.cpp" line="57" />
+        <source>Margin</source>
+        <translation>Margin</translation>
+    </message>
+    <message>
+        <location filename="../app/views/thermals.cpp" line="57" />
+        <source>State</source>
+        <translation>Tilstand</translation>
+    </message>
+    <message>
+        <location filename="../app/views/thermals.cpp" line="58" />
+        <source>Temperature sensors. Choose one to see its history in the graph.</source>
+        <translation>Temperatursensorer. Velg en for å se historikken i grafen.</translation>
+    </message>
+    <message>
+        <location filename="../app/views/thermals.cpp" line="35" />
+        <source>&amp;Fans:</source>
+        <translation>&amp;Vifter:</translation>
+    </message>
+    <message>
+        <location filename="../app/views/thermals.cpp" line="71" />
+        <source>Fan</source>
+        <translation>Vifte</translation>
+    </message>
+    <message>
+        <location filename="../app/views/thermals.cpp" line="71" />
+        <source>Speed</source>
+        <translation>Hastighet</translation>
+    </message>
+    <message>
+        <location filename="../app/views/thermals.cpp" line="71" />
+        <source>Power</source>
+        <translation>Effekt</translation>
+    </message>
+    <message>
+        <location filename="../app/views/thermals.cpp" line="72" />
+        <source>Fans</source>
+        <translation>Vifter</translation>
+    </message>
+    <message>
+        <location filename="../app/views/thermals.cpp" line="73" />
+        <source>This system reports no fan sensors. Many laptops leave the fans to their firmware.</source>
+        <translation>Dette systemet oppgir ingen viftesensorer. Mange bærbare overlater viftene til fastvaren.</translation>
+    </message>
+    <message>
+        <location filename="../app/views/thermals.cpp" line="113" />
+        <source>%1 %2</source>
+        <translation>%1 %2</translation>
+    </message>
+    <message>
+        <location filename="../app/views/thermals.cpp" line="116" />
+        <source>CPU hotspot</source>
+        <translation>Varmeste punkt i CPU</translation>
+    </message>
+    <message>
+        <location filename="../app/views/thermals.cpp" line="128" />
+        <source>No limit</source>
+        <translation>Ingen grense</translation>
+    </message>
+    <message>
+        <location filename="../app/views/thermals.cpp" line="131" />
+        <source>Over the limit</source>
+        <translation>Over grensen</translation>
+    </message>
+    <message>
+        <location filename="../app/views/thermals.cpp" line="133" />
+        <source>At the limit</source>
+        <translation>Ved grensen</translation>
+    </message>
+    <message>
+        <location filename="../app/views/thermals.cpp" line="135" />
+        <source>Near the limit</source>
+        <translation>Nær grensen</translation>
+    </message>
+    <message>
+        <location filename="../app/views/thermals.cpp" line="136" />
+        <source>Normal</source>
+        <translation>Normal</translation>
+    </message>
+    <message>
+        <location filename="../app/views/thermals.cpp" line="190" />
+        <source>CPU hotspot:</source>
+        <translation>Varmeste punkt i CPU:</translation>
+    </message>
+    <message>
+        <location filename="../app/views/thermals.cpp" line="191" />
+        <source>Hottest sensor:</source>
+        <translation>Varmeste sensor:</translation>
+    </message>
+    <message>
+        <location filename="../app/views/thermals.cpp" line="191" />
+        <source>%1 %2: %3</source>
+        <translation>%1 %2: %3</translation>
+    </message>
+    <message>
+        <location filename="../app/views/thermals.cpp" line="192" />
+        <source>Closest to its limit:</source>
+        <translation>Nærmest grensen sin:</translation>
+    </message>
+    <message>
+        <location filename="../app/views/thermals.cpp" line="192" />
+        <source>%1 %2: %3 left</source>
+        <translation>%1 %2: %3 igjen</translation>
+    </message>
+    <message>
+        <location filename="../app/views/thermals.cpp" line="192" />
+        <source>No sensor here reports a limit</source>
+        <translation>Ingen sensor her oppgir en grense</translation>
+    </message>
+    <message>
+        <location filename="../app/views/thermals.cpp" line="197" />
+        <location filename="../app/views/thermals.cpp" line="199" />
+        <source>Thermal pressure:</source>
+        <translation>Varmebelastning:</translation>
+    </message>
+    <message>
+        <location filename="../app/views/thermals.cpp" line="197" />
+        <source>%1 throttle events since start, %2 since this page opened</source>
+        <translation>%1 strupinger siden start, %2 siden denne siden ble åpnet</translation>
+    </message>
+    <message>
+        <location filename="../app/views/thermals.cpp" line="214" />
+        <source>%1 RPM</source>
+        <translation>%1 o/min</translation>
+    </message>
+    <message>
+        <location filename="../app/views/thermals.cpp" line="220" />
+        <source>%1: %2</source>
+        <translation>%1: %2</translation>
+    </message>
+</context>
+<context>
     <name>fg::TitleBar</name>
     <message>
         <location filename="../app/shell/titlebar.cpp" line="214" />
@@ -3547,77 +3714,82 @@ Ulagret arbeid kan gå tapt.</translation>
 <context>
     <name>fg::Views</name>
     <message>
-        <location filename="../app/views/views.cpp" line="26" />
+        <location filename="../app/views/views.cpp" line="27" />
         <source>Summary</source>
         <translation>Oversikt</translation>
     </message>
     <message>
-        <location filename="../app/views/views.cpp" line="27" />
+        <location filename="../app/views/views.cpp" line="28" />
         <source>Performance</source>
         <translation>Ytelse</translation>
     </message>
     <message>
-        <location filename="../app/views/views.cpp" line="28" />
+        <location filename="../app/views/views.cpp" line="29" />
+        <source>Thermals</source>
+        <translation>Temperaturer</translation>
+    </message>
+    <message>
+        <location filename="../app/views/views.cpp" line="30" />
         <source>Processes</source>
         <translation>Prosesser</translation>
     </message>
     <message>
-        <location filename="../app/views/views.cpp" line="29" />
+        <location filename="../app/views/views.cpp" line="31" />
         <source>App History</source>
         <translation>Apphistorikk</translation>
     </message>
     <message>
-        <location filename="../app/views/views.cpp" line="30" />
+        <location filename="../app/views/views.cpp" line="32" />
         <source>System Info</source>
         <translation>Systeminfo</translation>
     </message>
     <message>
-        <location filename="../app/views/views.cpp" line="31" />
+        <location filename="../app/views/views.cpp" line="33" />
         <source>Startup</source>
         <translation>Oppstart</translation>
     </message>
     <message>
-        <location filename="../app/views/views.cpp" line="32" />
+        <location filename="../app/views/views.cpp" line="34" />
         <source>Users</source>
         <translation>Brukere</translation>
     </message>
     <message>
-        <location filename="../app/views/views.cpp" line="33" />
+        <location filename="../app/views/views.cpp" line="35" />
         <source>Services</source>
         <translation>Tjenester</translation>
     </message>
     <message>
-        <location filename="../app/views/views.cpp" line="34" />
+        <location filename="../app/views/views.cpp" line="36" />
         <source>Power &amp;&amp; Freq</source>
         <translation>Effekt og frekvens</translation>
     </message>
     <message>
-        <location filename="../app/views/views.cpp" line="35" />
+        <location filename="../app/views/views.cpp" line="37" />
         <source>Connections</source>
         <translation>Tilkoblinger</translation>
     </message>
     <message>
-        <location filename="../app/views/views.cpp" line="36" />
+        <location filename="../app/views/views.cpp" line="38" />
         <source>Installed Apps</source>
         <translation>Installerte apper</translation>
     </message>
     <message>
-        <location filename="../app/views/views.cpp" line="37" />
+        <location filename="../app/views/views.cpp" line="39" />
         <source>Drivers</source>
         <translation>Drivere</translation>
     </message>
     <message>
-        <location filename="../app/views/views.cpp" line="38" />
+        <location filename="../app/views/views.cpp" line="40" />
         <source>Disk Space</source>
         <translation>Diskplass</translation>
     </message>
     <message>
-        <location filename="../app/views/views.cpp" line="39" />
+        <location filename="../app/views/views.cpp" line="41" />
         <source>Benchmarks</source>
         <translation>Ytelsestester</translation>
     </message>
     <message>
-        <location filename="../app/views/views.cpp" line="40" />
+        <location filename="../app/views/views.cpp" line="42" />
         <source>Flight Recorder</source>
         <translation>Ferdsskriver</translation>
     </message>
