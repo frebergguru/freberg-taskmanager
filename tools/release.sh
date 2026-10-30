@@ -38,7 +38,7 @@ cat >"$DEB/control/control" <<CONTROL
 Package: freberg-taskmanager
 Version: $VERSION
 Architecture: $DEB_ARCH
-Maintainer: Freberg.guru <noreply@freberg.guru>
+Maintainer: Freberg.guru <37067463-Freberg.guru@users.noreply.gitlab.com>
 Depends: libqt6widgets6 (>= 6.4), libqt6sql6 (>= 6.4), libqt6sql6-sqlite (>= 6.4), libqt6dbus6 (>= 6.4)
 Recommends: policykit-1, smartmontools
 Section: utils
