@@ -43,6 +43,38 @@ struct SystemFacts {
     Reading<std::vector<MemoryModule>> memoryModules;
 };
 
+struct NetworkConnection {
+    std::string protocol; // tcp, tcp6, udp, udp6, unix
+    std::string local, remote;
+    std::string state;
+    unsigned uid = 0;
+    ProcessId owner;          // pid 0 when the owner is hidden from us
+    std::string ownerName;
+    Reading<std::uint64_t> sent, received; // TCP only; other protocols do not count
+};
+
+struct IdleState {
+    std::string name;
+    std::uint64_t timeUs = 0;
+};
+
+// Slow-changing power facts for the Power & Freq page.
+struct PowerDetails {
+    std::vector<IdleState> idleStates; // summed over all logical processors
+    Reading<std::vector<std::string>> availableGovernors;
+    Reading<double> minFreqMHz, maxFreqMHz;
+    Reading<std::string> boost;
+};
+
+struct KernelModule {
+    std::string name;
+    std::uint64_t sizeBytes = 0;
+    int useCount = 0;
+    std::string usedBy;
+    std::string state;
+    std::vector<std::string> devices;
+};
+
 class ISystemBackend {
 public:
     virtual ~ISystemBackend() = default;
@@ -52,6 +84,9 @@ public:
 
     virtual const CpuTopology& topology() = 0;
     virtual SystemFacts systemFacts() = 0;
+    virtual PowerDetails powerDetails() = 0;
+    virtual std::vector<NetworkConnection> connections() = 0;
+    virtual std::vector<KernelModule> kernelModules() = 0;
 
     // Refuses when the PID now belongs to a different process than the one given.
     virtual ActionResult signalProcess(const ProcessId& id, ProcessSignal signal) = 0;

@@ -1,4 +1,4 @@
-find_package(Qt6 REQUIRED COMPONENTS Core Test)
+find_package(Qt6 REQUIRED COMPONENTS Core Test Network)
 set(CMAKE_AUTOMOC ON)
 
 function(fg_test name)
@@ -9,6 +9,8 @@ endfunction()
 
 fg_test(test_parse)
 fg_test(test_samplers)
+fg_test(test_trace)
+target_link_libraries(test_samplers PRIVATE Qt6::Network)
 
 add_executable(test_scheme test_scheme.cpp)
 target_link_libraries(test_scheme PRIVATE fg_appearance Qt6::Test)

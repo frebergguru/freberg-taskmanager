@@ -164,6 +164,10 @@ public:
         return facts;
     }
 
+    PowerDetails powerDetails() override { return readPowerDetails(m_root); }
+    std::vector<NetworkConnection> connections() override { return readConnections(m_root); }
+    std::vector<KernelModule> kernelModules() override { return readKernelModules(m_root); }
+
     ActionResult signalProcess(const ProcessId& id, ProcessSignal signal) override
     {
         int number = SIGTERM;

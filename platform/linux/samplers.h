@@ -3,6 +3,7 @@
 #pragma once
 
 #include "../../core/parse.h"
+#include "../backend.h"
 #include "../../core/snapshot.h"
 #include "file.h"
 
@@ -12,6 +13,10 @@
 #include <vector>
 
 namespace fg {
+
+PowerDetails readPowerDetails(const std::string& root);
+std::vector<NetworkConnection> readConnections(const std::string& root);
+std::vector<KernelModule> readKernelModules(const std::string& root);
 
 class CpuSampler {
 public:

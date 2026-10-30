@@ -1,9 +1,11 @@
+#include "core/diskscan.h"
 #include "platform/backend.h"
 
 #include <QCoreApplication>
 #include <QDir>
 #include <QFile>
 #include <QProcess>
+#include <QTcpServer>
 #include <QTemporaryDir>
 #include <QTest>
 #include <sys/stat.h>
@@ -175,6 +177,75 @@ private slots:
 
         QVERIFY(system->signalProcess(id, ProcessSignal::Kill).ok());
         QVERIFY(sleeper.waitForFinished(2000));
+    }
+
+    void diskScanAddsUpAndSorts()
+    {
+        put("/tree/small.txt", QByteArray(100, 'x'));
+        put("/tree/big/large.bin", QByteArray(200000, 'y'));
+        std::atomic<bool> cancel{false};
+        const DiskScanResult result = scanFolder((m_dir->path() + "/tree").toStdString(), cancel);
+        QVERIFY(!result.root->denied);
+        QCOMPARE(result.root->files, std::uint64_t(2));
+        QCOMPARE(result.root->children.size(), std::size_t(2));
+        QCOMPARE(result.root->children[0]->name, std::string("big")); // largest first
+        QVERIFY(result.root->bytes >= 200000);
+        QCOMPARE(nodePath(*result.root->children[0]->children[0]), (m_dir->path() + "/tree/big/large.bin").toStdString());
+    }
+
+    void diskScanCountsHardLinksOnce()
+    {
+        put("/tree/one.bin", QByteArray(200000, 'y'));
+        QVERIFY(::link((m_dir->path() + "/tree/one.bin").toUtf8().constData(), (m_dir->path() + "/tree/two.bin").toUtf8().constData()) == 0);
+        std::atomic<bool> cancel{false};
+        const DiskScanResult result = scanFolder((m_dir->path() + "/tree").toStdString(), cancel);
+        QCOMPARE(result.root->files, std::uint64_t(2));
+        QVERIFY(result.root->bytes < 300000);
+    }
+
+    void diskScanCancelsAndReportsMissing()
+    {
+        put("/tree/a.txt", "a");
+        std::atomic<bool> cancel{true};
+        QVERIFY(scanFolder((m_dir->path() + "/tree").toStdString(), cancel).cancelled);
+        std::atomic<bool> go{false};
+        QVERIFY(scanFolder((m_dir->path() + "/does-not-exist").toStdString(), go).root->denied);
+    }
+
+    void connectionsListFromFakeUnixTable()
+    {
+        put("/proc/net/unix", "Num RefCount Protocol Flags Type St Inode Path\n0000: 00000002 00000000 00010000 0001 01 1234 /run/test.sock\n");
+        const auto list = backend()->connections();
+        QCOMPARE(list.size(), std::size_t(1));
+        QCOMPARE(list[0].protocol, std::string("unix"));
+        QCOMPARE(list[0].local, std::string("/run/test.sock"));
+        QCOMPARE(list[0].state, std::string("LISTEN"));
+        QCOMPARE(list[0].sent.state, Availability::Unsupported);
+    }
+
+    void kernelModulesParse()
+    {
+        put("/proc/modules", "amdgpu 123456 7 foo,bar, Live 0x0\nsnd 4096 0 - Live 0x0\n");
+        const auto list = backend()->kernelModules();
+        QCOMPARE(list.size(), std::size_t(2));
+        QCOMPARE(list[0].name, std::string("amdgpu"));
+        QCOMPARE(list[0].sizeBytes, std::uint64_t(123456));
+        QCOMPARE(list[0].useCount, 7);
+        QCOMPARE(list[0].usedBy, std::string("foo,bar"));
+        QCOMPARE(list[1].usedBy, std::string());
+    }
+
+    void liveConnectionsAnswer()
+    {
+        // A real listening socket of ours must appear, with us as the owner.
+        QTcpServer server;
+        QVERIFY(server.listen(QHostAddress::LocalHost));
+        const std::string port = ":" + std::to_string(server.serverPort());
+        bool found = false;
+        for (const NetworkConnection& c : createLinuxBackend()->connections())
+            if (c.protocol == "tcp" && c.local.ends_with(port) && c.owner.pid == ::getpid() && c.state == "LISTEN")
+                found = true;
+        QVERIFY(found);
     }
 
     void liveSystemAnswers()

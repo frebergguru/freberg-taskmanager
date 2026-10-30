@@ -1,3 +1,4 @@
+#include "platform/headless.h"
 #include "settings.h"
 #include "shell/mainwindow.h"
 #include "style/appearance.h"
@@ -11,6 +12,8 @@
 #include <QLocale>
 #include <QTimer>
 #include <QTranslator>
+#include <cstdlib>
+#include <cstring>
 
 using namespace fg;
 
@@ -55,6 +58,20 @@ void takeScreenshots(MainWindow& window, const QString& directory, const QString
 
 int main(int argc, char** argv)
 {
+    // Recording needs no window, so it must also work with no display at all.
+    for (int i = 1; i + 1 < argc; ++i)
+        if (std::strcmp(argv[i], "--record") == 0) {
+            int seconds = 0;
+            int intervalMs = 1000;
+            for (int j = 1; j + 1 < argc; ++j) {
+                if (std::strcmp(argv[j], "--seconds") == 0)
+                    seconds = std::atoi(argv[j + 1]);
+                else if (std::strcmp(argv[j], "--interval-ms") == 0)
+                    intervalMs = std::max(100, std::atoi(argv[j + 1]));
+            }
+            return recordHeadless(argv[i + 1], seconds, intervalMs);
+        }
+
     QApplication::setAttribute(Qt::AA_DontCreateNativeWidgetSiblings);
     QApplication app(argc, argv);
     QApplication::setApplicationName(QStringLiteral("Freberg.guru - Task manager"));
@@ -69,7 +86,10 @@ int main(int argc, char** argv)
     QCommandLineOption schemesOption("schemes", "Comma-separated schemes for --screenshots.", "ids", "standard");
     QCommandLineOption textOption("text-sizes", "Comma-separated text sizes for --screenshots.", "percent", "100");
     QCommandLineOption viewOption("view", "Open this view number at start.", "number");
-    parser.addOptions({shotsOption, schemesOption, textOption, viewOption});
+    QCommandLineOption recordOption("record", "Record to this .fgtrace file with no window, then quit.", "file");
+    QCommandLineOption secondsOption("seconds", "How long --record runs. Without it, until interrupted.", "seconds");
+    QCommandLineOption intervalOption("interval-ms", "Time between samples for --record.", "ms");
+    parser.addOptions({shotsOption, schemesOption, textOption, viewOption, recordOption, secondsOption, intervalOption});
     parser.process(app);
 
     QTranslator translator;

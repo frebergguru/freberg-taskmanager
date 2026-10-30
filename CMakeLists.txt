@@ -16,10 +16,16 @@ add_link_options(-Wl,--gc-sections)
 add_library(fg_core STATIC
     core/parse.cpp
     core/smbios.cpp
+    core/diskscan.cpp
+    core/benchmark.cpp
+    core/trace.cpp
+    platform/headless.cpp
     platform/linux/cpu_memory.cpp
     platform/linux/disk_network.cpp
     platform/linux/gpu_thermal_power.cpp
     platform/linux/processes.cpp
+    platform/linux/connections.cpp
+    platform/linux/details.cpp
     platform/linux/linux_backend.cpp
 )
 target_include_directories(fg_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
@@ -38,6 +44,7 @@ add_executable(freberg-taskmanager
     app/main.cpp
     app/format.cpp
     app/hub.cpp
+    app/recorder.cpp
     app/settings.cpp
     app/style/appearance.cpp
     app/shell/mainwindow.cpp
@@ -47,9 +54,17 @@ add_executable(freberg-taskmanager
     app/widgets/graph.cpp
     app/widgets/icons.cpp
     app/widgets/infogrid.cpp
+    app/widgets/resultsdb.cpp
     app/system/dbus.cpp
     app/views/views.cpp
     app/views/apphistory.cpp
+    app/views/benchmarks.cpp
+    app/views/connections.cpp
+    app/views/diskspace.cpp
+    app/views/drivers.cpp
+    app/views/flightrecorder.cpp
+    app/views/installedapps.cpp
+    app/views/powerfreq.cpp
     app/views/services.cpp
     app/views/startup.cpp
     app/views/sysinfo.cpp
@@ -60,7 +75,6 @@ add_executable(freberg-taskmanager
     app/views/processmodel.cpp
     app/views/summary.cpp
     app/shell/view.h
-    app/views/placeholder.h
 )
 target_compile_definitions(freberg-taskmanager PRIVATE FG_VERSION="${PROJECT_VERSION}")
 target_link_libraries(freberg-taskmanager PRIVATE fg_core fg_appearance Qt6::Widgets Qt6::DBus Qt6::Sql)

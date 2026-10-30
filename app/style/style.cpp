@@ -422,6 +422,29 @@ void Style::drawComplexControl(ComplexControl control, const QStyleOptionComplex
             return;
         }
     }
+    if (control == CC_Slider) {
+        if (const auto* slider = qstyleoption_cast<const QStyleOptionSlider*>(o)) {
+            // A thin sunken groove and a raised block, with nothing else drawn.
+            const QRect groove = subControlRect(CC_Slider, o, SC_SliderGroove, w);
+            const QRect handle = subControlRect(CC_Slider, o, SC_SliderHandle, w);
+            QRect track = groove;
+            if (slider->orientation == Qt::Horizontal)
+                track = QRect(groove.left(), groove.center().y() - 2, groove.width(), 4);
+            else
+                track = QRect(groove.center().x() - 2, groove.top(), 4, groove.height());
+            const QBrush base = o->palette.brush(QPalette::Base);
+            sunken(p, track, o->palette, &base);
+            const QBrush face = o->palette.brush(QPalette::Button);
+            raised(p, handle, o->palette, &face);
+            if (o->state & State_HasFocus) {
+                QStyleOptionFocusRect focus;
+                focus.QStyleOption::operator=(*o);
+                focus.rect = o->rect;
+                drawPrimitive(PE_FrameFocusRect, &focus, p, w);
+            }
+            return;
+        }
+    }
     QCommonStyle::drawComplexControl(control, o, p, w);
 }
 
