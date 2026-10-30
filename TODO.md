@@ -25,7 +25,8 @@
 - [ ] Services without systemd are listed but can't be controlled.
 - [ ] Process names longer than 15 characters are cut off by the kernel ("systemd-userwor"). Take the full name from the command line.
 - [ ] Group processes by container, beyond the sortable Group column.
-- [ ] Keyboard route to the Disk Space map and to sorting by the Thermals table's columns.
+- [ ] Keyboard route to the Disk Space map.
+- [ ] Sortable columns in the Thermals table.
 - [ ] Thermal pressure on AMD. The kernel has no throttle counter there, so it shows "Not supported".
 - [ ] Recording that starts by itself at launch.
 - [ ] ARM64 packages (no cross toolchain or hardware here).
@@ -43,4 +44,3 @@ Measured offscreen, on a busy machine:
 - [ ] The saved last page is a number, so a changed page order opens the wrong page once.
 - [ ] Modern: the sidebar leaves less room for Processes' columns at the default window size.
 - [ ] Performance also has a small Thermals page, now that a full one exists. Keep it, or link to the new one?
-- [ ] Tests still print to `~/.qttest` in some runs. Check after the isolation change, and tidy up.
