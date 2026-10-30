@@ -213,7 +213,6 @@ void MainWindow::buildMenus()
 
     QMenu* help = m_menus->addMenu(tr("&Help"));
     help->addAction(tr("&Accessibility Statement..."), this, &MainWindow::showAccessibility);
-    help->addAction(tr("Check for &Updates..."), this, &MainWindow::checkForUpdates);
     help->addSeparator();
     help->addAction(tr("&About..."), this, &MainWindow::showAbout);
 }
@@ -342,12 +341,6 @@ void MainWindow::runNewTask()
         QMessageBox::warning(this, tr("Create New Task"), tr("Could not start %1.").arg(program));
 }
 
-void MainWindow::checkForUpdates()
-{
-    // No release address exists yet, so nothing is contacted.
-    QMessageBox::information(this, tr("Check for Updates"), tr("This build has no release address set, so it can't check for updates. It sends nothing over the network."));
-}
-
 void MainWindow::closeEvent(QCloseEvent* event)
 {
     if (Settings::instance().closeToTray() && m_tray && m_tray->iconShown()) {
@@ -378,7 +371,7 @@ void MainWindow::showOptions()
 
 void MainWindow::showAbout()
 {
-    QMessageBox::about(this, tr("About"), tr("<b>Freberg.guru - Task manager</b><br>Version %1<br><br>Sends no usage data, hardware details or process information anywhere.").arg(QApplication::applicationVersion()));
+    QMessageBox::about(this, tr("About"), tr("<b>Freberg.guru - Task manager</b><br>Version %1<br><br>Sends no usage data, hardware details or process information anywhere.<br><br>Free software under the GNU General Public License, version 3 or later. It comes with no warranty.").arg(QApplication::applicationVersion()));
 }
 
 void MainWindow::showAccessibility()

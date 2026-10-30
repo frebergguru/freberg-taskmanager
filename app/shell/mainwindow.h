@@ -59,7 +59,6 @@ private:
     void togglePopout();
     void showScreensaver();
     void runNewTask();
-    void checkForUpdates();
 
     SamplerHub& m_hub;
     QList<ViewDef> m_defs;

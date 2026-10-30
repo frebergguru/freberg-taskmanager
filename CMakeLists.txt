@@ -101,6 +101,7 @@ include(GNUInstallDirs)
 install(TARGETS freberg-taskmanager RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(FILES packaging/guru.freberg.TaskManager.desktop DESTINATION ${CMAKE_INSTALL_DATADIR}/applications)
 install(FILES packaging/guru.freberg.TaskManager.png DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/256x256/apps)
+install(FILES LICENSE DESTINATION ${CMAKE_INSTALL_DATADIR}/licenses/freberg-taskmanager)
 
 option(FG_BUILD_TESTS "Build the tests" ON)
 if(FG_BUILD_TESTS)

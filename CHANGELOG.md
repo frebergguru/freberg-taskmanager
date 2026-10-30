@@ -2,6 +2,10 @@
 
 ## Unreleased (0.1.0)
 
+### License
+
+- Released under the GNU General Public License, version 3 or later. The packages include the license, and About mentions it.
+
 ### Pages
 
 - Summary, Performance, Thermals, Processes, App History, System Info, Startup, Users, Services, Power & Freq, Connections, Installed Apps, Drivers, Disk Space, Benchmarks and Flight Recorder.
@@ -21,6 +25,7 @@
 - Menus open and switch when pointed at, submenus open on hover, and they close when the pointer leaves. Settings can turn this off.
 - Alerts on CPU, memory and temperature.
 - Wi-Fi network name and link speed, read from the kernel.
+- The Help menu no longer has an update check, since the app doesn't have one yet.
 - The Thermals table sorts by any column.
 - The Disk Space map works from the keyboard: arrow keys, Enter and Backspace. Right-click also goes up a level.
 - Flight Recorder can start recording when the app starts.

@@ -72,7 +72,10 @@ CPU power counters and memory module details are root-only on many systems. The 
 - **Processes of other users** show "Access denied" for disk use and open files unless the app runs with more rights.
 - **Keeping the popout above other windows is a request** to the desktop. On Wayland the desktop decides, and it also decides where the popout goes.
 - **On systems without systemd,** services are listed but can't be controlled.
-- **Update checks:** no release address is set yet, so the command only says so.
+
+## License
+
+Copyright © 2026 Freberg.guru. This program is free software: you can redistribute it and/or modify it under the terms of the [GNU General Public License](LICENSE), version 3 or any later version. It comes with no warranty. `tools/check-stripped.sh` keeps its own MIT license.
 
 ## More documentation
 

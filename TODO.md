@@ -1,10 +1,5 @@
 # TODO
 
-## Decisions needed from the owner
-
-- [ ] Choose a license. There is none yet, so the project is all rights reserved, and no license file ships in the packages.
-- [ ] Decide on update checks. The menu item says no release address is set, and the app makes no network requests.
-
 ## Not exercised yet on real targets
 
 - [ ] Uninstalling an app. The commands are written, but only ever shown, never run here.
@@ -34,4 +29,7 @@ Measured offscreen, on a busy machine:
 ## Smaller things
 
 - [ ] App History can't count a process's last update, because it has exited by the next one, so short runs read up to one update low.
-- [ ] Performance also has a small Thermals page, now that a full one exists. Keep it, or link to the new one?
+
+## Later features
+
+- [ ] Update checks. There is no release address yet, and the app makes no network requests. Any future request needs a generic User-Agent and no personal data.

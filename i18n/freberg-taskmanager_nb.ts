@@ -1353,88 +1353,73 @@ Dette kjører:
         <translation>&amp;Tilgjengelighetserklæring ...</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="216"/>
-        <source>Check for &amp;Updates...</source>
-        <translation>Se etter &amp;oppdateringer ...</translation>
+        <location filename="../app/shell/mainwindow.cpp" line="374"/>
+        <source>&lt;b&gt;Freberg.guru - Task manager&lt;/b&gt;&lt;br&gt;Version %1&lt;br&gt;&lt;br&gt;Sends no usage data, hardware details or process information anywhere.&lt;br&gt;&lt;br&gt;Free software under the GNU General Public License, version 3 or later. It comes with no warranty.</source>
+        <translation>&lt;b&gt;Freberg.guru - Task manager&lt;/b&gt;&lt;br&gt;Versjon %1&lt;br&gt;&lt;br&gt;Sender ikke bruksdata, maskinvaredetaljer eller prosessinformasjon noe sted.&lt;br&gt;&lt;br&gt;Fri programvare under GNU General Public License, versjon 3 eller nyere. Den kommer uten garanti.</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="218"/>
+        <location filename="../app/shell/mainwindow.cpp" line="217"/>
         <source>&amp;About...</source>
         <translation>&amp;Om ...</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="225"/>
+        <location filename="../app/shell/mainwindow.cpp" line="224"/>
         <source>Refresh Now</source>
         <translation>Oppdater nå</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="231"/>
+        <location filename="../app/shell/mainwindow.cpp" line="230"/>
         <source>Settings</source>
         <translation>Innstillinger</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="232"/>
+        <location filename="../app/shell/mainwindow.cpp" line="231"/>
         <source>Popout Readout</source>
         <translation>Miniviser</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="292"/>
+        <location filename="../app/shell/mainwindow.cpp" line="291"/>
         <source>CPU Usage: %1</source>
         <translation>CPU-bruk: %1</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="294"/>
+        <location filename="../app/shell/mainwindow.cpp" line="293"/>
         <source>Memory: %1 / %2</source>
         <translation>Minne: %1 / %2</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="300"/>
+        <location filename="../app/shell/mainwindow.cpp" line="299"/>
         <source>This app: %1 s CPU, peak %2</source>
         <translation>Denne appen: %1 s CPU, topp %2</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="334"/>
-        <location filename="../app/shell/mainwindow.cpp" line="342"/>
+        <location filename="../app/shell/mainwindow.cpp" line="333"/>
+        <location filename="../app/shell/mainwindow.cpp" line="341"/>
         <source>Create New Task</source>
         <translation>Opprett ny oppgave</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="334"/>
+        <location filename="../app/shell/mainwindow.cpp" line="333"/>
         <source>Type the name of a program to open:</source>
         <translation>Skriv navnet på et program som skal åpnes:</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="342"/>
+        <location filename="../app/shell/mainwindow.cpp" line="341"/>
         <source>Could not start %1.</source>
         <translation>Fikk ikke startet %1.</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="348"/>
-        <source>Check for Updates</source>
-        <translation>Se etter oppdateringer</translation>
-    </message>
-    <message>
-        <location filename="../app/shell/mainwindow.cpp" line="348"/>
-        <source>This build has no release address set, so it can&apos;t check for updates. It sends nothing over the network.</source>
-        <translation>Denne utgaven har ingen utgivelsesadresse, så den kan ikke se etter oppdateringer. Den sender ingenting over nettverket.</translation>
-    </message>
-    <message>
-        <location filename="../app/shell/mainwindow.cpp" line="381"/>
+        <location filename="../app/shell/mainwindow.cpp" line="374"/>
         <source>About</source>
         <translation>Om</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="381"/>
-        <source>&lt;b&gt;Freberg.guru - Task manager&lt;/b&gt;&lt;br&gt;Version %1&lt;br&gt;&lt;br&gt;Sends no usage data, hardware details or process information anywhere.</source>
-        <translation>&lt;b&gt;Freberg.guru - Task manager&lt;/b&gt;&lt;br&gt;Versjon %1&lt;br&gt;&lt;br&gt;Sender ikke bruksdata, maskinvaredetaljer eller prosessinformasjon noe sted.</translation>
-    </message>
-    <message>
-        <location filename="../app/shell/mainwindow.cpp" line="386"/>
+        <location filename="../app/shell/mainwindow.cpp" line="379"/>
         <source>Accessibility Statement</source>
         <translation>Tilgjengelighetserklæring</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="387"/>
+        <location filename="../app/shell/mainwindow.cpp" line="380"/>
         <source>This app aims for full keyboard use, screen reader support through AT-SPI, WCAG AA contrast in every colour scheme, text size from 100% to 200%, and no information conveyed by colour or sound alone.
 
 Known limits are listed in the README.</source>

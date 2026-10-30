@@ -401,6 +401,14 @@ private slots:
         Settings::instance().setValue("flightRecorder/autoStart", false);
     }
 
+    void thereIsNoUpdateCheckToOffer()
+    {
+        MainWindow window(*m_hub);
+        for (const QMenu* menu : window.findChildren<QMenu*>())
+            for (const QAction* action : menu->actions())
+                QVERIFY(!action->text().contains(QLatin1String("Check for")));
+    }
+
     void alwaysOnTopIsAppliedAtStart()
     {
         Settings::instance().setValue("app/alwaysOnTop", true);
