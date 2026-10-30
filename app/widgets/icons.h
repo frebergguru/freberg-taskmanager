@@ -9,5 +9,6 @@ namespace fg::Icons {
 QIcon app();
 QIcon refresh();
 QIcon settings();
+QIcon popout();
 
 } // namespace fg::Icons

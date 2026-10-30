@@ -35,6 +35,7 @@ private:
     void showProperties();
     void report(const QString& action, const struct ActionResult& result);
     void applyHighlightSetting();
+    void exportList();
 
     SamplerHub& m_hub;
     ProcessModel* m_model;
@@ -42,6 +43,7 @@ private:
     QLineEdit* m_filter;
     QCheckBox* m_treeMode;
     QPushButton* m_endTask;
+    QPushButton* m_export;
     QLabel* m_message;
 };
 

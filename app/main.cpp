@@ -1,4 +1,5 @@
 #include "platform/headless.h"
+#include "popout/popout.h"
 #include "settings.h"
 #include "shell/mainwindow.h"
 #include "style/appearance.h"
@@ -54,6 +55,29 @@ void takeScreenshots(MainWindow& window, const QString& directory, const QString
     QTimer::singleShot(0, &window, *next);
 }
 
+// Hidden test aid: saves a picture of the popout in every skin, then quits.
+void takeSkinShots(SamplerHub& hub, const QString& directory)
+{
+    QDir().mkpath(directory);
+    auto* popout = new Popout(hub);
+    popout->show();
+    auto remaining = std::make_shared<QList<Skin>>(popout->library().skins);
+    auto next = std::make_shared<std::function<void()>>();
+    *next = [popout, directory, remaining, next] {
+        if (remaining->isEmpty()) {
+            QApplication::quit();
+            return;
+        }
+        const Skin skin = remaining->takeFirst();
+        popout->applySkin(skin);
+        QTimer::singleShot(2200, popout, [popout, directory, skin, next] {
+            popout->grab().save(QStringLiteral("%1/skin-%2.png").arg(directory, skin.id));
+            (*next)();
+        });
+    };
+    QTimer::singleShot(0, popout, *next);
+}
+
 } // namespace
 
 int main(int argc, char** argv)
@@ -86,10 +110,11 @@ int main(int argc, char** argv)
     QCommandLineOption schemesOption("schemes", "Comma-separated schemes for --screenshots.", "ids", "standard");
     QCommandLineOption textOption("text-sizes", "Comma-separated text sizes for --screenshots.", "percent", "100");
     QCommandLineOption viewOption("view", "Open this view number at start.", "number");
+    QCommandLineOption skinShotsOption("skin-screenshots", "Save a picture of the popout in every skin into this folder, then quit.", "folder");
     QCommandLineOption recordOption("record", "Record to this .fgtrace file with no window, then quit.", "file");
     QCommandLineOption secondsOption("seconds", "How long --record runs. Without it, until interrupted.", "seconds");
     QCommandLineOption intervalOption("interval-ms", "Time between samples for --record.", "ms");
-    parser.addOptions({shotsOption, schemesOption, textOption, viewOption, recordOption, secondsOption, intervalOption});
+    parser.addOptions({shotsOption, schemesOption, textOption, viewOption, skinShotsOption, recordOption, secondsOption, intervalOption});
     parser.process(app);
 
     QTranslator translator;
@@ -114,5 +139,7 @@ int main(int argc, char** argv)
             sizes << size.toInt();
         takeScreenshots(window, parser.value(shotsOption), parser.value(schemesOption).split(','), sizes);
     }
+    if (parser.isSet(skinShotsOption))
+        takeSkinShots(hub, parser.value(skinShotsOption));
     return QApplication::exec();
 }

@@ -15,13 +15,17 @@ class QToolBar;
 
 namespace fg {
 
+class Popout;
+class Screensaver;
 class Sheet;
 class TitleBar;
+class TrayAndAlerts;
 
 class MainWindow final : public QWidget {
     Q_OBJECT
 public:
     explicit MainWindow(SamplerHub& hub);
+    ~MainWindow() override;
 
     void openView(int index);
     int viewCount() const { return m_defs.size(); }
@@ -35,6 +39,7 @@ protected:
     void changeEvent(QEvent* event) override;
     void showEvent(QShowEvent* event) override;
     void hideEvent(QHideEvent* event) override;
+    void closeEvent(QCloseEvent* event) override;
     bool eventFilter(QObject* watched, QEvent* event) override;
     void keyPressEvent(QKeyEvent* event) override;
 
@@ -51,6 +56,10 @@ private:
     void showOptions();
     void showAbout();
     void showAccessibility();
+    void togglePopout();
+    void showScreensaver();
+    void runNewTask();
+    void checkForUpdates();
 
     SamplerHub& m_hub;
     QList<ViewDef> m_defs;
@@ -64,6 +73,10 @@ private:
     QLabel* m_statusCpu;
     QLabel* m_statusMemory;
     QLabel* m_statusSelf;
+    // Created when first asked for.
+    Popout* m_popout = nullptr;
+    Screensaver* m_screensaver = nullptr;
+    TrayAndAlerts* m_tray = nullptr;
 };
 
 } // namespace fg

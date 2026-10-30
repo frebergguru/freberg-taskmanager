@@ -40,14 +40,17 @@ add_library(fg_appearance STATIC
 target_link_libraries(fg_appearance PUBLIC Qt6::Core Qt6::Gui Qt6::Widgets)
 target_include_directories(fg_appearance PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_executable(freberg-taskmanager
-    app/main.cpp
+add_library(fg_app STATIC
     app/format.cpp
     app/hub.cpp
     app/recorder.cpp
     app/settings.cpp
     app/style/appearance.cpp
+    app/popout/popout.cpp
+    app/popout/skin.cpp
     app/shell/mainwindow.cpp
+    app/shell/screensaver.cpp
+    app/shell/tray.cpp
     app/shell/options.cpp
     app/shell/sheet.cpp
     app/shell/titlebar.cpp
@@ -76,8 +79,11 @@ add_executable(freberg-taskmanager
     app/views/summary.cpp
     app/shell/view.h
 )
+target_link_libraries(fg_app PUBLIC fg_core fg_appearance Qt6::Widgets Qt6::DBus Qt6::Sql)
+
+add_executable(freberg-taskmanager app/main.cpp)
 target_compile_definitions(freberg-taskmanager PRIVATE FG_VERSION="${PROJECT_VERSION}")
-target_link_libraries(freberg-taskmanager PRIVATE fg_core fg_appearance Qt6::Widgets Qt6::DBus Qt6::Sql)
+target_link_libraries(freberg-taskmanager PRIVATE fg_app)
 
 option(FG_BUILD_TESTS "Build the tests" ON)
 if(FG_BUILD_TESTS)

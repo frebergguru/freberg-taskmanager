@@ -101,4 +101,26 @@ QIcon settings()
     });
 }
 
+QIcon popout()
+{
+    return fromRows({
+        "................",
+        ".kkkkkkkk.......",
+        ".kwwwwwwk.......",
+        ".kwddddwk.......",
+        ".kwddddwk.......",
+        ".kwwwwwwk.......",
+        ".kkkkkkkkkkkkkk.",
+        ".......kbbbbbbk.",
+        ".......kkkkkkkk.",
+        ".......kggGGGGk.",
+        ".......kGggGGGk.",
+        ".......kGGGggGk.",
+        ".......kGGGGGgk.",
+        ".......kkkkkkkk.",
+        "................",
+        "................",
+    });
+}
+
 } // namespace fg::Icons

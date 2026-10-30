@@ -15,3 +15,8 @@ target_link_libraries(test_samplers PRIVATE Qt6::Network)
 add_executable(test_scheme test_scheme.cpp)
 target_link_libraries(test_scheme PRIVATE fg_appearance Qt6::Test)
 add_test(NAME test_scheme COMMAND test_scheme)
+
+add_executable(test_ui test_ui.cpp)
+target_link_libraries(test_ui PRIVATE fg_app Qt6::Test)
+add_test(NAME test_ui COMMAND test_ui)
+set_tests_properties(test_ui PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")

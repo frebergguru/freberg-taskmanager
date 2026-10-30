@@ -4,18 +4,24 @@
 #include "../settings.h"
 #include "../style/appearance.h"
 #include "../widgets/icons.h"
+#include "../popout/popout.h"
 #include "options.h"
+#include "screensaver.h"
 #include "sheet.h"
 #include "titlebar.h"
+#include "tray.h"
 
 #include <QActionGroup>
 #include <QApplication>
+#include <QCloseEvent>
 #include <QEvent>
+#include <QInputDialog>
 #include <QKeyEvent>
 #include <QLabel>
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QPainter>
+#include <QProcess>
 #include <QScreen>
 #include <QStatusBar>
 #include <QToolBar>
@@ -72,9 +78,21 @@ MainWindow::MainWindow(SamplerHub& hub) : QWidget(nullptr, Qt::Window | Qt::Fram
     });
 
     m_hub.setIntervalMs(Settings::instance().updateMs());
+    if (Settings::instance().closeToTray() || Settings::instance().value("general/trayMeter", false).toBool() || Settings::instance().value("alerts/cpuPercent", 0).toInt() > 0
+        || Settings::instance().value("alerts/memoryPercent", 0).toInt() > 0 || Settings::instance().value("alerts/temperatureC", 0).toInt() > 0)
+        m_tray = new TrayAndAlerts(m_hub, this);
+    connect(&Settings::instance(), &Settings::changed, this, [this](const QString& key) {
+        if (!m_tray && (key.startsWith(QLatin1String("alerts/")) || key == QLatin1String("general/closeToTray") || key == QLatin1String("general/trayMeter")))
+            m_tray = new TrayAndAlerts(m_hub, this);
+    });
     resize(kBaseWidth, kBaseHeight);
     applyAppearance();
     m_sheet->setCurrentIndex(Settings::instance().value("general/lastView", 0).toInt());
+}
+
+MainWindow::~MainWindow()
+{
+    m_hub.clearWanted(this);
 }
 
 void MainWindow::openView(int index)
@@ -106,6 +124,8 @@ void MainWindow::applyAppearance()
 void MainWindow::buildMenus()
 {
     QMenu* file = m_menus->addMenu(tr("&File"));
+    file->addAction(tr("&New Task (Run...)"), this, &MainWindow::runNewTask);
+    file->addSeparator();
     file->addAction(tr("E&xit"), QKeySequence(Qt::ALT | Qt::Key_F4), this, &QWidget::close);
 
     QMenu* options = m_menus->addMenu(tr("&Options"));
@@ -126,6 +146,9 @@ void MainWindow::buildMenus()
         if (m_currentIndex >= 0 && m_views[m_currentIndex])
             m_views[m_currentIndex]->refresh();
     });
+    view->addAction(tr("&Popout Readout"), QKeySequence(Qt::Key_F11), this, &MainWindow::togglePopout);
+    view->addAction(tr("&Full-Screen Load"), QKeySequence(Qt::Key_F12), this, &MainWindow::showScreensaver);
+    view->addSeparator();
     QMenu* speed = view->addMenu(tr("&Update Speed"));
     auto* speeds = new QActionGroup(this);
     const struct {
@@ -142,6 +165,7 @@ void MainWindow::buildMenus()
 
     QMenu* help = m_menus->addMenu(tr("&Help"));
     help->addAction(tr("&Accessibility Statement..."), this, &MainWindow::showAccessibility);
+    help->addAction(tr("Check for &Updates..."), this, &MainWindow::checkForUpdates);
     help->addSeparator();
     help->addAction(tr("&About..."), this, &MainWindow::showAbout);
 }
@@ -157,6 +181,7 @@ void MainWindow::buildToolBar()
     });
     m_tools->addSeparator();
     m_tools->addAction(Icons::settings(), tr("Settings"), this, &MainWindow::showOptions);
+    m_tools->addAction(Icons::popout(), tr("Popout Readout"), this, &MainWindow::togglePopout);
 }
 
 void MainWindow::buildStatusBar()
@@ -228,6 +253,55 @@ void MainWindow::onSampled(const SnapshotPtr& snapshot)
 
     if (m_currentIndex >= 0 && m_views[m_currentIndex])
         m_views[m_currentIndex]->onSnapshot(*snapshot);
+}
+
+void MainWindow::togglePopout()
+{
+    if (!m_popout)
+        m_popout = new Popout(m_hub);
+    m_popout->setVisible(!m_popout->isVisible());
+}
+
+void MainWindow::showScreensaver()
+{
+    if (!m_screensaver)
+        m_screensaver = new Screensaver(m_hub);
+    m_screensaver->showFullScreen();
+}
+
+void MainWindow::runNewTask()
+{
+    bool accepted = false;
+    const QString command = QInputDialog::getText(this, tr("Create New Task"), tr("Type the name of a program to open:"), QLineEdit::Normal, QString(), &accepted);
+    if (!accepted || command.trimmed().isEmpty())
+        return;
+    QStringList parts = QProcess::splitCommand(command);
+    if (parts.isEmpty())
+        return;
+    const QString program = parts.takeFirst();
+    if (!QProcess::startDetached(program, parts))
+        QMessageBox::warning(this, tr("Create New Task"), tr("Could not start %1.").arg(program));
+}
+
+void MainWindow::checkForUpdates()
+{
+    // No release address exists yet, so nothing is contacted.
+    QMessageBox::information(this, tr("Check for Updates"), tr("This build has no release address set, so it can't check for updates. It sends nothing over the network."));
+}
+
+void MainWindow::closeEvent(QCloseEvent* event)
+{
+    if (Settings::instance().closeToTray() && m_tray && m_tray->iconShown()) {
+        hide();
+        event->ignore();
+        return;
+    }
+    if (m_popout)
+        m_popout->close();
+    if (m_screensaver)
+        m_screensaver->close();
+    QApplication::quit();
+    event->accept();
 }
 
 void MainWindow::setUpdateSpeed(int intervalMs)

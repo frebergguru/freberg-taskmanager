@@ -9,6 +9,8 @@
 #include <QCheckBox>
 #include <QDialog>
 #include <QDialogButtonBox>
+#include <QFile>
+#include <QFileDialog>
 #include <QHBoxLayout>
 #include <QHeaderView>
 #include <QLabel>
@@ -17,6 +19,7 @@
 #include <QMenu>
 #include <QMessageBox>
 #include <QPushButton>
+#include <QStandardPaths>
 #include <QTreeView>
 #include <QVBoxLayout>
 
@@ -24,7 +27,7 @@ namespace fg {
 
 ProcessesView::ProcessesView(SamplerHub& hub)
     : m_hub(hub), m_model(new ProcessModel(this)), m_tree(new QTreeView(this)), m_filter(new QLineEdit(this)),
-      m_treeMode(new QCheckBox(tr("Show as &tree"), this)), m_endTask(new QPushButton(tr("&End Task"), this)), m_message(new QLabel(this))
+      m_treeMode(new QCheckBox(tr("Show as &tree"), this)), m_endTask(new QPushButton(tr("&End Task"), this)), m_export(new QPushButton(tr("E&xport..."), this)), m_message(new QLabel(this))
 {
     auto* layout = new QVBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
@@ -76,6 +79,7 @@ ProcessesView::ProcessesView(SamplerHub& hub)
     auto* bottom = new QHBoxLayout;
     m_message->setWordWrap(true);
     bottom->addWidget(m_message, 1);
+    bottom->addWidget(m_export);
     bottom->addWidget(m_endTask);
     layout->addLayout(bottom);
 
@@ -90,6 +94,7 @@ ProcessesView::ProcessesView(SamplerHub& hub)
         m_tree->setRootIsDecorated(on);
     });
     connect(m_endTask, &QPushButton::clicked, this, [this] { endSelected(false, false); });
+    connect(m_export, &QPushButton::clicked, this, &ProcessesView::exportList);
     connect(m_tree, &QTreeView::customContextMenuRequested, this, &ProcessesView::showContextMenu);
     connect(m_tree, &QTreeView::activated, this, &ProcessesView::showProperties);
     connect(header, &QHeaderView::customContextMenuRequested, this, &ProcessesView::showHeaderMenu);
@@ -292,6 +297,39 @@ void ProcessesView::showContextMenu(const QPoint& position)
     QAction* properties = menu.addAction(tr("P&roperties..."), this, &ProcessesView::showProperties);
     menu.setDefaultAction(properties);
     menu.exec(m_tree->viewport()->mapToGlobal(position));
+}
+
+void ProcessesView::exportList()
+{
+    QString path = QFileDialog::getSaveFileName(this, tr("Export Process List"), QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation), tr("Spreadsheet (*.csv)"));
+    if (path.isEmpty())
+        return;
+    if (!path.endsWith(QLatin1String(".csv")))
+        path += QStringLiteral(".csv");
+    QFile file(path);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        m_message->setText(tr("Could not export: %1").arg(file.errorString()));
+        return;
+    }
+    QStringList header;
+    for (int column = 0; column < ProcessModel::ColumnCount; ++column)
+        header << m_model->headerData(column, Qt::Horizontal).toString();
+    file.write(header.join(QLatin1Char(',')).toUtf8() + '\n');
+    const std::function<void(const QModelIndex&)> writeRows = [&](const QModelIndex& parent) {
+        for (int row = 0; row < m_model->rowCount(parent); ++row) {
+            const QModelIndex first = m_model->index(row, 0, parent);
+            QStringList cells;
+            for (int column = 0; column < ProcessModel::ColumnCount; ++column) {
+                QString cell = m_model->index(row, column, parent).data().toString();
+                cell.replace(QLatin1Char('"'), QStringLiteral("\"\""));
+                cells << QLatin1Char('"') + cell + QLatin1Char('"');
+            }
+            file.write(cells.join(QLatin1Char(',')).toUtf8() + '\n');
+            writeRows(first);
+        }
+    };
+    writeRows({});
+    m_message->setText(tr("Exported to %1").arg(path));
 }
 
 void ProcessesView::showHeaderMenu(const QPoint& position)

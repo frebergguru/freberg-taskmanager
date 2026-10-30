@@ -83,7 +83,24 @@ OptionsDialog::OptionsDialog(QWidget* parent) : QDialog(parent)
     addCheck(tr("&Highlight process rows"), "general/rowHighlight", settings.rowHighlight());
     addCheck(tr("&Close to the notification area"), "general/closeToTray", settings.closeToTray());
     addCheck(tr("Show this app's &own cost"), "general/selfMonitor", settings.selfMonitor());
+    addCheck(tr("Show a CPU &meter in the notification area"), "general/trayMeter", settings.value("general/trayMeter", false).toBool());
     layout->addWidget(general);
+
+    auto* alerts = new QGroupBox(tr("Alerts"), this);
+    auto* alertsForm = new QFormLayout(alerts);
+    const auto addAlert = [&](const QString& label, const char* key, const QString& suffix, int top) {
+        auto* box = new QSpinBox(alerts);
+        box->setRange(0, top);
+        box->setSuffix(suffix);
+        box->setSpecialValueText(tr("Off"));
+        box->setValue(settings.value(QLatin1String(key), 0).toInt());
+        connect(box, &QSpinBox::valueChanged, this, [key, &settings](int value) { settings.setValue(QLatin1String(key), value); });
+        alertsForm->addRow(label, box);
+    };
+    addAlert(tr("CPU &use above:"), "alerts/cpuPercent", tr("%"), 100);
+    addAlert(tr("Memory us&e above:"), "alerts/memoryPercent", tr("%"), 100);
+    addAlert(tr("Tem&perature above:"), "alerts/temperatureC", tr(" \u00b0C"), 150);
+    layout->addWidget(alerts);
 
     auto* buttons = new QDialogButtonBox(QDialogButtonBox::Close, this);
     connect(buttons, &QDialogButtonBox::rejected, this, &QDialog::reject);
