@@ -4,7 +4,8 @@
 
 ### License
 
-- Released under the GNU General Public License, version 3 or later. The packages include the license, and About mentions it.
+- Released under the GNU General Public License, version 3 or later. The packages include the license, and Help, License shows it.
+- Every release includes its complete source, and the AppImage lists the libraries it carries with their licenses and where to get their source.
 
 ### Pages
 

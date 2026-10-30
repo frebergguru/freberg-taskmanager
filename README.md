@@ -77,6 +77,8 @@ CPU power counters and memory module details are root-only on many systems. The 
 
 Copyright © 2026 Freberg.guru. This program is free software: you can redistribute it and/or modify it under the terms of the [GNU General Public License](LICENSE), version 3 or any later version. It comes with no warranty. `tools/check-stripped.sh` keeps its own MIT license.
 
+Every release has its complete source next to the packages, as `freberg-taskmanager-<version>-source.tar.gz`. Publish that file along with the packages. The AppImage also carries Qt and other libraries, each under its own license, and lists them with where to get their source in `usr/share/licenses/third-party/NOTICES.txt`.
+
 ## More documentation
 
 - [What's left to do](TODO.md) and [what has changed](CHANGELOG.md)

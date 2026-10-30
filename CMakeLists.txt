@@ -85,6 +85,7 @@ add_library(fg_app STATIC
     app/shell/view.h
 )
 target_link_libraries(fg_app PUBLIC fg_core fg_appearance Qt6::Widgets Qt6::DBus Qt6::Sql)
+qt_add_resources(fg_app "legal" PREFIX "/legal" FILES LICENSE)
 
 add_executable(freberg-taskmanager app/main.cpp)
 target_compile_definitions(freberg-taskmanager PRIVATE FG_VERSION="${PROJECT_VERSION}")

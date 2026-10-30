@@ -1,6 +1,6 @@
 #!/bin/bash
 # Builds the release packages for this machine's architecture into dist/.
-# Stops if anything that ships is unstripped.
+# Stops if anything that ships is unstripped, or if the GPL's source and notices are missing.
 #
 # Usage: tools/release.sh [jobs]
 set -euo pipefail
@@ -19,11 +19,20 @@ DIST=$ROOT/dist
 WORK=$BUILD/package # never /tmp: it is small and shared
 NAME=freberg-taskmanager-$VERSION-linux-$ARCH
 
+# The GPL needs the source of exactly what ships, so only committed code can be released.
+if [ -n "$(git -C "$ROOT" status --porcelain)" ]; then
+    echo "The source tree has uncommitted changes. Commit them first, so the source package matches." >&2
+    exit 1
+fi
+
 cmake -S "$ROOT" -B "$BUILD" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr -DFG_BUILD_TESTS=OFF
 cmake --build "$BUILD" -j"$JOBS"
 
 rm -rf "$WORK" "$DIST"
 mkdir -p "$WORK" "$DIST"
+
+# The complete source of this release, which goes next to the packages.
+git -C "$ROOT" archive --format=tar.gz --prefix="freberg-taskmanager-$VERSION/" -o "$DIST/freberg-taskmanager-$VERSION-source.tar.gz" HEAD
 
 # The installed tree, which the .tar.gz and .deb both use.
 STAGE=$WORK/stage
@@ -85,6 +94,8 @@ copy_deps() {
 copy_deps "$APPDIR/usr/bin/freberg-taskmanager"
 while IFS= read -r plugin; do copy_deps "$plugin"; done < <(find "$PLUGINS" -name '*.so')
 find "$APPDIR" -type f \( -name '*.so' -o -name '*.so.*' \) -exec strip --strip-unneeded {} +
+
+"$ROOT/tools/third-party-notices.sh" "$APPDIR" "$QT_PLUGINS"
 
 cat >"$APPDIR/AppRun" <<'APPRUN'
 #!/bin/sh

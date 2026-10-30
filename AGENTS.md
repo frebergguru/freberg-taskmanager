@@ -45,6 +45,7 @@ A task manager for Linux in C++20 and Qt 6 Widgets, in English and Norwegian. Se
 
 **Releases**
 - Everything shipped must be stripped. `tools/release.sh` stops if `tools/check-stripped.sh` finds anything else.
+- The app is under GPL-3.0-or-later. `tools/release.sh` releases only committed code, puts the matching source next to the packages, and stops if `tools/third-party-notices.sh` can't name the license of a bundled library. Publish the source package with the others.
 
 ## Shared machine
 

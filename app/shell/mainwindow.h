@@ -56,6 +56,7 @@ private:
     void showOptions();
     void showAbout();
     void showAccessibility();
+    void showLicense();
     void togglePopout();
     void showScreensaver();
     void runNewTask();

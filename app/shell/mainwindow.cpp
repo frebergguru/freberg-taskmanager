@@ -15,6 +15,11 @@
 
 #include <QActionGroup>
 #include <QCoreApplication>
+#include <QDialog>
+#include <QDialogButtonBox>
+#include <QFile>
+#include <QFontDatabase>
+#include <QPlainTextEdit>
 #include <QApplication>
 #include <QCloseEvent>
 #include <QEvent>
@@ -214,6 +219,7 @@ void MainWindow::buildMenus()
     QMenu* help = m_menus->addMenu(tr("&Help"));
     help->addAction(tr("&Accessibility Statement..."), this, &MainWindow::showAccessibility);
     help->addSeparator();
+    help->addAction(tr("&License..."), this, &MainWindow::showLicense);
     help->addAction(tr("&About..."), this, &MainWindow::showAbout);
 }
 
@@ -371,7 +377,28 @@ void MainWindow::showOptions()
 
 void MainWindow::showAbout()
 {
-    QMessageBox::about(this, tr("About"), tr("<b>Freberg.guru - Task manager</b><br>Version %1<br><br>Sends no usage data, hardware details or process information anywhere.<br><br>Free software under the GNU General Public License, version 3 or later. It comes with no warranty.").arg(QApplication::applicationVersion()));
+    QMessageBox::about(this, tr("About"), tr("<b>Freberg.guru - Task manager</b><br>Version %1<br><br>Copyright © 2026 Freberg.guru<br><br>Sends no usage data, hardware details or process information anywhere.<br><br>Free software: you may share and change it under the GNU General Public License, version 3 or later. It comes with no warranty. See Help, License, for the terms. The source code is released with every version.").arg(QApplication::applicationVersion()));
+}
+
+void MainWindow::showLicense()
+{
+    QFile file(QStringLiteral(":/legal/LICENSE"));
+    QDialog dialog(this);
+    dialog.setWindowTitle(tr("License"));
+    dialog.resize(fontMetrics().averageCharWidth() * 86, fontMetrics().lineSpacing() * 32);
+    auto* layout = new QVBoxLayout(&dialog);
+    auto* text = new QPlainTextEdit(&dialog);
+    text->setReadOnly(true);
+    text->setLineWrapMode(QPlainTextEdit::NoWrap);
+    text->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
+    text->setAccessibleName(tr("License"));
+    if (file.open(QIODevice::ReadOnly | QIODevice::Text))
+        text->setPlainText(QString::fromUtf8(file.readAll()));
+    layout->addWidget(text, 1);
+    auto* buttons = new QDialogButtonBox(QDialogButtonBox::Close, &dialog);
+    connect(buttons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+    layout->addWidget(buttons);
+    dialog.exec();
 }
 
 void MainWindow::showAccessibility()

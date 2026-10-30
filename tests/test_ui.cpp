@@ -33,7 +33,9 @@
 #include <QSignalSpy>
 #include <QStandardPaths>
 #include <QTemporaryDir>
+#include <QPlainTextEdit>
 #include <QTest>
+#include <QTimer>
 #include <QTreeView>
 #include <QTreeWidget>
 #include <cmath>
@@ -399,6 +401,30 @@ private slots:
         QVERIFY(FlightRecorder::shared(*m_hub).isRecording());
         FlightRecorder::shared(*m_hub).stop();
         Settings::instance().setValue("flightRecorder/autoStart", false);
+    }
+
+    void theLicenseCanBeReadInTheApp()
+    {
+        QFile license(QStringLiteral(":/legal/LICENSE"));
+        QVERIFY(license.open(QIODevice::ReadOnly));
+        QVERIFY(license.readAll().contains("GNU GENERAL PUBLIC LICENSE"));
+        MainWindow window(*m_hub);
+        QAction* action = nullptr;
+        for (QMenu* menu : window.findChildren<QMenu*>())
+            for (QAction* candidate : menu->actions())
+                if (candidate->text() == QLatin1String("&License..."))
+                    action = candidate;
+        QVERIFY(action);
+        // The dialog is modal, so a timer reads it and closes it.
+        int shownLines = 0;
+        QTimer::singleShot(200, this, [&shownLines] {
+            QWidget* dialog = QApplication::activeModalWidget();
+            QVERIFY(dialog);
+            shownLines = dialog->findChild<QPlainTextEdit*>()->blockCount();
+            dialog->close();
+        });
+        action->trigger();
+        QVERIFY(shownLines > 600);
     }
 
     void thereIsNoUpdateCheckToOffer()
