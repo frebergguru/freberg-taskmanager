@@ -1,6 +1,7 @@
 #include "scheme.h"
 
 #include <QCoreApplication>
+#include <QHash>
 #include <cmath>
 
 namespace fg {
@@ -9,12 +10,19 @@ namespace {
 
 QColor c(const char* hex) { return QColor::fromString(QLatin1String(hex)); }
 
-// A dark scheme with one phosphor colour, like an old monitor.
-Scheme phosphor(const char* id, const char* name, const char* bright, const char* mid, const char* low)
+void setIdentity(Scheme& s, const char* family, const char* name, bool isDark)
+{
+    s.family = QLatin1String(family);
+    s.id = s.family + (isDark ? QStringLiteral("-dark") : QStringLiteral("-light"));
+    s.name = name;
+    s.isDark = isDark;
+}
+
+// One colour on black, like an old monitor.
+Scheme phosphorDark(const char* family, const char* name, const char* bright, const char* mid, const char* low)
 {
     Scheme s;
-    s.id = QLatin1String(id);
-    s.name = name;
+    setIdentity(s, family, name, true);
     s.face = QColor(16, 16, 16);
     s.light = c(mid);
     s.midlight = c(low);
@@ -36,96 +44,215 @@ Scheme phosphor(const char* id, const char* name, const char* bright, const char
     return s;
 }
 
+// The same colour as ink on a tinted page, like a printout.
+Scheme phosphorLight(const char* family, const char* name, const char* ink, const char* strong, const char* face, const char* base, const char* disabled, const char* grid, const char* line2)
+{
+    Scheme s;
+    setIdentity(s, family, name, false);
+    s.face = c(face);
+    s.light = c(base);
+    s.midlight = c(face).lighter(104);
+    s.dark = c(face).darker(150);
+    s.shadow = c(ink);
+    s.base = c(base);
+    s.text = c(ink);
+    s.disabledText = c(disabled);
+    s.selection = c(strong);
+    s.selectionText = QColor(255, 255, 255);
+    s.titleStart = c(strong);
+    s.titleEnd = c(strong).lighter(135);
+    s.titleText = QColor(255, 255, 255);
+    s.titleInactive = c(face).darker(125);
+    s.graphBack = c(base);
+    s.graphGrid = c(grid);
+    s.graphLine = c(strong);
+    s.graphLine2 = c(line2);
+    return s;
+}
+
+struct FlatColours {
+    const char* face, *base, *text, *disabled, *selection, *selectionText, *accent, *border, *hover, *strong, *grid, *line, *line2;
+};
+
+Scheme flat(const char* family, const char* name, Design design, bool isDark, const FlatColours& k)
+{
+    Scheme f;
+    setIdentity(f, family, name, isDark);
+    f.design = design;
+    f.face = c(k.face);
+    f.light = c(k.base);
+    f.midlight = c(k.hover);
+    f.dark = c(k.strong);
+    f.shadow = isDark ? c(k.strong).lighter(130) : c(k.strong).darker(130);
+    f.base = c(k.base);
+    f.text = c(k.text);
+    f.disabledText = c(k.disabled);
+    f.selection = c(k.selection);
+    f.selectionText = c(k.selectionText);
+    f.accent = c(k.accent);
+    f.border = c(k.border);
+    f.hover = c(k.hover);
+    f.titleStart = f.titleEnd = f.titleInactive = c(k.face);
+    f.titleText = c(k.text);
+    f.graphBack = c(k.base);
+    f.graphGrid = c(k.grid);
+    f.graphLine = c(k.line);
+    f.graphLine2 = c(k.line2);
+    return f;
+}
+
 QList<Scheme> build()
 {
     QList<Scheme> list;
 
-    Scheme standard;
-    standard.id = QStringLiteral("standard");
-    standard.name = QT_TRANSLATE_NOOP("fg::Scheme", "Standard");
-    standard.face = c("#c0c0c0");
-    standard.light = c("#ffffff");
-    standard.midlight = c("#dfdfdf");
-    standard.dark = c("#808080");
-    standard.shadow = c("#000000");
-    standard.base = c("#ffffff");
-    standard.text = c("#000000");
-    standard.disabledText = c("#4a4a4a"); // the classic #808080 misses WCAG AA on silver
-    standard.selection = c("#000080");
-    standard.selectionText = c("#ffffff");
-    standard.titleStart = c("#000080");
-    standard.titleEnd = c("#1084d0");
-    standard.titleText = c("#ffffff");
-    standard.titleInactive = c("#686868");
-    standard.graphBack = c("#000000");
-    standard.graphGrid = c("#008040");
-    standard.graphLine = c("#00ff00");
-    standard.graphLine2 = c("#ffff00");
-    list << standard;
+    const char* const classicName = QT_TRANSLATE_NOOP("fg::Scheme", "Classic");
+    Scheme classicLight;
+    setIdentity(classicLight, "classic", classicName, false);
+    classicLight.face = c("#c0c0c0");
+    classicLight.light = c("#ffffff");
+    classicLight.midlight = c("#dfdfdf");
+    classicLight.dark = c("#808080");
+    classicLight.shadow = c("#000000");
+    classicLight.base = c("#ffffff");
+    classicLight.text = c("#000000");
+    classicLight.disabledText = c("#4a4a4a"); // the old #808080 misses WCAG AA on silver
+    classicLight.selection = c("#000080");
+    classicLight.selectionText = c("#ffffff");
+    classicLight.titleStart = c("#000080");
+    classicLight.titleEnd = c("#1084d0");
+    classicLight.titleText = c("#ffffff");
+    classicLight.titleInactive = c("#686868");
+    classicLight.graphBack = c("#000000");
+    classicLight.graphGrid = c("#008040");
+    classicLight.graphLine = c("#00ff00");
+    classicLight.graphLine2 = c("#ffff00");
+    list << classicLight;
 
-    Scheme light = standard;
-    light.id = QStringLiteral("light");
-    light.name = QT_TRANSLATE_NOOP("fg::Scheme", "Light");
-    light.face = c("#ece9d8");
-    light.midlight = c("#f5f3e8");
-    light.dark = c("#9d9a87");
-    light.selection = c("#2f5d8c");
-    light.titleStart = c("#2f5d8c");
-    light.titleEnd = c("#8db4dc");
-    light.disabledText = c("#55534a");
-    list << light;
+    Scheme classicDark;
+    setIdentity(classicDark, "classic", classicName, true);
+    classicDark.face = c("#2e2e2e");
+    classicDark.light = c("#6a6a6a");
+    classicDark.midlight = c("#484848");
+    classicDark.dark = c("#191919");
+    classicDark.shadow = c("#000000");
+    classicDark.base = c("#1a1a1a");
+    classicDark.text = c("#f0f0f0");
+    classicDark.disabledText = c("#a8a8a8");
+    classicDark.selection = c("#3a6ea5");
+    classicDark.selectionText = c("#ffffff");
+    classicDark.titleStart = c("#1f3f66");
+    classicDark.titleEnd = c("#3a6ea5");
+    classicDark.titleText = c("#ffffff");
+    classicDark.titleInactive = c("#444444");
+    classicDark.graphBack = c("#000000");
+    classicDark.graphGrid = c("#2f5f6f");
+    classicDark.graphLine = c("#5fd0ff");
+    classicDark.graphLine2 = c("#ffd060");
+    list << classicDark;
 
-    Scheme dark;
-    dark.id = QStringLiteral("dark");
-    dark.name = QT_TRANSLATE_NOOP("fg::Scheme", "Dark");
-    dark.face = c("#2e2e2e");
-    dark.light = c("#6a6a6a");
-    dark.midlight = c("#484848");
-    dark.dark = c("#191919");
-    dark.shadow = c("#000000");
-    dark.base = c("#1a1a1a");
-    dark.text = c("#f0f0f0");
-    dark.disabledText = c("#a8a8a8");
-    dark.selection = c("#3a6ea5");
-    dark.selectionText = c("#ffffff");
-    dark.titleStart = c("#1f3f66");
-    dark.titleEnd = c("#3a6ea5");
-    dark.titleText = c("#ffffff");
-    dark.titleInactive = c("#444444");
-    dark.graphBack = c("#000000");
-    dark.graphGrid = c("#2f5f6f");
-    dark.graphLine = c("#5fd0ff");
-    dark.graphLine2 = c("#ffd060");
-    list << dark;
+    const char* const sandName = QT_TRANSLATE_NOOP("fg::Scheme", "Sand");
+    Scheme sandLight = classicLight;
+    setIdentity(sandLight, "sand", sandName, false);
+    sandLight.face = c("#ece9d8");
+    sandLight.midlight = c("#f5f3e8");
+    sandLight.dark = c("#9d9a87");
+    sandLight.selection = c("#2f5d8c");
+    sandLight.titleStart = c("#2f5d8c");
+    sandLight.titleEnd = c("#8db4dc");
+    sandLight.disabledText = c("#55534a");
+    list << sandLight;
 
-    list << phosphor("green", QT_TRANSLATE_NOOP("fg::Scheme", "Green Phosphor"), "#33ff66", "#1f9f40", "#0f5f25");
-    list << phosphor("amber", QT_TRANSLATE_NOOP("fg::Scheme", "Amber Phosphor"), "#ffb000", "#a87400", "#5f4200");
-    list << phosphor("blue", QT_TRANSLATE_NOOP("fg::Scheme", "Blue Phosphor"), "#66c8ff", "#4a94c0", "#1f4a62");
-    list << phosphor("mono", QT_TRANSLATE_NOOP("fg::Scheme", "Mono"), "#e6e6e6", "#909090", "#505050");
-    list << phosphor("red", QT_TRANSLATE_NOOP("fg::Scheme", "Red Phosphor"), "#ff6a5a", "#d0584a", "#62261f");
-    list << phosphor("purple", QT_TRANSLATE_NOOP("fg::Scheme", "Purple Phosphor"), "#d29aff", "#a47ccc", "#503864");
+    Scheme sandDark = classicDark;
+    setIdentity(sandDark, "sand", sandName, true);
+    sandDark.face = c("#38342a");
+    sandDark.light = c("#6e6854");
+    sandDark.midlight = c("#4f4a3c");
+    sandDark.dark = c("#201d16");
+    sandDark.base = c("#26231b");
+    sandDark.text = c("#f2eee0");
+    sandDark.disabledText = c("#b4ae9a");
+    sandDark.selection = c("#2f5d8c");
+    sandDark.titleStart = c("#2a4a6e");
+    sandDark.titleEnd = c("#4f7aa8");
+    sandDark.titleInactive = c("#4f4a3c");
+    sandDark.graphGrid = c("#4f4a3c");
+    sandDark.graphLine = c("#e8c878");
+    sandDark.graphLine2 = c("#8db4dc");
+    list << sandDark;
 
-    Scheme contrast;
-    contrast.id = QStringLiteral("contrast");
-    contrast.name = QT_TRANSLATE_NOOP("fg::Scheme", "High Contrast");
-    contrast.face = c("#000000");
-    contrast.light = c("#ffffff");
-    contrast.midlight = c("#000000");
-    contrast.dark = c("#ffffff");
-    contrast.shadow = c("#ffffff");
-    contrast.base = c("#000000");
-    contrast.text = c("#ffffff");
-    contrast.disabledText = c("#00ff00");
-    contrast.selection = c("#ffff00");
-    contrast.selectionText = c("#000000");
-    contrast.titleStart = contrast.titleEnd = c("#800080");
-    contrast.titleText = c("#ffffff");
-    contrast.titleInactive = c("#000000");
-    contrast.graphBack = c("#000000");
-    contrast.graphGrid = c("#808080");
-    contrast.graphLine = c("#ffff00");
-    contrast.graphLine2 = c("#00ffff");
-    list << contrast;
+    const char* const green = QT_TRANSLATE_NOOP("fg::Scheme", "Green Phosphor");
+    list << phosphorLight("green", green, "#0b3d1c", "#0f6b32", "#dcebe0", "#f4faf6", "#335c41", "#c9dfd0", "#7a5a00");
+    list << phosphorDark("green", green, "#33ff66", "#1f9f40", "#0f5f25");
+    const char* const amber = QT_TRANSLATE_NOOP("fg::Scheme", "Amber Phosphor");
+    list << phosphorLight("amber", amber, "#4a3000", "#8a5a00", "#f3e7cf", "#fdf8ec", "#6b5223", "#e6d6b4", "#0f5c8a");
+    list << phosphorDark("amber", amber, "#ffb000", "#a87400", "#5f4200");
+    const char* const blue = QT_TRANSLATE_NOOP("fg::Scheme", "Blue Phosphor");
+    list << phosphorLight("blue", blue, "#0c3350", "#14608f", "#dbe9f3", "#f3f9fd", "#2f5670", "#c6dbea", "#8a3a00");
+    list << phosphorDark("blue", blue, "#66c8ff", "#4a94c0", "#1f4a62");
+    const char* const mono = QT_TRANSLATE_NOOP("fg::Scheme", "Mono");
+    list << phosphorLight("mono", mono, "#1a1a1a", "#4a4a4a", "#e4e4e4", "#fafafa", "#575757", "#d2d2d2", "#7a7a7a");
+    list << phosphorDark("mono", mono, "#e6e6e6", "#909090", "#505050");
+    const char* const red = QT_TRANSLATE_NOOP("fg::Scheme", "Red Phosphor");
+    list << phosphorLight("red", red, "#5a0f08", "#a32a1c", "#f5e0dc", "#fdf5f3", "#7a3a32", "#ebcdc7", "#14608f");
+    list << phosphorDark("red", red, "#ff6a5a", "#d0584a", "#62261f");
+    const char* const purple = QT_TRANSLATE_NOOP("fg::Scheme", "Purple Phosphor");
+    list << phosphorLight("purple", purple, "#33154f", "#6b35a0", "#e9dff3", "#faf6fd", "#574070", "#dcccec", "#8a5a00");
+    list << phosphorDark("purple", purple, "#d29aff", "#a47ccc", "#503864");
+
+    const char* const contrastName = QT_TRANSLATE_NOOP("fg::Scheme", "High Contrast");
+    Scheme contrastLight;
+    setIdentity(contrastLight, "contrast", contrastName, false);
+    contrastLight.face = c("#ffffff");
+    contrastLight.light = c("#000000");
+    contrastLight.midlight = c("#ffffff");
+    contrastLight.dark = c("#000000");
+    contrastLight.shadow = c("#000000");
+    contrastLight.base = c("#ffffff");
+    contrastLight.text = c("#000000");
+    contrastLight.disabledText = c("#005000");
+    contrastLight.selection = c("#000080");
+    contrastLight.selectionText = c("#ffffff");
+    contrastLight.titleStart = contrastLight.titleEnd = c("#000080");
+    contrastLight.titleText = c("#ffffff");
+    contrastLight.titleInactive = c("#ffffff");
+    contrastLight.graphBack = c("#ffffff");
+    contrastLight.graphGrid = c("#808080");
+    contrastLight.graphLine = c("#000080");
+    contrastLight.graphLine2 = c("#a00000");
+    list << contrastLight;
+
+    Scheme contrastDark;
+    setIdentity(contrastDark, "contrast", contrastName, true);
+    contrastDark.face = c("#000000");
+    contrastDark.light = c("#ffffff");
+    contrastDark.midlight = c("#000000");
+    contrastDark.dark = c("#ffffff");
+    contrastDark.shadow = c("#ffffff");
+    contrastDark.base = c("#000000");
+    contrastDark.text = c("#ffffff");
+    contrastDark.disabledText = c("#00ff00");
+    contrastDark.selection = c("#ffff00");
+    contrastDark.selectionText = c("#000000");
+    contrastDark.titleStart = contrastDark.titleEnd = c("#800080");
+    contrastDark.titleText = c("#ffffff");
+    contrastDark.titleInactive = c("#000000");
+    contrastDark.graphBack = c("#000000");
+    contrastDark.graphGrid = c("#808080");
+    contrastDark.graphLine = c("#ffff00");
+    contrastDark.graphLine2 = c("#00ffff");
+    list << contrastDark;
+
+    const char* const modern = QT_TRANSLATE_NOOP("fg::Scheme", "Modern");
+    list << flat("modern", modern, Design::Modern, false,
+                 {"#f3f4f6", "#ffffff", "#1c1f24", "#5f6672", "#2563eb", "#ffffff", "#2563eb", "#d3d7de", "#e7e9ed", "#b4b9c2", "#eceef1", "#2563eb", "#c2410c"});
+    list << flat("modern", modern, Design::Modern, true,
+                 {"#1e2126", "#16181c", "#e8eaed", "#9aa1ab", "#2563eb", "#ffffff", "#60a5fa", "#33373e", "#2a2e34", "#4a4f58", "#262a30", "#60a5fa", "#fbbf24"});
+
+    const char* const neon = QT_TRANSLATE_NOOP("fg::Scheme", "Neon Glow");
+    list << flat("neon", neon, Design::Neon, false,
+                 {"#f5f0ff", "#ffffff", "#1d1238", "#5c4f80", "#c4009a", "#ffffff", "#008ca3", "#d5c8f5", "#ece4ff", "#a99ae0", "#ece4ff", "#008ca3", "#c4009a"});
+    list << flat("neon", neon, Design::Neon, true,
+                 {"#0d0b1a", "#07060f", "#f0eaff", "#a79bc9", "#ff2bd6", "#000000", "#00f0ff", "#3a2f6b", "#1a1633", "#4b3d8a", "#1d1840", "#00f0ff", "#ff2bd6"});
 
     return list;
 }
@@ -156,12 +283,34 @@ const QList<Scheme>& schemes()
     return list;
 }
 
+QStringList schemeFamilies()
+{
+    QStringList families;
+    for (const Scheme& scheme : schemes())
+        if (!families.contains(scheme.family))
+            families << scheme.family;
+    return families;
+}
+
 const Scheme& schemeById(const QString& id)
 {
+    // Names used by earlier versions of the app, so that a saved choice survives.
+    static const QHash<QString, QString> earlier = {
+        {QStringLiteral("standard"), QStringLiteral("classic-light")}, {QStringLiteral("dark"), QStringLiteral("classic-dark")}, {QStringLiteral("light"), QStringLiteral("sand-light")},
+        {QStringLiteral("green"), QStringLiteral("green-dark")},       {QStringLiteral("amber"), QStringLiteral("amber-dark")},  {QStringLiteral("blue"), QStringLiteral("blue-dark")},
+        {QStringLiteral("mono"), QStringLiteral("mono-dark")},         {QStringLiteral("red"), QStringLiteral("red-dark")},      {QStringLiteral("purple"), QStringLiteral("purple-dark")},
+        {QStringLiteral("contrast"), QStringLiteral("contrast-dark")}, {QStringLiteral("neon"), QStringLiteral("neon-dark")},
+    };
+    const QString wanted = earlier.value(id, id);
     for (const Scheme& scheme : schemes())
-        if (scheme.id == id)
+        if (scheme.id == wanted)
             return scheme;
     return schemes().first();
+}
+
+const Scheme& schemeFor(const QString& family, bool isDark)
+{
+    return schemeById(family + (isDark ? QStringLiteral("-dark") : QStringLiteral("-light")));
 }
 
 Scheme withSaturation(const Scheme& scheme, int saturation)
@@ -170,7 +319,7 @@ Scheme withSaturation(const Scheme& scheme, int saturation)
         return scheme;
     const double factor = qBound(0, saturation, 10) / 10.0;
     Scheme s = scheme;
-    for (QColor* color : {&s.face, &s.light, &s.midlight, &s.dark, &s.shadow, &s.base, &s.text, &s.disabledText, &s.selection, &s.selectionText,
+    for (QColor* color : {&s.accent, &s.border, &s.hover, &s.face, &s.light, &s.midlight, &s.dark, &s.shadow, &s.base, &s.text, &s.disabledText, &s.selection, &s.selectionText,
                           &s.titleStart, &s.titleEnd, &s.titleText, &s.titleInactive, &s.graphBack, &s.graphGrid, &s.graphLine, &s.graphLine2})
         *color = desaturated(*color, factor);
     return s;

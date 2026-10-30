@@ -1,6 +1,7 @@
 #include "diskspace.h"
 
 #include "../format.h"
+#include "../style/style.h"
 #include "../widgets/resultsdb.h"
 
 #include <QComboBox>
@@ -168,10 +169,10 @@ void Treemap::paintEvent(QPaintEvent*)
 {
     QPainter p(this);
     const QBrush back = palette().brush(QPalette::Base);
-    qDrawWinPanel(&p, rect(), palette(), true, &back);
+    sunkenPanel(&p, rect(), palette(), &back);
     for (const Cell& cell : std::as_const(m_cells)) {
         const QBrush face = palette().brush(cell.node->isDir ? QPalette::Button : QPalette::Base);
-        qDrawWinButton(&p, cell.rect, palette(), false, &face);
+        raisedPanel(&p, cell.rect, palette(), false, &face);
         if (cell.rect.width() > 30 && cell.rect.height() > fontMetrics().height() + 4) {
             p.setPen(palette().color(QPalette::ButtonText));
             const QRect text = cell.rect.adjusted(4, 2, -4, -2);

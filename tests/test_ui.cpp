@@ -230,6 +230,28 @@ private slots:
         QVERIFY(file.readAll().contains("Hidden=true"));
     }
 
+    void everyThemeOpensEveryPageAndCanBeLeft()
+    {
+        MainWindow window(*m_hub);
+        window.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&window));
+        const auto sheet = window.findChild<Sheet*>();
+        QVERIFY(sheet);
+        for (const Scheme& scheme : schemes()) {
+            Settings::instance().setValue("appearance/scheme", scheme.id);
+            window.applyAppearance();
+            for (int view = 0; view < window.viewCount(); ++view) {
+                window.openView(view);
+                QVERIFY(!window.grab().isNull()); // draws every page in this design
+            }
+            // Every tab must stay inside the page's own area in every design.
+            for (const SheetTab* tab : sheet->findChildren<SheetTab*>())
+                QVERIFY2(sheet->rect().contains(tab->geometry()), qPrintable(scheme.id + QLatin1Char(' ') + tab->text()));
+        }
+        Settings::instance().setValue("appearance/scheme", QStringLiteral("standard"));
+        window.applyAppearance();
+    }
+
     void builtInSkinsAllLoad()
     {
         QTemporaryDir empty(QCoreApplication::applicationDirPath() + "/fixture-XXXXXX");

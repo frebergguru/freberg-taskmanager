@@ -52,7 +52,7 @@ Right-click the popout and choose **Skin ▸ Open Skins Folder**. After adding o
 - **Surfaces:** a colour, or `{"top", "bottom"}` for a vertical gradient. `window`, `header` and `tile` can be set, and `windowImage` and `headerImage` can be placed on the first two.
 - **Images:** `file`, `fit` (`fill`, `fit`, `stretch` or `tile`) and `opacity`. PNG and JPEG are always available; other formats depend on the Qt image plugins installed.
 - **Fonts:** `size` is clamped to 5-24 points.
-- **Meters:** `style` is `bars`, `gauge`, `graph`, `vertical` or `rows`.
+- **Meters:** `style` is `bars`, `gauge`, `graph`, `vertical` or `rows`. In `bars` and `rows`, `segments` of 1 gives a plain solid bar.
 - **Accent:** the lit colour per channel: `cpu`, `memory`, `gpu`, `thermal`, `disk`, `network`, `power`, `alert`.
 - **Quadrants:** which readings appear, in order. Any channel except `alert` is allowed. Unknown names are dropped, and if none remain the default four are used.
 - **Glow:** 0-24.

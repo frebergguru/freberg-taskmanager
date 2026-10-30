@@ -1,7 +1,11 @@
 #include "style.h"
 
 #include <QAbstractButton>
+#include <QAbstractSlider>
+#include <QApplication>
+#include <QComboBox>
 #include <QPainter>
+#include <QPainterPath>
 #include <QPolygon>
 #include <QStyleOption>
 #include <QToolButton>
@@ -43,18 +47,117 @@ void arrow(QPainter* p, const QRect& r, Qt::ArrowType type, const QColor& color)
 
 } // namespace
 
+const Scheme& currentScheme()
+{
+    return static_cast<const Style*>(QApplication::style())->scheme();
+}
+
+void raisedPanel(QPainter* p, const QRect& r, const QPalette& pal, bool down, const QBrush* fill)
+{
+    const Scheme& s = currentScheme();
+    if (s.design == Design::Classic) {
+        qDrawWinButton(p, r, pal, down, fill);
+        return;
+    }
+    p->save();
+    p->setRenderHint(QPainter::Antialiasing, true);
+    QPainterPath path;
+    path.addRoundedRect(QRectF(r).adjusted(0.5, 0.5, -0.5, -0.5), 4, 4);
+    if (fill)
+        p->fillPath(path, *fill);
+    p->setPen(QPen(s.border, 1));
+    p->setBrush(Qt::NoBrush);
+    p->drawPath(path);
+    p->restore();
+}
+
+void sunkenPanel(QPainter* p, const QRect& r, const QPalette& pal, const QBrush* fill)
+{
+    if (currentScheme().design == Design::Classic)
+        qDrawWinPanel(p, r, pal, true, fill);
+    else
+        raisedPanel(p, r, pal, false, fill);
+}
+
+void glowStroke(QPainter& p, const QPainterPath& path, const QColor& color, double radius)
+{
+    if (currentScheme().design != Design::Neon || radius <= 0)
+        return;
+    // A few wide, faint strokes stand in for a blur, at a fraction of the cost.
+    p.save();
+    p.setRenderHint(QPainter::Antialiasing, true);
+    p.setBrush(Qt::NoBrush);
+    QColor halo = color;
+    for (const double share : {1.0, 0.6, 0.3}) {
+        halo.setAlphaF(0.16);
+        p.setPen(QPen(halo, radius * 2 * share, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+        p.drawPath(path);
+    }
+    p.restore();
+}
+
+void strokeSeries(QPainter& p, const QPainterPath& line, const QColor& color, double baseline)
+{
+    p.save();
+    p.setRenderHint(QPainter::Antialiasing, true);
+    p.setBrush(Qt::NoBrush);
+    if (currentScheme().design == Design::Modern) {
+        // Each unbroken stretch gets its own fill, so a gap stays empty all the way down.
+        QColor fill = color;
+        fill.setAlphaF(0.14);
+        for (const QPolygonF& stretch : line.toSubpathPolygons()) {
+            if (stretch.size() < 2)
+                continue;
+            QPolygonF area = stretch;
+            area << QPointF(stretch.last().x(), baseline) << QPointF(stretch.first().x(), baseline);
+            QPainterPath shape;
+            shape.addPolygon(area);
+            p.fillPath(shape, fill);
+        }
+    }
+    glowStroke(p, line, color, 4);
+    p.setPen(QPen(color, 1.4, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+    p.drawPath(line);
+    p.restore();
+}
+
 Style::Style(const Scheme& scheme, double scale) : m_scheme(scheme), m_scale(scale) {}
 
 void Style::polish(QWidget* widget)
 {
     QCommonStyle::polish(widget);
-    // Toolbar buttons rise under the mouse. Nothing else needs hover repaints.
-    if (qobject_cast<QToolButton*>(widget))
+    // These react to the mouse. Each repaints only when it is entered and left.
+    if (qobject_cast<QAbstractButton*>(widget) || qobject_cast<QComboBox*>(widget) || qobject_cast<QAbstractSlider*>(widget))
         widget->setAttribute(Qt::WA_Hover, true);
 }
 
 int Style::pixelMetric(PixelMetric metric, const QStyleOption* option, const QWidget* widget) const
 {
+    if (!isClassic()) {
+        switch (metric) {
+        case PM_DefaultFrameWidth: return 1;
+        case PM_ScrollBarExtent: return scaled(11);
+        case PM_ScrollBarSliderMin: return scaled(24);
+        case PM_IndicatorWidth:
+        case PM_IndicatorHeight:
+        case PM_ExclusiveIndicatorWidth:
+        case PM_ExclusiveIndicatorHeight: return scaled(14);
+        case PM_ButtonShiftHorizontal:
+        case PM_ButtonShiftVertical:
+        case PM_ButtonDefaultIndicator: return 0;
+        case PM_MenuPanelWidth: return 1;
+        case PM_MenuVMargin: return 4;
+        case PM_MenuBarItemSpacing: return 2;
+        case PM_MenuBarHMargin: return 4;
+        case PM_ToolBarItemSpacing: return 4;
+        case PM_ToolBarItemMargin: return 3;
+        case PM_HeaderMargin: return scaled(6);
+        case PM_SliderThickness:
+        case PM_SliderLength:
+        case PM_SliderControlThickness: return scaled(14);
+        default: break;
+        }
+    }
     switch (metric) {
     case PM_DefaultFrameWidth: return 2;
     case PM_ButtonMargin: return scaled(6);
@@ -117,6 +220,39 @@ int Style::styleHint(StyleHint hint, const QStyleOption* option, const QWidget* 
 QSize Style::sizeFromContents(ContentsType type, const QStyleOption* option, const QSize& size, const QWidget* widget) const
 {
     QSize out = QCommonStyle::sizeFromContents(type, option, size, widget);
+    if (!isClassic()) {
+        switch (type) {
+        case CT_PushButton:
+            out.setWidth(qMax(out.width() + scaled(12), scaled(78)));
+            out.setHeight(qMax(out.height(), scaled(26)));
+            return out;
+        case CT_LineEdit:
+        case CT_ComboBox:
+        case CT_SpinBox:
+            out.setHeight(qMax(out.height(), scaled(25)));
+            return out;
+        case CT_MenuBarItem:
+            return QSize(size.width() + scaled(16), size.height() + scaled(8));
+        case CT_MenuItem:
+            if (const auto* item = qstyleoption_cast<const QStyleOptionMenuItem*>(option)) {
+                if (item->menuItemType == QStyleOptionMenuItem::Separator)
+                    return QSize(size.width(), scaled(9));
+                return QSize(size.width() + scaled(52), qMax(size.height(), option->fontMetrics.height()) + scaled(8));
+            }
+            return out;
+        case CT_ItemViewItem:
+            out.setHeight(qMax(out.height(), option->fontMetrics.height() + scaled(5)));
+            return out;
+        case CT_HeaderSection:
+            out.setHeight(out.height() + scaled(4));
+            return out;
+        case CT_ProgressBar:
+            out.setHeight(scaled(8));
+            return out;
+        default:
+            return out;
+        }
+    }
     switch (type) {
     case CT_PushButton:
         out.setWidth(qMax(out.width() + scaled(8), scaled(75)));
@@ -141,6 +277,8 @@ QSize Style::sizeFromContents(ContentsType type, const QStyleOption* option, con
 
 void Style::drawPrimitive(PrimitiveElement element, const QStyleOption* o, QPainter* p, const QWidget* w) const
 {
+    if (!isClassic() && drawModernPrimitive(element, o, p, w))
+        return;
     const QPalette& pal = o->palette;
     const QRect& r = o->rect;
     const bool down = o->state & (State_Sunken | State_On);
@@ -284,6 +422,8 @@ void Style::drawPrimitive(PrimitiveElement element, const QStyleOption* o, QPain
 
 void Style::drawControl(ControlElement element, const QStyleOption* o, QPainter* p, const QWidget* w) const
 {
+    if (!isClassic() && drawModernControl(element, o, p, w))
+        return;
     const QPalette& pal = o->palette;
     const QRect& r = o->rect;
 
@@ -404,6 +544,8 @@ void Style::drawControl(ControlElement element, const QStyleOption* o, QPainter*
 
 void Style::drawComplexControl(ComplexControl control, const QStyleOptionComplex* o, QPainter* p, const QWidget* w) const
 {
+    if (!isClassic() && drawModernComplex(control, o, p, w))
+        return;
     if (control == CC_ComboBox) {
         if (const auto* combo = qstyleoption_cast<const QStyleOptionComboBox*>(o)) {
             const QBrush fill = o->palette.brush(combo->state & State_Enabled ? QPalette::Base : QPalette::Button);

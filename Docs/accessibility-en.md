@@ -6,7 +6,7 @@ This app aims to be usable with a screen reader, with the keyboard alone, and wi
 
 - **Screen readers:** works through AT-SPI. Controls have names and roles, and graphs and meters give their current value as a description.
 - **Keyboard:** everything in the main window can be reached without a mouse. Tab moves between controls, arrow keys move between tabs, Ctrl+Tab changes page, Enter and Space activate, Esc closes, Alt+Space opens the window menu, and Alt with the underlined letter opens menus. The focused control has a dotted outline, drawn thicker than usual.
-- **Contrast:** text meets WCAG AA (4.5:1) in all ten colour schemes, checked by an automated test. A High Contrast scheme is included.
+- **Contrast:** text meets WCAG AA (4.5:1) in all eleven themes, in both their light and dark versions, checked by an automated test. A High Contrast theme is included, in light and dark.
 - **Text size:** 100% to 200% in the settings. It is remembered, and the window grows to fit.
 - **Motion:** the app has no animation, so there is nothing for reduced-motion settings to turn off. Replay in the Flight Recorder only runs when you start it.
 - **Colour and sound:** nothing is told by colour alone, and the app makes no sound. Efficiency cores are marked P or E in their names, and graphs with two lines name each line beside the graph.

@@ -16,6 +16,7 @@
 #include <QMessageBox>
 #include <QMouseEvent>
 #include <QPainter>
+#include <QPainterPath>
 #include <QPlainTextEdit>
 #include <QPushButton>
 #include <QSlider>
@@ -91,7 +92,7 @@ protected:
         QPainter p(this);
         const Scheme& scheme = static_cast<const Style*>(QApplication::style())->scheme();
         const QBrush back(scheme.graphBack);
-        qDrawWinPanel(&p, rect(), palette(), true, &back);
+        sunkenPanel(&p, rect(), palette(), &back);
         const QRect area = rect().adjusted(2, 2, -2, -2);
         p.setClipRect(area);
         p.setPen(scheme.graphGrid);
@@ -125,13 +126,11 @@ protected:
             top = top > 0 ? top * 1.1 : 1.0;
         }
 
-        p.setRenderHint(QPainter::Antialiasing, true);
         const auto draw = [&](TraceChannel channel, const QColor& color) {
-            p.setPen(QPen(color, 1.4, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
             const int height = area.height() - 1;
             // More frames than pixels: each column shows its highest value, so spikes survive.
+            QPainterPath line;
             bool have = false;
-            QPoint previous;
             for (int x = 0; x < area.width(); ++x) {
                 const std::size_t from = static_cast<std::size_t>(x) * size / static_cast<std::size_t>(area.width());
                 const std::size_t to = std::max(from + 1, static_cast<std::size_t>(x + 1) * size / static_cast<std::size_t>(area.width()));
@@ -147,14 +146,14 @@ protected:
                     have = false; // a missing sample is a gap
                     continue;
                 }
-                const QPoint point(area.left() + x, area.bottom() - static_cast<int>(std::min(1.0, best / top) * height));
+                const QPointF point(area.left() + x, area.bottom() - std::min(1.0, best / top) * height);
                 if (have)
-                    p.drawLine(previous, point);
+                    line.lineTo(point);
                 else
-                    p.drawPoint(point);
-                previous = point;
+                    line.moveTo(point);
                 have = true;
             }
+            strokeSeries(p, line, color, area.bottom());
         };
         draw(m_panel.channel, scheme.graphLine);
         if (m_panel.hasSecond)

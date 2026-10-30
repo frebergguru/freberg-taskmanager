@@ -23,12 +23,22 @@ OptionsDialog::OptionsDialog(QWidget* parent) : QDialog(parent)
     auto* appearance = new QGroupBox(tr("Appearance"), this);
     auto* appearanceForm = new QFormLayout(appearance);
 
-    auto* scheme = new QComboBox(appearance);
-    for (const Scheme& item : schemes())
-        scheme->addItem(QCoreApplication::translate("fg::Scheme", item.name), item.id);
-    scheme->setCurrentIndex(scheme->findData(settings.scheme()));
-    connect(scheme, &QComboBox::currentIndexChanged, this, [scheme, &settings] { settings.setValue("appearance/scheme", scheme->currentData()); });
-    appearanceForm->addRow(tr("&Scheme:"), scheme);
+    const Scheme& current = schemeById(settings.scheme());
+    auto* theme = new QComboBox(appearance);
+    for (const QString& family : schemeFamilies())
+        theme->addItem(QCoreApplication::translate("fg::Scheme", schemeFor(family, false).name), family);
+    theme->setCurrentIndex(theme->findData(current.family));
+    appearanceForm->addRow(tr("&Theme:"), theme);
+
+    auto* mode = new QComboBox(appearance);
+    mode->addItem(tr("Light"), false);
+    mode->addItem(tr("Dark"), true);
+    mode->setCurrentIndex(current.isDark ? 1 : 0);
+    appearanceForm->addRow(tr("&Mode:"), mode);
+
+    const auto saveTheme = [theme, mode, &settings] { settings.setValue("appearance/scheme", schemeFor(theme->currentData().toString(), mode->currentData().toBool()).id); };
+    connect(theme, &QComboBox::currentIndexChanged, this, saveTheme);
+    connect(mode, &QComboBox::currentIndexChanged, this, saveTheme);
 
     auto* saturation = new QSpinBox(appearance);
     saturation->setRange(0, 10);

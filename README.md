@@ -1,6 +1,6 @@
 # Freberg.guru - Task manager
 
-A small system monitor and task manager for Linux, with the look of a classic late-1990s desktop, drawn at the sharpness of today's screens. It is written in C++20 with Qt 6 Widgets and is built to use as little of your computer as possible.
+A small system monitor and task manager for Linux, with the look of a classic late-1990s desktop, drawn at the sharpness of today's screens. Prefer something current? A flat Modern theme is one menu click away. It is written in C++20 with Qt 6 Widgets and is built to use as little of your computer as possible.
 
 ## What it does
 
@@ -22,7 +22,7 @@ A small system monitor and task manager for Linux, with the look of a classic la
 | Benchmarks | CPU, memory and disk tests with saved results |
 | Flight Recorder | Record, save, open, scrub and replay; ask "why was it slow?"; compare recordings; CSV and JSON export; save automatically on a CPU spike |
 
-Also: a small popout readout with skins, a full-screen load view (F12), a tray meter, threshold alerts, ten colour schemes (with an option to follow the system's light, dark and high contrast settings), text size from 100% to 200%, English and Norwegian.
+Also: a small popout readout with skins, a full-screen load view (F12), a tray meter, threshold alerts, eleven themes, each in light and dark (the classic ones, Modern with no effects, and a separate Neon Glow), with an option to follow the system's light, dark and high contrast settings, text size from 100% to 200%, English and Norwegian.
 
 ## What you can rely on
 

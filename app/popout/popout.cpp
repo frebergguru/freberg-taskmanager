@@ -329,6 +329,22 @@ void Popout::paintChannel(QPainter& p, const QRect& area, const Channel& channel
     }
     const QRect in = area.adjusted(3, 2, -3, -2);
 
+    // One segment means a plain solid bar.
+    const auto drawHorizontalMeter = [&](QPainter& painter, const QRect& bar) {
+        if (segments == 1) {
+            const QRect thin(bar.left(), bar.center().y() - 2, bar.width(), 5);
+            painter.fillRect(thin, unlit);
+            if (known)
+                painter.fillRect(QRectF(thin.left(), thin.top(), thin.width() * channel.fraction, thin.height()), lit);
+            return;
+        }
+        const double step = static_cast<double>(bar.width()) / segments;
+        for (int i = 0; i < segments; ++i) {
+            const bool on = known && (i + 0.5) / segments <= channel.fraction;
+            painter.fillRect(QRectF(bar.left() + i * step, bar.top(), std::max(1.0, step - 1), bar.height()), on ? lit : unlit);
+        }
+    };
+
     const auto drawText = [&](const QRect& where) {
         p.setPen(m_skin.ink);
         p.drawText(where, Qt::AlignLeft | Qt::AlignVCenter, channel.label);
@@ -345,23 +361,14 @@ void Popout::paintChannel(QPainter& p, const QRect& area, const Channel& channel
         p.setPen(known ? m_skin.ink : m_skin.inkDim);
         p.drawText(QRect(in.right() - valueWidth, in.top(), valueWidth, in.height()), Qt::AlignRight | Qt::AlignVCenter, channel.valueText);
         const QRect bar(in.left() + labelWidth, in.top() + 2, in.width() - labelWidth - valueWidth - 2, in.height() - 4);
-        if (bar.width() > 2) {
-            const double step = static_cast<double>(bar.width()) / segments;
-            for (int i = 0; i < segments; ++i) {
-                const bool on = known && (i + 0.5) / segments <= channel.fraction;
-                p.fillRect(QRectF(bar.left() + i * step, bar.top(), std::max(1.0, step - 1), bar.height()), on ? lit : unlit);
-            }
-        }
+        if (bar.width() > 2)
+            drawHorizontalMeter(p, bar);
         break;
     }
     case Skin::Bars: {
         drawText(QRect(in.left(), in.top(), in.width(), line));
         const QRect bar(in.left(), in.top() + line + 2, in.width(), in.height() - line - 2);
-        const double step = static_cast<double>(bar.width()) / segments;
-        for (int i = 0; i < segments; ++i) {
-            const bool on = known && (i + 0.5) / segments <= channel.fraction;
-            p.fillRect(QRectF(bar.left() + i * step, bar.top(), std::max(1.0, step - 1), bar.height()), on ? lit : unlit);
-        }
+        drawHorizontalMeter(p, bar);
         break;
     }
     case Skin::Vertical: {

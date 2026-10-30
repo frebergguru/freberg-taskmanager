@@ -36,6 +36,7 @@ set(CMAKE_AUTOMOC ON)
 add_library(fg_appearance STATIC
     app/style/scheme.cpp
     app/style/style.cpp
+    app/style/style_modern.cpp
 )
 target_link_libraries(fg_appearance PUBLIC Qt6::Core Qt6::Gui Qt6::Widgets)
 target_include_directories(fg_appearance PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

@@ -6,7 +6,7 @@ Denne appen skal kunne brukes med skjermleser, med bare tastatur og med nedsatt 
 
 - **Skjermlesere:** virker gjennom AT-SPI. Kontroller har navn og roller, og grafer og målere oppgir verdien sin som en beskrivelse.
 - **Tastatur:** alt i hovedvinduet kan nås uten mus. Tab flytter mellom kontroller, piltastene flytter mellom faner, Ctrl+Tab bytter side, Enter og mellomrom aktiverer, Esc lukker, Alt+mellomrom åpner vindusmenyen, og Alt med den understrekede bokstaven åpner menyer. Kontrollen som har fokus, får en prikket ramme som er tykkere enn vanlig.
-- **Kontrast:** tekst oppfyller WCAG AA (4,5:1) i alle de ti fargeskjemaene, og det sjekkes av en automatisk test. Et skjema med høy kontrast følger med.
+- **Kontrast:** tekst oppfyller WCAG AA (4,5:1) i alle de elleve temaene, både i lys og mørk utgave, og det sjekkes av en automatisk test. Et tema med høy kontrast følger med, både lyst og mørkt.
 - **Tekststørrelse:** 100 % til 200 % i innstillingene. Valget huskes, og vinduet vokser så alt får plass.
 - **Bevegelse:** appen har ingen animasjoner, så det er ingenting for innstillinger for redusert bevegelse å slå av. Avspilling i ferdsskriveren går bare når du starter den selv.
 - **Farge og lyd:** ingenting formidles bare med farge, og appen lager ingen lyd. Effektivitetskjerner er merket P eller E i navnet, og grafer med to linjer sier hvilken linje som er hva ved siden av grafen.

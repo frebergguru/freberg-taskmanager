@@ -6,6 +6,7 @@
 #include <QApplication>
 #include <QKeyEvent>
 #include <QPainter>
+#include <QPainterPath>
 #include <cmath>
 
 namespace fg {
@@ -19,24 +20,23 @@ void drawHistory(QPainter& p, const QRect& area, const History& history, const Q
         p.drawLine(x, area.top(), x, area.bottom());
     for (int y = area.bottom(); y >= area.top(); y -= 40)
         p.drawLine(area.left(), y, area.right(), y);
-    p.setRenderHint(QPainter::Antialiasing, true);
-    p.setPen(QPen(line, 2.5, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
     const std::size_t size = history.size();
+    QPainterPath path;
     bool have = false;
-    QPoint previous;
     for (std::size_t back = 0; back < size && static_cast<int>(back) * 4 < area.width(); ++back) {
         const float value = history.at(size - 1 - back);
         if (std::isnan(value)) {
             have = false;
             continue;
         }
-        const QPoint point(area.right() - static_cast<int>(back) * 4, area.bottom() - static_cast<int>(std::min(1.0, static_cast<double>(value) / 100.0) * (area.height() - 1)));
+        const QPointF point(area.right() - static_cast<double>(back) * 4, area.bottom() - std::min(1.0, static_cast<double>(value) / 100.0) * (area.height() - 1));
         if (have)
-            p.drawLine(previous, point);
-        previous = point;
+            path.lineTo(point);
+        else
+            path.moveTo(point);
         have = true;
     }
-    p.setRenderHint(QPainter::Antialiasing, false);
+    strokeSeries(p, path, line, area.bottom());
 }
 
 } // namespace

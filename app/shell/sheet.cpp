@@ -1,7 +1,10 @@
 #include "sheet.h"
 
+#include "../style/style.h"
+
 #include <QKeyEvent>
 #include <QPainter>
+#include <QPainterPath>
 #include <QShortcut>
 #include <QStackedWidget>
 #include <QStyleOption>
@@ -20,17 +23,56 @@ SheetTab::SheetTab(const QString& text, QWidget* parent) : QAbstractButton(paren
     setAutoExclusive(true);
     setFocusPolicy(Qt::StrongFocus);
     setAccessibleName(text);
+    setAttribute(Qt::WA_Hover, true);
 }
 
 QSize SheetTab::sizeHint() const
 {
     const QFontMetrics metrics = fontMetrics();
+    if (currentScheme().design != Design::Classic)
+        return QSize(metrics.horizontalAdvance(text()) + 4 * metrics.averageCharWidth() + 8, metrics.height() + 12);
     return QSize(metrics.horizontalAdvance(text()) + 2 * metrics.averageCharWidth() + 8, metrics.height() + 8);
+}
+
+// A row in the sidebar: a soft fill when chosen, with a short bar in the accent colour
+// so that the choice is shown by shape as well as by colour.
+void SheetTab::paintFlat(QPainter& p)
+{
+    const Scheme& s = currentScheme();
+    p.setRenderHint(QPainter::Antialiasing, true);
+    const QRectF row = QRectF(rect()).adjusted(2, 1, -2, -1);
+    QPainterPath path;
+    path.addRoundedRect(row, 5, 5);
+    if (isChecked()) {
+        glowStroke(p, path, s.accent, 3);
+        p.fillPath(path, s.hover);
+        QPainterPath bar;
+        bar.addRoundedRect(QRectF(row.left() + 3, row.top() + row.height() * 0.2, 3, row.height() * 0.6), 1.5, 1.5);
+        p.fillPath(bar, s.accent);
+    } else if (underMouse() && isEnabled()) {
+        p.fillPath(path, s.hover);
+    }
+    p.setPen(isEnabled() ? s.text : s.disabledText);
+    QFont chosen = font();
+    chosen.setBold(isChecked());
+    p.setFont(chosen);
+    const int indent = 2 * fontMetrics().averageCharWidth() + 4;
+    p.drawText(rect().adjusted(indent, 0, -4, 0), Qt::AlignLeft | Qt::AlignVCenter | Qt::TextShowMnemonic, text());
+    if (hasFocus()) {
+        QStyleOptionFocusRect focus;
+        focus.initFrom(this);
+        focus.rect = rect().adjusted(2, 1, -2, -1);
+        style()->drawPrimitive(QStyle::PE_FrameFocusRect, &focus, &p, this);
+    }
 }
 
 void SheetTab::paintEvent(QPaintEvent*)
 {
     QPainter p(this);
+    if (currentScheme().design != Design::Classic) {
+        paintFlat(p);
+        return;
+    }
     const QPalette pal = palette();
     const QRect r = rect();
     const bool chosen = isChecked();
@@ -150,6 +192,10 @@ QSize Sheet::minimumSizeHint() const
     // The tabs and page are placed by hand, so the layout can't work this out itself.
     const int inset = 6;
     const QSize page = m_stack->minimumSizeHint();
+    if (m_sidebarWidth > 0) {
+        const int rows = m_tabs.isEmpty() ? 0 : m_tabs.size() * m_tabs.first()->sizeHint().height();
+        return QSize(m_sidebarWidth + page.width() + 2 * inset, qMax(rows, page.height() + 2 * inset));
+    }
     return QSize(page.width() + 2 * inset, m_tabsHeight + page.height() + 2 * inset);
 }
 
@@ -165,10 +211,40 @@ bool Sheet::event(QEvent* event)
     return QWidget::event(event);
 }
 
+void Sheet::relayoutSidebar()
+{
+    int wide = 0;
+    for (const SheetTab* tab : std::as_const(m_tabs))
+        wide = qMax(wide, tab->sizeHint().width());
+    QFont chosen = font();
+    chosen.setBold(true); // the chosen row is bold, so all rows make room for that
+    wide += QFontMetrics(chosen).averageCharWidth() * 2;
+    int y = 0;
+    for (SheetTab* tab : std::as_const(m_tabs)) {
+        const int high = tab->sizeHint().height();
+        tab->setGeometry(0, y, wide, high);
+        tab->raise();
+        y += high;
+    }
+    if (m_sidebarWidth != wide || m_tabsHeight != 0) {
+        m_sidebarWidth = wide;
+        m_tabsHeight = 0;
+        updateGeometry();
+    }
+    const int gap = 8;
+    m_stack->setGeometry(wide + gap, 2, qMax(0, width() - wide - gap - 2), qMax(0, height() - 4));
+    update();
+}
+
 void Sheet::relayout()
 {
     if (m_tabs.isEmpty())
         return;
+    if (currentScheme().design != Design::Classic) {
+        relayoutSidebar();
+        return;
+    }
+    m_sidebarWidth = 0;
 
     // Fill rows in order, then bring the row with the chosen tab to the front.
     QList<QList<SheetTab*>> rows;
@@ -226,6 +302,8 @@ void Sheet::relayout()
 
 void Sheet::paintEvent(QPaintEvent*)
 {
+    if (m_sidebarWidth > 0)
+        return; // the rows and the page draw themselves
     QStylePainter p(this);
     QStyleOptionFrame frame;
     frame.initFrom(this);

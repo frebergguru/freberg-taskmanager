@@ -5,6 +5,7 @@
 #include <QAccessible>
 #include <QApplication>
 #include <QPainter>
+#include <QPainterPath>
 #include <cmath>
 #include <qdrawutil.h>
 
@@ -47,7 +48,7 @@ void Graph::paintEvent(QPaintEvent*)
     QPainter p(this);
     const Scheme& scheme = static_cast<const Style*>(QApplication::style())->scheme();
     const QBrush back(scheme.graphBack);
-    qDrawWinPanel(&p, rect(), palette(), true, &back);
+    sunkenPanel(&p, rect(), palette(), &back);
     const QRect area = rect().adjusted(2, 2, -2, -2);
     p.setClipRect(area);
 
@@ -73,13 +74,11 @@ void Graph::paintEvent(QPaintEvent*)
     }
 
     const int height = area.height() - 1;
-    p.setRenderHint(QPainter::Antialiasing, true); // the grid above stays sharp, the lines stay smooth
     for (const Series& series : std::as_const(m_series)) {
-        p.setPen(QPen(series.secondary ? scheme.graphLine2 : scheme.graphLine, 1.4, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
         const std::size_t size = series.history->size();
         const std::size_t count = std::min<std::size_t>(size, static_cast<std::size_t>(visible));
+        QPainterPath line;
         bool havePrevious = false;
-        QPoint previous;
         for (std::size_t back = 0; back < count; ++back) {
             const float value = series.history->at(size - 1 - back);
             if (std::isnan(value)) {
@@ -87,14 +86,14 @@ void Graph::paintEvent(QPaintEvent*)
                 continue;
             }
             const double fraction = std::min(1.0, static_cast<double>(value) / top);
-            const QPoint point(area.right() - static_cast<int>(back) * kPixelsPerSample, area.bottom() - static_cast<int>(fraction * height));
+            const QPointF point(area.right() - static_cast<double>(back) * kPixelsPerSample, area.bottom() - fraction * height);
             if (havePrevious)
-                p.drawLine(previous, point);
+                line.lineTo(point);
             else
-                p.drawPoint(point);
-            previous = point;
+                line.moveTo(point);
             havePrevious = true;
         }
+        strokeSeries(p, line, series.secondary ? scheme.graphLine2 : scheme.graphLine, area.bottom());
     }
 }
 

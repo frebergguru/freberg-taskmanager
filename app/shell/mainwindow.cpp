@@ -3,6 +3,7 @@
 #include "../format.h"
 #include "../settings.h"
 #include "../style/appearance.h"
+#include "../style/style.h"
 #include "../widgets/icons.h"
 #include "../popout/popout.h"
 #include "options.h"
@@ -12,6 +13,7 @@
 #include "tray.h"
 
 #include <QActionGroup>
+#include <QCoreApplication>
 #include <QApplication>
 #include <QCloseEvent>
 #include <QEvent>
@@ -152,6 +154,40 @@ void MainWindow::buildMenus()
     view->addAction(tr("&Popout Readout"), QKeySequence(Qt::Key_F11), this, &MainWindow::togglePopout);
     view->addAction(tr("&Full-Screen Load"), QKeySequence(Qt::Key_F12), this, &MainWindow::showScreensaver);
     view->addSeparator();
+    QMenu* themes = view->addMenu(tr("&Theme"));
+    auto* familyGroup = new QActionGroup(this);
+    auto* modeGroup = new QActionGroup(this);
+    const auto refreshThemeMenu = [familyGroup, modeGroup] {
+        const Scheme& current = schemeById(Settings::instance().scheme());
+        for (QAction* action : familyGroup->actions())
+            action->setChecked(action->data().toString() == current.family);
+        for (QAction* action : modeGroup->actions())
+            action->setChecked(action->data().toBool() == current.isDark);
+    };
+    for (const QString& family : schemeFamilies()) {
+        QAction* action = themes->addAction(QCoreApplication::translate("fg::Scheme", schemeFor(family, false).name));
+        action->setCheckable(true);
+        action->setData(family);
+        familyGroup->addAction(action);
+        connect(action, &QAction::triggered, this, [family] {
+            Settings::instance().setValue("appearance/scheme", schemeFor(family, schemeById(Settings::instance().scheme()).isDark).id);
+        });
+    }
+    themes->addSeparator();
+    for (const bool dark : {false, true}) {
+        QAction* action = themes->addAction(dark ? tr("&Dark") : tr("&Light"));
+        action->setCheckable(true);
+        action->setData(dark);
+        modeGroup->addAction(action);
+        connect(action, &QAction::triggered, this, [dark] {
+            Settings::instance().setValue("appearance/scheme", schemeFor(schemeById(Settings::instance().scheme()).family, dark).id);
+        });
+    }
+    refreshThemeMenu();
+    connect(&Settings::instance(), &Settings::changed, themes, [refreshThemeMenu](const QString& key) {
+        if (key == QLatin1String("appearance/scheme"))
+            refreshThemeMenu();
+    });
     QMenu* speed = view->addMenu(tr("&Update Speed"));
     auto* speeds = new QActionGroup(this);
     const struct {
@@ -374,7 +410,14 @@ void MainWindow::paintEvent(QPaintEvent*)
 {
     QPainter p(this);
     const QBrush face = palette().brush(QPalette::Window);
-    qDrawWinButton(&p, rect(), palette(), false, &face);
+    if (currentScheme().design == Design::Classic) {
+        qDrawWinButton(&p, rect(), palette(), false, &face);
+        return;
+    }
+    // Flat: one thin line, and the same width of edge to grab for resizing.
+    p.fillRect(rect(), face);
+    p.setPen(currentScheme().design == Design::Neon ? currentScheme().accent : currentScheme().border);
+    p.drawRect(rect().adjusted(0, 0, -1, -1));
 }
 
 void MainWindow::changeEvent(QEvent* event)

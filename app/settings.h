@@ -18,7 +18,7 @@ public:
     void sync() { m_store.sync(); }
     QString fileName() const { return m_store.fileName(); }
 
-    QString scheme() const { return value("appearance/scheme", "standard").toString(); }
+    QString scheme() const { return value("appearance/scheme", "classic-light").toString(); }
     int saturation() const { return value("appearance/saturation", 10).toInt(); }
     int textPercent() const { return qBound(100, value("appearance/textPercent", 100).toInt(), 200); }
     bool followSystem() const { return value("appearance/followSystem", false).toBool(); }

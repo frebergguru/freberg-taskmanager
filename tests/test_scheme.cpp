@@ -29,8 +29,52 @@ private slots:
         check(s.disabledText, s.face, 4.5, "disabled text on face");
         check(s.selectionText, s.selection, 4.5, "selected text");
         check(s.titleText, s.titleStart, 4.5, "title text"); // the title sits at the left end
+        if (s.design != Design::Classic) {
+            check(s.accent, s.graphBack, 3.0, "accent");
+            check(s.text, s.hover, 4.5, "text on a hovered or chosen row");
+        }
         check(s.graphLine, s.graphBack, 3.0, "graph line");
         check(s.graphLine2, s.graphBack, 3.0, "second graph line");
+    }
+
+    void everyThemeHasALightAndADarkMember()
+    {
+        const QStringList families = schemeFamilies();
+        QCOMPARE(families.size(), 11);
+        QCOMPARE(schemes().size(), 22);
+        for (const QString& family : families) {
+            const Scheme& light = schemeFor(family, false);
+            const Scheme& dark = schemeFor(family, true);
+            QCOMPARE(light.family, family);
+            QCOMPARE(dark.family, family);
+            QVERIFY(!light.isDark);
+            QVERIFY(dark.isDark);
+            QCOMPARE(light.design, dark.design);
+            // A dark member really is darker, on the page as well as the window.
+            QVERIFY2(contrastRatio(dark.base, QColor(0, 0, 0)) < contrastRatio(light.base, QColor(0, 0, 0)), qPrintable(family));
+            QVERIFY2(contrastRatio(dark.face, QColor(0, 0, 0)) < contrastRatio(light.face, QColor(0, 0, 0)), qPrintable(family));
+        }
+    }
+
+    void onlyTheNeonThemeHasTheNeonDesign()
+    {
+        int neon = 0, modern = 0;
+        for (const Scheme& s : schemes()) {
+            neon += s.design == Design::Neon;
+            modern += s.design == Design::Modern;
+        }
+        QCOMPARE(neon, 2);
+        QCOMPARE(modern, 2);
+        QCOMPARE(schemeFor("neon", false).design, Design::Neon);
+        QCOMPARE(schemeFor("modern", true).design, Design::Modern);
+    }
+
+    void earlierSavedChoicesStillWork()
+    {
+        QCOMPARE(schemeById("standard").id, QStringLiteral("classic-light")); // also what a new install gets
+        QCOMPARE(schemeById("dark").id, QStringLiteral("classic-dark"));
+        QCOMPARE(schemeById("green").id, QStringLiteral("green-dark"));
+        QCOMPARE(schemeById("no-such-theme").id, QStringLiteral("classic-light"));
     }
 };
 

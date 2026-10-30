@@ -22,6 +22,9 @@ signals:
 protected:
     void paintEvent(QPaintEvent* event) override;
     void keyPressEvent(QKeyEvent* event) override;
+
+private:
+    void paintFlat(QPainter& p);
 };
 
 class Sheet final : public QWidget {
@@ -50,11 +53,13 @@ protected:
 
 private:
     void relayout();
+    void relayoutSidebar();
 
     QList<SheetTab*> m_tabs;
     QStackedWidget* m_stack;
     int m_current = -1;
     int m_tabsHeight = 0;
+    int m_sidebarWidth = 0; // above 0 only in the flat designs
 };
 
 } // namespace fg

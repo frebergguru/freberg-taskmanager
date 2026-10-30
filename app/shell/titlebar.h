@@ -18,6 +18,7 @@ public:
 
 protected:
     void paintEvent(QPaintEvent* event) override;
+    bool event(QEvent* event) override;
 
 private:
     Kind m_kind;
