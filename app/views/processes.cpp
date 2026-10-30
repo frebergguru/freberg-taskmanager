@@ -89,7 +89,7 @@ ProcessesView::ProcessesView(SamplerHub& hub)
 
     applyHighlightSetting();
     connect(&Settings::instance(), &Settings::changed, this, [this](const QString& key) {
-        if (key == QLatin1String("general/rowHighlight"))
+        if (key == QLatin1String("app/rowHighlight"))
             applyHighlightSetting();
     });
     connect(m_filter, &QLineEdit::textChanged, m_model, &ProcessModel::setFilter);

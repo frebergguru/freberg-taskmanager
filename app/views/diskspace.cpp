@@ -11,6 +11,7 @@
 #include <QHBoxLayout>
 #include <QHeaderView>
 #include <QLabel>
+#include <QLineEdit>
 #include <QLocale>
 #include <QMessageBox>
 #include <QMouseEvent>
@@ -201,6 +202,7 @@ DiskSpaceView::DiskSpaceView()
     label->setBuddy(m_where);
     m_where->setEditable(true);
     m_where->setAccessibleName(tr("Folder to scan"));
+    m_where->lineEdit()->setAccessibleName(tr("Folder to scan"));
     m_where->addItem(QDir::homePath());
     for (const QStorageInfo& volume : QStorageInfo::mountedVolumes())
         if (volume.isValid() && volume.isReady() && !volume.isReadOnly() && m_where->findText(volume.rootPath()) < 0)

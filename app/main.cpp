@@ -1,6 +1,7 @@
 #include "platform/headless.h"
 #include "popout/popout.h"
 #include "settings.h"
+#include "shell/accessible.h"
 #include "shell/mainwindow.h"
 #include "style/appearance.h"
 #include "style/style.h"
@@ -124,6 +125,7 @@ int main(int argc, char** argv)
         QApplication::installTranslator(&translator);
     QLocale::setDefault(locale);
 
+    installAccessibility();
     installAppearance();
 
     SamplerHub hub;

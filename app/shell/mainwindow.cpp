@@ -73,21 +73,21 @@ MainWindow::MainWindow(SamplerHub& hub) : QWidget(nullptr, Qt::Window | Qt::Fram
     connect(&Settings::instance(), &Settings::changed, this, [this](const QString& key) {
         if (key.startsWith(QLatin1String("appearance/")))
             applyAppearance();
-        else if (key == QLatin1String("general/updateMs"))
+        else if (key == QLatin1String("app/updateMs"))
             m_hub.setIntervalMs(Settings::instance().updateMs());
     });
 
     m_hub.setIntervalMs(Settings::instance().updateMs());
-    if (Settings::instance().closeToTray() || Settings::instance().value("general/trayMeter", false).toBool() || Settings::instance().value("alerts/cpuPercent", 0).toInt() > 0
+    if (Settings::instance().closeToTray() || Settings::instance().value("app/trayMeter", false).toBool() || Settings::instance().value("alerts/cpuPercent", 0).toInt() > 0
         || Settings::instance().value("alerts/memoryPercent", 0).toInt() > 0 || Settings::instance().value("alerts/temperatureC", 0).toInt() > 0)
         m_tray = new TrayAndAlerts(m_hub, this);
     connect(&Settings::instance(), &Settings::changed, this, [this](const QString& key) {
-        if (!m_tray && (key.startsWith(QLatin1String("alerts/")) || key == QLatin1String("general/closeToTray") || key == QLatin1String("general/trayMeter")))
+        if (!m_tray && (key.startsWith(QLatin1String("alerts/")) || key == QLatin1String("app/closeToTray") || key == QLatin1String("app/trayMeter")))
             m_tray = new TrayAndAlerts(m_hub, this);
     });
     resize(kBaseWidth, kBaseHeight);
     applyAppearance();
-    m_sheet->setCurrentIndex(Settings::instance().value("general/lastView", 0).toInt());
+    m_sheet->setCurrentIndex(Settings::instance().value("app/lastView", 0).toInt());
 }
 
 MainWindow::~MainWindow()
@@ -131,9 +131,9 @@ void MainWindow::buildMenus()
     QMenu* options = m_menus->addMenu(tr("&Options"));
     QAction* onTop = options->addAction(tr("&Always On Top"));
     onTop->setCheckable(true);
-    onTop->setChecked(Settings::instance().value("general/alwaysOnTop", false).toBool());
+    onTop->setChecked(Settings::instance().value("app/alwaysOnTop", false).toBool());
     connect(onTop, &QAction::toggled, this, [this](bool on) {
-        Settings::instance().setValue("general/alwaysOnTop", on);
+        Settings::instance().setValue("app/alwaysOnTop", on);
         setWindowFlag(Qt::WindowStaysOnTopHint, on);
         show();
     });
@@ -200,7 +200,7 @@ void MainWindow::onCurrentChanged(int index)
     if (m_currentIndex >= 0 && m_views[m_currentIndex])
         m_views[m_currentIndex]->closed();
     m_currentIndex = index;
-    Settings::instance().setValue("general/lastView", index);
+    Settings::instance().setValue("app/lastView", index);
 
     if (!m_views[index]) {
         m_views[index] = m_defs[index].create(m_hub);
@@ -306,7 +306,7 @@ void MainWindow::closeEvent(QCloseEvent* event)
 
 void MainWindow::setUpdateSpeed(int intervalMs)
 {
-    Settings::instance().setValue("general/updateMs", intervalMs);
+    Settings::instance().setValue("app/updateMs", intervalMs);
 }
 
 void MainWindow::showOptions()

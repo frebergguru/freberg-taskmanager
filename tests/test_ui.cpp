@@ -4,6 +4,7 @@
 #include "app/popout/popout.h"
 #include "app/popout/skin.h"
 #include "app/settings.h"
+#include "app/shell/accessible.h"
 #include "app/shell/mainwindow.h"
 #include "app/shell/sheet.h"
 #include "app/style/appearance.h"
@@ -11,7 +12,9 @@
 #include "app/views/processes.h"
 
 #include <QAbstractItemModel>
+#include <QAccessible>
 #include <QApplication>
+#include <QSettings>
 #include <QDir>
 #include <QProcess>
 #include <QPushButton>
@@ -31,6 +34,7 @@ private slots:
     void initTestCase()
     {
         QStandardPaths::setTestModeEnabled(true);
+        installAccessibility();
         installAppearance();
         m_hub = new SamplerHub(this);
     }
@@ -90,6 +94,59 @@ private slots:
         QVERIFY(id.startTicks != 0);
         QVERIFY(m_hub->backend().signalProcess(id, ProcessSignal::End).ok());
         QVERIFY(sleeper.waitForFinished(3000));
+    }
+
+    void everyControlOnEveryPageHasARoleAndAName()
+    {
+        MainWindow window(*m_hub);
+        window.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&window));
+        QStringList unnamed;
+        int checked = 0;
+        for (int view = 0; view < window.viewCount(); ++view) {
+            window.openView(view);
+            QTest::qWait(30);
+            const std::function<void(QAccessibleInterface*)> walk = [&](QAccessibleInterface* item) {
+                if (!item || !item->isValid())
+                    return;
+                const QAccessible::Role role = item->role();
+                const bool interactive = role == QAccessible::PushButton || role == QAccessible::Button || role == QAccessible::PageTab || role == QAccessible::ComboBox
+                    || role == QAccessible::EditableText || role == QAccessible::CheckBox || role == QAccessible::RadioButton || role == QAccessible::Slider
+                    || role == QAccessible::SpinBox || role == QAccessible::Tree || role == QAccessible::List || role == QAccessible::Table || role == QAccessible::Chart;
+                if (interactive && !item->state().invisible) {
+                    ++checked;
+                    if (item->text(QAccessible::Name).trimmed().isEmpty()) {
+                        const QObject* object = item->object();
+                        unnamed << QStringLiteral("%1: %2 (%3)").arg(window.viewTitle(view), object ? QString::fromLatin1(object->metaObject()->className()) : QStringLiteral("?")).arg(int(role));
+                    }
+                }
+                // Rows of a list are many and are named by their cells; the list itself is what counts.
+                if (role == QAccessible::Tree || role == QAccessible::List || role == QAccessible::Table)
+                    return;
+                for (int child = 0; child < item->childCount(); ++child)
+                    walk(item->child(child));
+            };
+            walk(QAccessible::queryAccessibleInterface(&window));
+        }
+        QVERIFY(checked > 50);
+        unnamed.removeDuplicates();
+        QVERIFY2(unnamed.isEmpty(), qPrintable(unnamed.join(QStringLiteral("; "))));
+    }
+
+    void settingsReallyReachTheFile()
+    {
+        // Every group the app writes must read back from a separate object, as after a restart.
+        Settings& settings = Settings::instance();
+        const QString file = QSettings(QSettings::IniFormat, QSettings::UserScope, "Freberg.guru", "TaskManager").fileName();
+        for (const char* key : {"app/language", "app/updateMs", "appearance/textPercent", "popout/skin", "processes/sortColumn", "alerts/cpuPercent", "appHistory/enabled", "performance/selected"}) {
+            const QVariant before = settings.value(QLatin1String(key));
+            settings.setValue(QLatin1String(key), QStringLiteral("marker"));
+            settings.sync();
+            QSettings reader(file, QSettings::IniFormat);
+            QCOMPARE(reader.value(QLatin1String(key)).toString(), QStringLiteral("marker"));
+            settings.setValue(QLatin1String(key), before);
+        }
+        settings.sync();
     }
 
     void builtInSkinsAllLoad()

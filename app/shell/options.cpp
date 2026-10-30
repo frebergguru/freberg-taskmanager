@@ -57,21 +57,21 @@ OptionsDialog::OptionsDialog(QWidget* parent) : QDialog(parent)
     language->addItem(QStringLiteral("English"), QStringLiteral("en"));
     language->addItem(QStringLiteral("Norsk"), QStringLiteral("nb"));
     language->setCurrentIndex(language->findData(settings.language()));
-    connect(language, &QComboBox::currentIndexChanged, this, [language, &settings] { settings.setValue("general/language", language->currentData()); });
+    connect(language, &QComboBox::currentIndexChanged, this, [language, &settings] { settings.setValue("app/language", language->currentData()); });
     generalForm->addRow(tr("&Language (after restart):"), language);
 
     auto* units = new QComboBox(general);
     units->addItem(tr("Celsius"), false);
     units->addItem(tr("Fahrenheit"), true);
     units->setCurrentIndex(settings.fahrenheit() ? 1 : 0);
-    connect(units, &QComboBox::currentIndexChanged, this, [units, &settings] { settings.setValue("general/fahrenheit", units->currentData()); });
+    connect(units, &QComboBox::currentIndexChanged, this, [units, &settings] { settings.setValue("app/fahrenheit", units->currentData()); });
     generalForm->addRow(tr("Te&mperature unit:"), units);
 
     auto* rates = new QComboBox(general);
     rates->addItem(tr("Bytes per second"), false);
     rates->addItem(tr("Bits per second"), true);
     rates->setCurrentIndex(settings.networkBits() ? 1 : 0);
-    connect(rates, &QComboBox::currentIndexChanged, this, [rates, &settings] { settings.setValue("general/networkBits", rates->currentData()); });
+    connect(rates, &QComboBox::currentIndexChanged, this, [rates, &settings] { settings.setValue("app/networkBits", rates->currentData()); });
     generalForm->addRow(tr("&Network rates:"), rates);
 
     const auto addCheck = [&](const QString& label, const char* key, bool value) {
@@ -80,10 +80,10 @@ OptionsDialog::OptionsDialog(QWidget* parent) : QDialog(parent)
         connect(box, &QCheckBox::toggled, this, [key, &settings](bool on) { settings.setValue(key, on); });
         generalForm->addRow(box);
     };
-    addCheck(tr("&Highlight process rows"), "general/rowHighlight", settings.rowHighlight());
-    addCheck(tr("&Close to the notification area"), "general/closeToTray", settings.closeToTray());
-    addCheck(tr("Show this app's &own cost"), "general/selfMonitor", settings.selfMonitor());
-    addCheck(tr("Show a CPU &meter in the notification area"), "general/trayMeter", settings.value("general/trayMeter", false).toBool());
+    addCheck(tr("&Highlight process rows"), "app/rowHighlight", settings.rowHighlight());
+    addCheck(tr("&Close to the notification area"), "app/closeToTray", settings.closeToTray());
+    addCheck(tr("Show this app's &own cost"), "app/selfMonitor", settings.selfMonitor());
+    addCheck(tr("Show a CPU &meter in the notification area"), "app/trayMeter", settings.value("app/trayMeter", false).toBool());
     layout->addWidget(general);
 
     auto* alerts = new QGroupBox(tr("Alerts"), this);

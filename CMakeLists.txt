@@ -30,7 +30,7 @@ add_library(fg_core STATIC
 )
 target_include_directories(fg_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets DBus Sql)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets DBus Sql LinguistTools)
 set(CMAKE_AUTOMOC ON)
 
 add_library(fg_appearance STATIC
@@ -48,6 +48,7 @@ add_library(fg_app STATIC
     app/style/appearance.cpp
     app/popout/popout.cpp
     app/popout/skin.cpp
+    app/shell/accessible.cpp
     app/shell/mainwindow.cpp
     app/shell/screensaver.cpp
     app/shell/tray.cpp
@@ -84,6 +85,12 @@ target_link_libraries(fg_app PUBLIC fg_core fg_appearance Qt6::Widgets Qt6::DBus
 add_executable(freberg-taskmanager app/main.cpp)
 target_compile_definitions(freberg-taskmanager PRIVATE FG_VERSION="${PROJECT_VERSION}")
 target_link_libraries(freberg-taskmanager PRIVATE fg_app)
+
+qt_add_translations(freberg-taskmanager
+    TS_FILES i18n/freberg-taskmanager_nb.ts
+    RESOURCE_PREFIX /i18n
+    LUPDATE_OPTIONS -no-obsolete
+)
 
 option(FG_BUILD_TESTS "Build the tests" ON)
 if(FG_BUILD_TESTS)

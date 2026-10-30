@@ -18,7 +18,7 @@ TrayAndAlerts::TrayAndAlerts(SamplerHub& hub, QWidget* window) : QObject(window)
 {
     connect(&m_hub, &SamplerHub::sampled, this, &TrayAndAlerts::onSampled);
     connect(&Settings::instance(), &Settings::changed, this, [this](const QString& key) {
-        if (key.startsWith(QLatin1String("alerts/")) || key == QLatin1String("general/closeToTray") || key == QLatin1String("general/trayMeter"))
+        if (key.startsWith(QLatin1String("alerts/")) || key == QLatin1String("app/closeToTray") || key == QLatin1String("app/trayMeter"))
             reconfigure();
     });
     reconfigure();
@@ -44,7 +44,7 @@ void TrayAndAlerts::reconfigure()
     }
     m_holdMs = settings.value("alerts/holdSeconds", 10).toInt() * 1000;
 
-    const bool meter = settings.value("general/trayMeter", false).toBool();
+    const bool meter = settings.value("app/trayMeter", false).toBool();
     const bool wantIcon = settings.closeToTray() || meter;
     if (wantIcon && !m_icon && QSystemTrayIcon::isSystemTrayAvailable()) {
         m_icon = new QSystemTrayIcon(Icons::app(), this);
@@ -123,7 +123,7 @@ void TrayAndAlerts::onSampled(const SnapshotPtr& snapshot)
     const Subsystems got = snapshot->collected;
     const qint64 now = snapshot->monotonicMs;
     if (got & SubCpu) {
-        if (m_icon && snapshot->cpu.usagePct.known() && Settings::instance().value("general/trayMeter", false).toBool())
+        if (m_icon && snapshot->cpu.usagePct.known() && Settings::instance().value("app/trayMeter", false).toBool())
             paintIcon(snapshot->cpu.usagePct.value);
         checkRule(m_cpu, snapshot->cpu.usagePct.known(), snapshot->cpu.usagePct.value, tr("CPU use is at %1.").arg(Format::percent(snapshot->cpu.usagePct)), now);
     }

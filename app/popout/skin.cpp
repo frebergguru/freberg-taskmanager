@@ -161,31 +161,30 @@ QString skinsFolder()
 
 bool parseSkin(const QByteArray& json, const QString& imageFolder, Skin& out, QString& reason)
 {
-    const auto tr = [](const char* text) { return QCoreApplication::translate("fg::Skin", text); };
     if (json.size() > kManifestLimit) {
-        reason = tr("The manifest is larger than 256 KB.");
+        reason = QCoreApplication::translate("fg::Skin", "The manifest is larger than 256 KB.");
         return false;
     }
     QJsonParseError error;
     const QJsonDocument document = QJsonDocument::fromJson(json, &error);
     if (error.error != QJsonParseError::NoError || !document.isObject()) {
-        reason = tr("The manifest is not valid JSON.");
+        reason = QCoreApplication::translate("fg::Skin", "The manifest is not valid JSON.");
         return false;
     }
     const QJsonObject root = document.object();
     if (root.value(QStringLiteral("format")).toInt(-1) != 1) {
-        reason = tr("The format value must be 1.");
+        reason = QCoreApplication::translate("fg::Skin", "The format value must be 1.");
         return false;
     }
     const QString id = root.value(QStringLiteral("id")).toString();
     static const QRegularExpression validId(QStringLiteral("^[A-Za-z0-9._-]{1,64}$"));
     if (!validId.match(id).hasMatch()) {
-        reason = tr("The id is missing or has characters other than letters, digits, dot, dash and underscore.");
+        reason = QCoreApplication::translate("fg::Skin", "The id is missing or has characters other than letters, digits, dot, dash and underscore.");
         return false;
     }
     const QString name = root.value(QStringLiteral("name")).toString();
     if (name.isEmpty()) {
-        reason = tr("The name is missing.");
+        reason = QCoreApplication::translate("fg::Skin", "The name is missing.");
         return false;
     }
 
