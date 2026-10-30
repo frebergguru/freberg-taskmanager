@@ -1,6 +1,6 @@
 # Freberg.guru - Task manager
 
-A small system monitor and task manager for Linux, with the look of a classic late-1990s desktop. It is written in C++20 with Qt 6 Widgets and is built to use as little of your computer as possible.
+A small system monitor and task manager for Linux, with the look of a classic late-1990s desktop, drawn at the sharpness of today's screens. It is written in C++20 with Qt 6 Widgets and is built to use as little of your computer as possible.
 
 ## What it does
 

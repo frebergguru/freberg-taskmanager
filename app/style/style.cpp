@@ -24,7 +24,7 @@ void sunken(QPainter* p, const QRect& r, const QPalette& pal, const QBrush* fill
 
 void arrow(QPainter* p, const QRect& r, Qt::ArrowType type, const QColor& color)
 {
-    const int size = qMax(2, qMin(r.width(), r.height()) / 4);
+    const int size = qMax(3, qMin(r.width(), r.height()) * 3 / 10);
     const QPoint c = r.center();
     QPolygon shape;
     switch (type) {
@@ -34,8 +34,8 @@ void arrow(QPainter* p, const QRect& r, Qt::ArrowType type, const QColor& color)
     default: shape << QPoint(c.x() + size, c.y()) << QPoint(c.x(), c.y() - size) << QPoint(c.x(), c.y() + size); break;
     }
     p->save();
-    p->setRenderHint(QPainter::Antialiasing, false);
-    p->setPen(color);
+    p->setRenderHint(QPainter::Antialiasing, true);
+    p->setPen(Qt::NoPen);
     p->setBrush(color);
     p->drawPolygon(shape);
     p->restore();
@@ -225,7 +225,7 @@ void Style::drawPrimitive(PrimitiveElement element, const QStyleOption* o, QPain
         if (o->state & (State_On | State_NoChange)) {
             const QRect in = r.adjusted(3, 3, -3, -3);
             p->save();
-            p->setRenderHint(QPainter::Antialiasing, false);
+            p->setRenderHint(QPainter::Antialiasing, true);
             p->setPen(QPen(pal.color(QPalette::Text), qMax(2, scaled(2))));
             const QPoint a(in.left(), in.center().y());
             const QPoint b(in.left() + in.width() / 3, in.bottom() - 1);
@@ -238,7 +238,7 @@ void Style::drawPrimitive(PrimitiveElement element, const QStyleOption* o, QPain
     }
     case PE_IndicatorRadioButton: {
         p->save();
-        p->setRenderHint(QPainter::Antialiasing, false);
+        p->setRenderHint(QPainter::Antialiasing, true);
         const QRect outer = r.adjusted(0, 0, -1, -1);
         p->setBrush(pal.brush((o->state & State_Enabled) ? QPalette::Base : QPalette::Button));
         p->setPen(Qt::NoPen);
@@ -371,7 +371,7 @@ void Style::drawControl(ControlElement element, const QStyleOption* o, QPainter*
                 const QPoint c(r.left() + gutter / 2, r.center().y());
                 const int s = scaled(3);
                 p->save();
-                p->setRenderHint(QPainter::Antialiasing, false);
+                p->setRenderHint(QPainter::Antialiasing, true);
                 if (item->checkType == QStyleOptionMenuItem::Exclusive) {
                     p->setBrush(ink);
                     p->drawEllipse(c, s - 1, s - 1);

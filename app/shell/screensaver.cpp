@@ -19,7 +19,8 @@ void drawHistory(QPainter& p, const QRect& area, const History& history, const Q
         p.drawLine(x, area.top(), x, area.bottom());
     for (int y = area.bottom(); y >= area.top(); y -= 40)
         p.drawLine(area.left(), y, area.right(), y);
-    p.setPen(QPen(line, 2));
+    p.setRenderHint(QPainter::Antialiasing, true);
+    p.setPen(QPen(line, 2.5, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
     const std::size_t size = history.size();
     bool have = false;
     QPoint previous;
@@ -35,6 +36,7 @@ void drawHistory(QPainter& p, const QRect& area, const History& history, const Q
         previous = point;
         have = true;
     }
+    p.setRenderHint(QPainter::Antialiasing, false);
 }
 
 } // namespace
@@ -95,7 +97,7 @@ void Screensaver::paintEvent(QPaintEvent*)
     p.fillRect(rect(), scheme.graphBack);
 
     QFont big = font();
-    big.setPixelSize(std::max(18, height() / 24));
+    big.setPixelSize(std::max(20, height() / 22));
     big.setBold(true);
     p.setFont(big);
     const int line = QFontMetrics(big).height();

@@ -73,8 +73,9 @@ void Graph::paintEvent(QPaintEvent*)
     }
 
     const int height = area.height() - 1;
+    p.setRenderHint(QPainter::Antialiasing, true); // the grid above stays sharp, the lines stay smooth
     for (const Series& series : std::as_const(m_series)) {
-        p.setPen(series.secondary ? scheme.graphLine2 : scheme.graphLine);
+        p.setPen(QPen(series.secondary ? scheme.graphLine2 : scheme.graphLine, 1.4, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
         const std::size_t size = series.history->size();
         const std::size_t count = std::min<std::size_t>(size, static_cast<std::size_t>(visible));
         bool havePrevious = false;

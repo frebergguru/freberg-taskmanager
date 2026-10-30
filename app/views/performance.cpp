@@ -46,7 +46,7 @@ PerformanceView::PerformanceView(SamplerHub& hub) : m_hub(hub), m_list(new QList
     layout->setContentsMargins(0, 0, 0, 0);
     layout->addWidget(m_list);
     layout->addWidget(m_stack, 1);
-    m_list->setFixedWidth(fontMetrics().averageCharWidth() * 24);
+    m_list->setFixedWidth(fontMetrics().averageCharWidth() * 26);
     m_list->setAccessibleName(tr("Device"));
     connect(m_list, &QListWidget::currentRowChanged, this, &PerformanceView::selectionChanged);
 }
@@ -54,7 +54,7 @@ PerformanceView::PerformanceView(SamplerHub& hub) : m_hub(hub), m_list(new QList
 void PerformanceView::changeEvent(QEvent* event)
 {
     if (event->type() == QEvent::FontChange)
-        m_list->setFixedWidth(fontMetrics().averageCharWidth() * 24);
+        m_list->setFixedWidth(fontMetrics().averageCharWidth() * 26);
     View::changeEvent(event);
 }
 

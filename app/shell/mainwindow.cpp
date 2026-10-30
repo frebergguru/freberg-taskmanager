@@ -37,8 +37,8 @@ namespace fg {
 
 namespace {
 constexpr int kFrameWidth = 4;
-constexpr int kBaseWidth = 760;
-constexpr int kBaseHeight = 560;
+constexpr int kBaseWidth = 1000;
+constexpr int kBaseHeight = 720;
 }
 
 MainWindow::MainWindow(SamplerHub& hub) : QWidget(nullptr, Qt::Window | Qt::FramelessWindowHint), m_hub(hub), m_defs(allViews())
@@ -107,7 +107,7 @@ void MainWindow::applyAppearance()
 {
     fg::applyAppearance();
     const double scale = Settings::instance().textPercent() / 100.0;
-    const int iconSize = qRound(16 * scale);
+    const int iconSize = qRound(22 * scale);
     m_tools->setIconSize(QSize(iconSize, iconSize));
     m_title->updateGeometry();
     m_title->update();

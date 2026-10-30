@@ -88,6 +88,7 @@ target_link_libraries(freberg-taskmanager PRIVATE fg_app)
 
 qt_add_translations(freberg-taskmanager
     TS_FILES i18n/freberg-taskmanager_nb.ts
+    PLURALS_TS_FILE i18n/freberg-taskmanager_en.ts
     RESOURCE_PREFIX /i18n
     LUPDATE_OPTIONS -no-obsolete
 )

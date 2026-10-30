@@ -17,7 +17,13 @@ namespace fg {
 
 namespace {
 
-constexpr int kBasePixelSize = 11;
+constexpr double kBasePointSize = 10.0;
+constexpr double kMetricsAtFullSize = 1.2; // bevels, buttons and bars in step with that text
+
+double metricScale()
+{
+    return Settings::instance().textPercent() / 100.0 * kMetricsAtFullSize;
+}
 
 Scheme chosenScheme()
 {
@@ -37,10 +43,9 @@ QFont chosenFont()
 {
     QFont font;
     font.setFamilies({QStringLiteral("Liberation Sans"), QStringLiteral("Nimbus Sans"), QStringLiteral("DejaVu Sans"), QStringLiteral("sans-serif")});
-    font.setPixelSize(qRound(kBasePixelSize * Settings::instance().textPercent() / 100.0));
-    // Crisp, unsmoothed text is part of the look, and it is cheaper to draw.
-    font.setStyleStrategy(QFont::NoAntialias);
-    font.setHintingPreference(QFont::PreferFullHinting);
+    // In points, so text keeps its real size on every screen and scale.
+    font.setPointSizeF(kBasePointSize * Settings::instance().textPercent() / 100.0);
+    font.setStyleStrategy(QFont::PreferAntialias);
     return font;
 }
 
@@ -48,7 +53,7 @@ QFont chosenFont()
 
 void installAppearance()
 {
-    QApplication::setStyle(new Style(chosenScheme(), Settings::instance().textPercent() / 100.0));
+    QApplication::setStyle(new Style(chosenScheme(), metricScale()));
     applyAppearance();
 }
 
@@ -56,7 +61,7 @@ void applyAppearance()
 {
     auto* style = static_cast<Style*>(QApplication::style());
     const double oldScale = style->scale();
-    const double newScale = Settings::instance().textPercent() / 100.0;
+    const double newScale = metricScale();
     style->setScheme(chosenScheme());
     style->setScale(newScale);
     QApplication::setPalette(style->standardPalette());

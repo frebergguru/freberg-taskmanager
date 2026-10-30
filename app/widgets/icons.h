@@ -1,5 +1,5 @@
-// Small original icons in the old 16-colour manner, drawn from text so that they
-// add nothing to load and stay sharp when scaled.
+// Small original icons in the old 16-colour manner, drawn as shapes so that they
+// stay sharp at any size and on any screen.
 #pragma once
 
 #include <QIcon>

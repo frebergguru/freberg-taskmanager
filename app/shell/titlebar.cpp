@@ -77,8 +77,8 @@ void CaptionButton::paintEvent(QPaintEvent*)
         break;
     }
     case Close: {
-        p.setRenderHint(QPainter::Antialiasing, false);
-        p.setPen(QPen(ink, 2));
+        p.setRenderHint(QPainter::Antialiasing, true);
+        p.setPen(QPen(ink, 1.6, Qt::SolidLine, Qt::SquareCap));
         p.drawLine(g.topLeft(), g.bottomRight());
         p.drawLine(g.topRight(), g.bottomLeft());
         break;

@@ -26,7 +26,7 @@ const char* const kBuiltIn[] = {
     R"({"format":1,"id":"console","name":"Console",
         "surfaces":{"window":"#000000","tile":"#101010","header":"#202020"},
         "colours":{"ink":"#33ff66","inkDim":"#1f9f40","unlit":"#0f3f18","outline":"#1f9f40"},
-        "fonts":{"body":{"size":9,"weight":"bold"}},
+        "fonts":{"body":{"size":10,"weight":"bold"}},
         "meters":{"style":"rows","segments":24},
         "accent":{"cpu":"#33ff66","memory":"#33ff66","gpu":"#33ff66","thermal":"#ffb000","disk":"#33ff66","network":"#33ff66","power":"#ffb000","alert":"#ff5040"},
         "quadrants":["cpu","memory","gpu","thermal","disk","network"]})",

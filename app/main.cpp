@@ -6,6 +6,7 @@
 #include "style/appearance.h"
 #include "style/style.h"
 #include "views/apphistory.h"
+#include "widgets/icons.h"
 
 #include <QApplication>
 #include <QCommandLineParser>
@@ -119,12 +120,16 @@ int main(int argc, char** argv)
     QCommandLineOption textOption("text-sizes", "Comma-separated text sizes for --screenshots.", "percent", "100");
     QCommandLineOption viewOption("view", "Open this view number at start.", "number");
     QCommandLineOption skinShotsOption("skin-screenshots", "Save a picture of the popout in every skin into this folder, then quit.", "folder");
+    QCommandLineOption iconOption("export-icon", "Save the app icon at 256 pixels to this file, then quit.", "file");
     QCommandLineOption startTestOption("start-test", "Quit as soon as the first window has been drawn, to measure start time.");
     QCommandLineOption recordOption("record", "Record to this .fgtrace file with no window, then quit.", "file");
     QCommandLineOption secondsOption("seconds", "How long --record runs. Without it, until interrupted.", "seconds");
     QCommandLineOption intervalOption("interval-ms", "Time between samples for --record.", "ms");
-    parser.addOptions({shotsOption, schemesOption, textOption, viewOption, skinShotsOption, startTestOption, recordOption, secondsOption, intervalOption});
+    parser.addOptions({shotsOption, schemesOption, textOption, viewOption, skinShotsOption, iconOption, startTestOption, recordOption, secondsOption, intervalOption});
     parser.process(app);
+
+    if (parser.isSet(iconOption))
+        return Icons::app().pixmap(256, 256).save(parser.value(iconOption)) ? 0 : 1;
 
     QTranslator translator;
     const QString language = Settings::instance().language();

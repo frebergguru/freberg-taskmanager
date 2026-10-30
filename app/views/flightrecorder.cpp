@@ -98,12 +98,19 @@ protected:
         for (int y = area.bottom(); y >= area.top(); y -= 12)
             p.drawLine(area.left(), y, area.right(), y);
 
-        p.setPen(scheme.graphLine);
         const QString caption = accessibleName();
-        p.drawText(area.adjusted(3, 1, -3, -1), Qt::AlignLeft | Qt::AlignTop, caption);
+        const auto drawCaption = [&] {
+            const QRect box = fontMetrics().boundingRect(caption).translated(area.left() + 4 - fontMetrics().boundingRect(caption).left(), area.top() + 2 - fontMetrics().boundingRect(caption).top());
+            p.setRenderHint(QPainter::Antialiasing, false);
+            p.fillRect(box.adjusted(-3, -1, 3, 1), scheme.graphBack); // readable over the grid and the lines
+            p.setPen(scheme.graphLine);
+            p.drawText(box, Qt::AlignLeft | Qt::AlignVCenter, caption);
+        };
 
-        if (!m_frames || m_frames->empty())
+        if (!m_frames || m_frames->empty()) {
+            drawCaption();
             return;
+        }
         const std::size_t size = m_frames->size();
 
         double top = m_panel.fixedMax;
@@ -118,8 +125,9 @@ protected:
             top = top > 0 ? top * 1.1 : 1.0;
         }
 
+        p.setRenderHint(QPainter::Antialiasing, true);
         const auto draw = [&](TraceChannel channel, const QColor& color) {
-            p.setPen(color);
+            p.setPen(QPen(color, 1.4, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
             const int height = area.height() - 1;
             // More frames than pixels: each column shows its highest value, so spikes survive.
             bool have = false;
@@ -154,9 +162,11 @@ protected:
 
         if (m_cursor >= 0 && size > 0) {
             const int x = area.left() + static_cast<int>(static_cast<double>(m_cursor) / static_cast<double>(std::max<std::size_t>(1, size - 1)) * (area.width() - 1));
+            p.setRenderHint(QPainter::Antialiasing, false);
             p.setPen(scheme.text);
             p.drawLine(x, area.top(), x, area.bottom());
         }
+        drawCaption();
     }
 
 private:

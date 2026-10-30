@@ -59,14 +59,14 @@ ProcessesView::ProcessesView(SamplerHub& hub)
     const QByteArray saved = Settings::instance().value("processes/header").toByteArray();
     if (saved.isEmpty()) {
         const int unit = fontMetrics().averageCharWidth();
-        m_tree->setColumnWidth(ProcessModel::Name, unit * 32);
+        m_tree->setColumnWidth(ProcessModel::Name, unit * 30);
         m_tree->setColumnWidth(ProcessModel::Pid, unit * 8);
-        m_tree->setColumnWidth(ProcessModel::User, unit * 12);
-        m_tree->setColumnWidth(ProcessModel::Status, unit * 12);
+        m_tree->setColumnWidth(ProcessModel::User, unit * 11);
+        m_tree->setColumnWidth(ProcessModel::Status, unit * 11);
         m_tree->setColumnWidth(ProcessModel::Cpu, unit * 8);
         m_tree->setColumnWidth(ProcessModel::Memory, unit * 11);
-        m_tree->setColumnWidth(ProcessModel::Disk, unit * 15);
-        m_tree->setColumnWidth(ProcessModel::Energy, unit * 19);
+        m_tree->setColumnWidth(ProcessModel::Disk, unit * 13);
+        m_tree->setColumnWidth(ProcessModel::Energy, unit * 17);
         m_tree->setColumnHidden(ProcessModel::Network, true);
         m_tree->setColumnHidden(ProcessModel::Gpu, true);
         m_tree->setColumnHidden(ProcessModel::Group, true);

@@ -5,6 +5,7 @@
 
 #include <QAccessible>
 #include <QActionGroup>
+#include <QApplication>
 #include <QContextMenuEvent>
 #include <QDesktopServices>
 #include <QDir>
@@ -23,7 +24,7 @@ namespace fg {
 
 namespace {
 
-constexpr int kBaseWidth = 180;
+constexpr int kBaseWidth = 220;
 
 void fillSurface(QPainter& p, const QRect& area, const SkinSurface& surface, int radius = 0)
 {
@@ -124,7 +125,7 @@ void Popout::applySkin(const Skin& skin)
                                                           : tr("Power");
         channel.valueText = Format::why(Availability::NotYetSampled);
     }
-    QFont skinFont = font();
+    QFont skinFont = QApplication::font();
     skinFont.setPointSizeF(skin.fontSize);
     skinFont.setBold(skin.fontBold);
     if (!skin.fontFamily.isEmpty())
@@ -146,13 +147,13 @@ QSize Popout::sizeHint() const
     const int outer = 2 * (m_skin.padding + m_skin.border + m_skin.frameInset);
     switch (m_skin.meterStyle) {
     case Skin::Rows:
-        return QSize(kBaseWidth + outer, header + outer + count * (line + 6 + m_skin.gap));
+        return QSize(kBaseWidth + outer, header + outer + count * (line + 8 + m_skin.gap));
     case Skin::Vertical:
-        return QSize(std::max(kBaseWidth, count * (fontMetrics().horizontalAdvance(tr("Memory")) + 10 + m_skin.gap)) + outer, header + outer + 110);
+        return QSize(std::max(kBaseWidth, count * (fontMetrics().horizontalAdvance(tr("Memory")) + 14 + m_skin.gap)) + outer, header + outer + 9 * fontMetrics().height());
     default: {
         const int columns = count <= 2 ? count : 2;
         const int rows = (count + columns - 1) / std::max(1, columns);
-        return QSize(kBaseWidth + outer, header + outer + rows * (72 + m_skin.gap));
+        return QSize(kBaseWidth + outer, header + outer + rows * (5 * fontMetrics().height() + m_skin.gap));
     }
     }
 }
@@ -402,7 +403,9 @@ void Popout::paintChannel(QPainter& p, const QRect& area, const Channel& channel
         p.setPen(unlit);
         for (int x = plot.right(); x >= plot.left(); x -= 10)
             p.drawLine(x, plot.top(), x, plot.bottom());
-        p.setPen(lit);
+        p.save();
+        p.setRenderHint(QPainter::Antialiasing, true);
+        p.setPen(QPen(lit, 1.4, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
         const std::size_t size = channel.history.size();
         double top = 100.0;
         if (channel.key == QLatin1String("thermal"))
@@ -423,6 +426,7 @@ void Popout::paintChannel(QPainter& p, const QRect& area, const Channel& channel
             previous = point;
             have = true;
         }
+        p.restore();
         break;
     }
     }

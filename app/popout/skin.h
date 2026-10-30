@@ -34,7 +34,7 @@ struct Skin {
     QColor ink, inkDim, outline;
     SkinImage windowImage, headerImage;
 
-    double fontSize = 9;
+    double fontSize = 10;
     bool fontBold = false;
     QString fontFamily;
 
