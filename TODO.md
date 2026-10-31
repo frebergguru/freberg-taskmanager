@@ -11,6 +11,8 @@
 
 ## Missing or partial
 
+- [ ] A real screen reader over AT-SPI. So far only Qt's accessibility tree is tested.
+- [ ] Find what triggers "This plugin supports grabbing the mouse only for popup windows". The app never asks for a grab, so the exact text is filtered in `app/main.cpp`. To trace it, run without the filter using `QT_FORCE_STDERR_LOGGING=1 QT_MESSAGE_PATTERN='%{message} @@ %{backtrace depth=14}'`.
 - [ ] NVIDIA GPU readings (no hardware here to test on).
 - [ ] Intel GPU busy percentage. Only speed is read at present.
 - [ ] Network per process counts TCP only, and App History has no network figure.
