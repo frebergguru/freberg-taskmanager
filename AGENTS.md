@@ -6,6 +6,7 @@ A task manager for Linux in C++20 and Qt 6 Widgets, in English and Norwegian. Se
 
 **Names**
 - Never name the old operating system or its vendor behind the classic look, or the existing task manager the feature list came from. That covers code, file names, UI text, docs and commit messages. Say "classic" or "the reference app". Check before each commit.
+- Name only the operating systems the app supports, which today means Linux. `TODO.md` may also name others as future platforms.
 
 **Honest readings**
 - Every reading is a `Reading<T>` with a state: Measured, Estimated, Unsupported, AccessDenied or NotYetSampled. Never show a zero you didn't measure, and never invent a value. A chip's "no limit" placeholder (such as 65261.85 °C) is not a reading.
