@@ -11,12 +11,14 @@
 
 #include <QApplication>
 #include <QCommandLineParser>
+#include <QLibraryInfo>
 #include <QDir>
 #include <QLibraryInfo>
 #include <QLocale>
 #include <QStandardPaths>
 #include <QTimer>
 #include <QTranslator>
+#include <string_view>
 #include <cstdlib>
 #ifdef __GLIBC__
 #include <malloc.h>
@@ -99,6 +101,36 @@ void takeSkinShots(SamplerHub& hub, const QString& directory)
 
 } // namespace
 
+// Accepts both "--name value" and "--name=value", as the command line parser later does.
+static const char* optionValue(int argc, char** argv, std::string_view name)
+{
+    for (int i = 1; i < argc; ++i) {
+        const std::string_view argument = argv[i];
+        if (argument == name && i + 1 < argc)
+            return argv[i + 1];
+        if (argument.starts_with(name) && argument.size() > name.size() && argument[name.size()] == '=')
+            return argv[i] + name.size() + 1;
+    }
+    return nullptr;
+}
+
+// The AppImage points these at its own libraries so that this program can start. Everything it
+// starts must get the system's own, or a file manager or a new task would load our Qt.
+static void forgetAppImagePaths()
+{
+    if (!qEnvironmentVariableIsSet("FG_APPIMAGE"))
+        return;
+    QCoreApplication::libraryPaths(); // reads the plugin path now, and keeps it
+    qunsetenv("QT_PLUGIN_PATH");
+    const QByteArray original = qgetenv("FG_ORIGINAL_LD_LIBRARY_PATH");
+    if (original.isEmpty())
+        qunsetenv("LD_LIBRARY_PATH"); // the loader read it when we started, so this doesn't touch us
+    else
+        qputenv("LD_LIBRARY_PATH", original);
+    qunsetenv("FG_ORIGINAL_LD_LIBRARY_PATH");
+    qunsetenv("FG_APPIMAGE");
+}
+
 int main(int argc, char** argv)
 {
 #ifdef __GLIBC__
@@ -106,22 +138,16 @@ int main(int argc, char** argv)
 #endif
 
     // Recording needs no window, so it must also work with no display at all.
-    for (int i = 1; i + 1 < argc; ++i)
-        if (std::strcmp(argv[i], "--record") == 0) {
-            int seconds = 0;
-            int intervalMs = 1000;
-            for (int j = 1; j + 1 < argc; ++j) {
-                if (std::strcmp(argv[j], "--seconds") == 0)
-                    seconds = std::atoi(argv[j + 1]);
-                else if (std::strcmp(argv[j], "--interval-ms") == 0)
-                    intervalMs = std::max(100, std::atoi(argv[j + 1]));
-            }
-            return recordHeadless(argv[i + 1], seconds, intervalMs);
-        }
+    if (const char* path = optionValue(argc, argv, "--record")) {
+        const char* seconds = optionValue(argc, argv, "--seconds");
+        const char* intervalMs = optionValue(argc, argv, "--interval-ms");
+        return recordHeadless(path, seconds ? std::atoi(seconds) : 0, intervalMs ? std::max(100, std::atoi(intervalMs)) : 1000);
+    }
 
     g_nextHandler = qInstallMessageHandler(messageHandler);
     QApplication::setAttribute(Qt::AA_DontCreateNativeWidgetSiblings);
     QApplication app(argc, argv);
+    forgetAppImagePaths();
     QApplication::setApplicationName(QStringLiteral("Freberg.guru - Task manager"));
     QApplication::setOrganizationName(QStringLiteral("Freberg.guru"));
     // Claiming this ID makes Qt register it with the desktop portal, which refuses an ID
@@ -154,6 +180,10 @@ int main(int argc, char** argv)
     const QLocale locale = language.isEmpty() ? QLocale::system() : QLocale(language);
     if (translator.load(locale, QStringLiteral("freberg-taskmanager"), QStringLiteral("_"), QStringLiteral(":/i18n")))
         QApplication::installTranslator(&translator);
+    // Qt's own texts, such as OK and Cancel, where the system has them in this language.
+    QTranslator qtTranslator;
+    if (qtTranslator.load(locale, QStringLiteral("qtbase"), QStringLiteral("_"), QLibraryInfo::path(QLibraryInfo::TranslationsPath)))
+        QApplication::installTranslator(&qtTranslator);
     QLocale::setDefault(locale);
 
     installAccessibility();

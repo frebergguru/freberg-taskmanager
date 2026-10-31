@@ -2,6 +2,7 @@
 
 #include "../format.h"
 #include "../style/style.h"
+#include "../widgets/confirm.h"
 #include "../widgets/resultsdb.h"
 
 #include <QAccessible>
@@ -29,6 +30,10 @@
 #include <QVBoxLayout>
 #include <QtSql/QSqlQuery>
 #include <qdrawutil.h>
+#include <QHelpEvent>
+#include <QToolTip>
+#include <algorithm>
+#include <climits>
 
 namespace fg {
 
@@ -127,6 +132,22 @@ Treemap::Treemap(QWidget* parent) : QWidget(parent)
     describeFocus();
 }
 
+bool Treemap::event(QEvent* event)
+{
+    // A small cell has no room for its name, so the pointer can ask for it.
+    if (event->type() == QEvent::ToolTip) {
+        const QPoint at = static_cast<QHelpEvent*>(event)->pos();
+        for (const Cell& cell : std::as_const(m_cells))
+            if (cell.rect.contains(at)) {
+                QToolTip::showText(static_cast<QHelpEvent*>(event)->globalPos(), tr("%1, %2, %3").arg(QString::fromStdString(cell.node->name), cell.node->isDir ? tr("folder") : tr("file"), Format::bytes(cell.node->bytes)), this);
+                return true;
+            }
+        QToolTip::hideText();
+        return true;
+    }
+    return QWidget::event(event);
+}
+
 void Treemap::describeFocus()
 {
     const QString help = tr("Arrow keys move between items, Enter opens a folder and Backspace goes up.");
@@ -134,7 +155,7 @@ void Treemap::describeFocus()
         setAccessibleDescription(help);
     } else {
         const DiskNode* node = m_cells[m_focusCell].node;
-        setAccessibleDescription(tr("%1, %2. %3").arg(QString::fromStdString(node->name), Format::bytes(node->bytes), help));
+        setAccessibleDescription(tr("%1, %2, %3. %4").arg(QString::fromStdString(node->name), node->isDir ? tr("folder") : tr("file"), Format::bytes(node->bytes), help));
     }
     if (QAccessible::isActive()) {
         QAccessibleEvent event(this, QAccessible::DescriptionChanged);
@@ -230,7 +251,8 @@ void Treemap::paintEvent(QPaintEvent*)
         if (cell.rect.width() > 30 && cell.rect.height() > fontMetrics().height() + 4) {
             p.setPen(palette().color(QPalette::ButtonText));
             const QRect text = cell.rect.adjusted(4, 2, -4, -2);
-            const QString label = QStringLiteral("%1\n%2").arg(QString::fromStdString(cell.node->name), Format::bytes(cell.node->bytes));
+            // The slash says what the shade says, so colour is not the only sign of a folder.
+            const QString label = QStringLiteral("%1%2\n%3").arg(QString::fromStdString(cell.node->name), cell.node->isDir ? QStringLiteral("/") : QString(), Format::bytes(cell.node->bytes));
             p.drawText(text, Qt::AlignLeft | Qt::AlignTop | Qt::TextWordWrap, label);
         }
     }
@@ -397,7 +419,7 @@ void DiskSpaceView::finishScan()
     m_map->setNode(m_root.get());
     m_trash->setEnabled(true);
 
-    const QString total = tr("%1 in %2 files.").arg(Format::bytes(m_root->bytes), QLocale().toString(static_cast<qulonglong>(m_root->files)));
+    const QString total = tr("%1 in %Ln file(s).", nullptr, static_cast<int>(std::min<std::uint64_t>(m_root->files, INT_MAX))).arg(Format::bytes(m_root->bytes));
     m_message->setText(result->deniedFolders ? tr("%1 %n folder(s) could not be read, so the true size is larger.", nullptr, static_cast<int>(result->deniedFolders)).arg(total) : total);
     saveHistory(QString::fromStdString(m_root->name), static_cast<qint64>(m_root->bytes), static_cast<qint64>(m_root->files), seconds);
     loadHistory();
@@ -411,7 +433,7 @@ void DiskSpaceView::moveSelectedToTrash()
         return;
     }
     const QString path = QString::fromStdString(nodePath(*m_model->nodeAt(index)));
-    if (QMessageBox::warning(this, tr("Move to Trash"), tr("Move this to the trash?\n\n%1").arg(path), QMessageBox::Yes | QMessageBox::No, QMessageBox::No) != QMessageBox::Yes)
+    if (!confirmed(this, tr("Move to Trash"), tr("Move this to the trash?\n\n%1").arg(path)))
         return;
     if (!QFile::moveToTrash(path)) {
         m_message->setText(tr("Could not move %1 to the trash.").arg(path));

@@ -3,6 +3,8 @@
 #include "../format.h"
 #include "../style/style.h"
 
+#include <QAccessible>
+#include <QWindow>
 #include <QApplication>
 #include <QKeyEvent>
 #include <QPainter>
@@ -63,8 +65,22 @@ void Screensaver::showEvent(QShowEvent* event)
         m_cpu.push(History::gap());
         m_memory.push(History::gap());
     }
+    if (QWindow* handle = windowHandle())
+        handle->installEventFilter(this); // installing twice is harmless, Qt keeps one
     m_hub.setWanted(this, SubCpu | SubMemory | SubThermal | SubPower);
     setFocus();
+}
+
+bool Screensaver::eventFilter(QObject* watched, QEvent* event)
+{
+    // Covered or on another desktop: the compositor stops exposing us, so sampling stops too.
+    if (watched == windowHandle() && event->type() == QEvent::Expose && isVisible()) {
+        if (windowHandle()->isExposed())
+            m_hub.setWanted(this, SubCpu | SubMemory | SubThermal | SubPower);
+        else
+            m_hub.clearWanted(this);
+    }
+    return QWidget::eventFilter(watched, event);
 }
 
 void Screensaver::hideEvent(QHideEvent* event)
@@ -93,6 +109,8 @@ void Screensaver::onSampled(const SnapshotPtr& snapshot)
     if (got & SubPower)
         m_powerText = tr("Power %1").arg(Format::watts(snapshot->power.cpuPackageW));
     update();
+    if (QAccessible::isActive())
+        setAccessibleDescription(QStringList{m_cpuText, m_memoryText, m_thermalText, m_powerText}.join(QStringLiteral(", ")));
 }
 
 void Screensaver::paintEvent(QPaintEvent*)

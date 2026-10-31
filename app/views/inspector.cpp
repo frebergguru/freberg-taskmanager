@@ -30,9 +30,11 @@ QString joined(const std::vector<std::string>& lines)
 }
 
 // Most of /proc is closed for other users' processes; say so instead of showing nothing.
-QString orDenied(const std::string& text)
+QString orWhy(const std::string& text, Availability state)
 {
-    return text.empty() ? Format::why(Availability::AccessDenied) : QString::fromStdString(text);
+    if (state != Availability::Measured)
+        return Format::why(state);
+    return text.empty() ? InspectorDialog::tr("Nothing here.") : QString::fromStdString(text);
 }
 
 QString orDenied(const std::vector<std::string>& lines)
@@ -44,21 +46,21 @@ QString orDenied(const std::vector<std::string>& lines)
 
 InspectorDialog::InspectorDialog(const ProcessInfo& info, const ProcessDetails& details, QWidget* parent) : QDialog(parent)
 {
-    setWindowTitle(tr("Properties: %1 (PID %2)").arg(QString::fromStdString(info.name)).arg(info.id.pid));
+    setWindowTitle(tr("Properties: %1 (PID %2)").arg(QString::fromStdString(info.name), QString::number(info.id.pid)));
     resize(620, 460);
 
     auto* layout = new QVBoxLayout(this);
     auto* sheet = new Sheet(this);
 
     const QString general = tr("Executable: %1\nCommand line: %2\ncgroup: %3\n\n%4")
-                                .arg(QString::fromStdString(info.exePath), QString::fromStdString(info.commandLine), Format::text(info.cgroup), orDenied(details.status));
+                                .arg(QString::fromStdString(info.exePath), QString::fromStdString(info.commandLine), Format::text(info.cgroup), orWhy(details.status, details.statusState));
     sheet->addPage(tr("General"), textPage(tr("General"), general));
     sheet->addPage(tr("Open Files"), textPage(tr("Open Files"), orDenied(details.openFiles)));
     sheet->addPage(tr("Sockets"), textPage(tr("Sockets"), orDenied(details.sockets)));
     sheet->addPage(tr("Threads"), textPage(tr("Threads"), orDenied(details.threads)));
-    sheet->addPage(tr("Memory Map"), textPage(tr("Memory Map"), orDenied(details.memoryMaps)));
-    sheet->addPage(tr("Environment"), textPage(tr("Environment"), orDenied(details.environment)));
-    sheet->addPage(tr("Limits"), textPage(tr("Limits"), orDenied(details.limits)));
+    sheet->addPage(tr("Memory Map"), textPage(tr("Memory Map"), orWhy(details.memoryMaps, details.memoryMapsState)));
+    sheet->addPage(tr("Environment"), textPage(tr("Environment"), orWhy(details.environment, details.environmentState)));
+    sheet->addPage(tr("Limits"), textPage(tr("Limits"), orWhy(details.limits, details.limitsState)));
     sheet->setCurrentIndex(0);
     layout->addWidget(sheet, 1);
 

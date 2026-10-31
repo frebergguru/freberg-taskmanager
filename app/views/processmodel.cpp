@@ -139,7 +139,7 @@ bool ProcessModel::lessThan(const Node& a, const Node& b) const
     const ProcessSample& y = b.sample;
     switch (m_sortColumn) {
     case Pid: return x.info->id.pid < y.info->id.pid;
-    case User: return x.info->uid < y.info->uid;
+    case User: return userName(x.info->uid) < userName(y.info->uid);
     case Status: return x.state < y.state;
     case Cpu: return readingOrLow(x.cpuPct) < readingOrLow(y.cpuPct);
     case Memory: return x.rssBytes.value < y.rssBytes.value;

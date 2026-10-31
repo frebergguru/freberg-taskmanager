@@ -105,7 +105,7 @@ std::vector<std::string> disksUnder(const std::string& root, std::string_view de
 
 DiskSampler::DiskSampler(const std::string& root) : m_root(root), m_diskstats(root + "/proc/diskstats") {}
 
-const DiskSampler::Identity& DiskSampler::identity(const std::string& name)
+DiskSampler::Identity& DiskSampler::identity(const std::string& name)
 {
     const auto found = m_identity.find(name);
     if (found != m_identity.end())
@@ -119,6 +119,7 @@ const DiskSampler::Identity& DiskSampler::identity(const std::string& name)
         id.model = readTrimmed(dir + "/device/model");
         id.rotational = readTrimmed(dir + "/queue/rotational") == "1";
         id.removable = readTrimmed(dir + "/removable") == "1";
+        id.size = CachedFile(dir + "/size");
     }
     return m_identity.emplace(name, std::move(id)).first->second;
 }
@@ -174,6 +175,13 @@ void DiskSampler::sample(std::int64_t nowMs, std::vector<DiskSample>& out)
         return; // the empty list tells the UI there are no measured drives
     parseDiskstats(m_buffer, m_counters);
 
+    // A device that left may come back under the same name as a different disk.
+    const auto gone = [this](const auto& item) {
+        return std::none_of(m_counters.begin(), m_counters.end(), [&item](const DiskCounters& counters) { return counters.name == item.first; });
+    };
+    std::erase_if(m_identity, gone);
+    std::erase_if(m_previous, gone);
+
     if (m_filesystemsAtMs == 0 || nowMs - m_filesystemsAtMs >= kFilesystemRefreshMs) {
         refreshFilesystems();
         m_filesystemsAtMs = nowMs;
@@ -182,7 +190,7 @@ void DiskSampler::sample(std::int64_t nowMs, std::vector<DiskSample>& out)
     const double seconds = m_previousMs ? static_cast<double>(nowMs - m_previousMs) / 1000.0 : 0;
     for (const DiskCounters& counters : m_counters) {
         const std::string name(counters.name);
-        const Identity& id = identity(name);
+        Identity& id = identity(name);
         if (!id.physical)
             continue;
         DiskSample disk;
@@ -191,9 +199,8 @@ void DiskSampler::sample(std::int64_t nowMs, std::vector<DiskSample>& out)
         disk.rotational = id.rotational;
         disk.removable = id.removable;
 
-        std::string size;
-        if (readFile(m_root + "/sys/block/" + name + "/size", size) == ReadStatus::Ok)
-            if (const auto sectors = parseU64(size))
+        if (id.size.read(m_sizeText) == ReadStatus::Ok)
+            if (const auto sectors = parseU64(m_sizeText))
                 disk.sizeBytes = Reading<std::uint64_t>::measured(*sectors * kSectorBytes);
 
         const auto previous = m_previous.find(name);
@@ -225,7 +232,7 @@ void DiskSampler::sample(std::int64_t nowMs, std::vector<DiskSample>& out)
     m_previousMs = nowMs;
 }
 
-NetworkSampler::NetworkSampler(const std::string& root) : m_root(root), m_netdev(root + "/proc/net/dev") {}
+NetworkSampler::NetworkSampler(const std::string& root) : m_root(root), m_netdev(root + "/proc/net/dev"), m_wireless(root + "/proc/net/wireless") {}
 
 void NetworkSampler::sample(std::int64_t nowMs, std::vector<NetworkSample>& out)
 {
@@ -233,26 +240,48 @@ void NetworkSampler::sample(std::int64_t nowMs, std::vector<NetworkSample>& out)
         return;
     parseNetDev(m_buffer, m_counters);
 
+    // Containers come and go with fresh names, and a name that returns may be a new interface.
+    const auto gone = [this](const auto& item) {
+        return std::none_of(m_counters.begin(), m_counters.end(), [&item](const NetCounters& counters) { return counters.name == item.first; });
+    };
+    std::erase_if(m_faces, gone);
+    std::erase_if(m_previous, gone);
+    std::erase_if(m_wifi, gone);
+
     // Face | status | link | level | noise ...  The trailing dots are part of the format.
-    std::string wireless;
-    readFile(m_root + "/proc/net/wireless", wireless);
+    if (m_wireless.read(m_wirelessText) != ReadStatus::Ok)
+        m_wirelessText.clear();
+    const std::string& wireless = m_wirelessText;
 
     const double seconds = m_previousMs ? static_cast<double>(nowMs - m_previousMs) / 1000.0 : 0;
     for (const NetCounters& counters : m_counters) {
         NetworkSample net;
         net.name = std::string(counters.name);
-        const std::string dir = m_root + "/sys/class/net/" + net.name;
-        net.loopback = readTrimmed(dir + "/type") == "772";
-        net.mac = readTrimmed(dir + "/address");
-        net.operState = readTrimmed(dir + "/operstate");
-        net.wireless = exists(dir + "/wireless") || exists(dir + "/phy80211");
-        net.hasDevice = exists(dir + "/device");
+        auto known = m_faces.find(net.name);
+        if (known == m_faces.end()) {
+            const std::string dir = m_root + "/sys/class/net/" + net.name;
+            Face created;
+            created.address = CachedFile(dir + "/address");
+            created.operState = CachedFile(dir + "/operstate");
+            created.speed = CachedFile(dir + "/speed");
+            created.loopback = readTrimmed(dir + "/type") == "772";
+            created.wireless = exists(dir + "/wireless") || exists(dir + "/phy80211");
+            created.hasDevice = exists(dir + "/device");
+            known = m_faces.emplace(net.name, std::move(created)).first;
+        }
+        Face& face = known->second;
+        net.loopback = face.loopback;
+        net.wireless = face.wireless;
+        net.hasDevice = face.hasDevice;
+        if (face.address.read(m_faceText) == ReadStatus::Ok)
+            net.mac = std::string(trimmed(m_faceText));
+        if (face.operState.read(m_faceText) == ReadStatus::Ok)
+            net.operState = std::string(trimmed(m_faceText));
         net.rxTotal = counters.rxBytes;
         net.txTotal = counters.txBytes;
 
-        std::string speed;
-        const ReadStatus speedStatus = readFile(dir + "/speed", speed);
-        const auto mbps = speedStatus == ReadStatus::Ok ? parseI64(speed) : std::nullopt;
+        const ReadStatus speedStatus = face.speed.read(m_faceText);
+        const auto mbps = speedStatus == ReadStatus::Ok ? parseI64(m_faceText) : std::nullopt;
         // Wi-Fi and down links report -1 or fail with EINVAL. That is not a speed of 0.
         net.linkMbps = mbps && *mbps > 0 ? Reading<double>::measured(static_cast<double>(*mbps))
                                          : Reading<double>::missing(Availability::Unsupported);
@@ -262,14 +291,14 @@ void NetworkSampler::sample(std::int64_t nowMs, std::vector<NetworkSample>& out)
         if (net.wireless) {
             // With a fake root in tests there is no kernel behind it, so ask only the real one.
             if (m_root.empty()) {
-                KnownWifi& known = m_wifi[net.name];
-                if (known.atMs == 0 || nowMs - known.atMs >= kWifiRefreshMs) {
-                    known.link = readWifiLink(net.name);
-                    known.atMs = nowMs;
+                KnownWifi& wifi = m_wifi[net.name];
+                if (wifi.atMs == 0 || nowMs - wifi.atMs >= kWifiRefreshMs) {
+                    wifi.link = readWifiLink(net.name);
+                    wifi.atMs = nowMs;
                 }
-                net.wifiNetwork = known.link.network;
-                if (known.link.sendMbps.known())
-                    net.linkMbps = known.link.sendMbps;
+                net.wifiNetwork = wifi.link.network;
+                if (wifi.link.sendMbps.known())
+                    net.linkMbps = wifi.link.sendMbps;
             }
             const std::string key = net.name + ":";
             const std::size_t at = wireless.find(key);

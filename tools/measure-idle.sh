@@ -5,16 +5,20 @@
 set -eu
 BIN=${1:?usage: measure-idle.sh <binary> [seconds]}
 SECONDS_PER_VIEW=${2:-20}
-WORK=$(mktemp -d "${FG_WORK:-$PWD/scratchpad}/measure.XXXXXX")
+BASE=${FG_WORK:-$PWD/scratchpad}
+mkdir -p "$BASE"
+WORK=$(mktemp -d "$BASE/measure.XXXXXX")
+trap 'rm -rf "$WORK"' EXIT
 TICKS=$(getconf CLK_TCK)
 
 ticks_of() { awk '{ print $14 + $15 }' "/proc/$1/stat"; }
 rss_of() { awk '/^VmRSS/ { print $2 }' "/proc/$1/status"; }
 own_of() { awk '/^RssAnon/ { print $2 }' "/proc/$1/status"; }
-switches_of() { awk '/ctxt_switches/ { n += $2 } END { print n }' "/proc/$1/status"; }
+# Every thread: the sampler has its own, and the process's status file only counts the main one.
+switches_of() { cat "/proc/$1"/task/*/status 2>/dev/null | awk '/ctxt_switches/ { n += $2 } END { print n + 0 }'; }
 
 printf '%-5s %10s %10s %14s %12s\n' view 'cpu %' 'rss MB' 'not shared MB' 'wakeups/s'
-for view in 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14; do
+for view in 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do
     XDG_CONFIG_HOME=$WORK/cfg XDG_DATA_HOME=$WORK/data QT_QPA_PLATFORM=offscreen "$BIN" --view "$view" &
     PID=$!
     sleep 3 # settle

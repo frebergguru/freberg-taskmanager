@@ -30,8 +30,11 @@ Measured offscreen, on a busy machine:
 
 ## Smaller things
 
+- [ ] Ship the MIT and BSD license texts of the AppImage runtime (type2-runtime, squashfuse), with their authors' names. `tools/third-party-notices.sh` copies only what is on the build machine, and the notice points to the source for the rest.
+- [ ] Sorting from the keyboard on lists other than Processes.
+- [ ] Connections: the refresh walks every process's files on the window's thread. It can be slow with auto-update on and thousands of open files. The lists on Services and Users also read D-Bus on the window's thread.
 - [ ] App History can't count a process's last update, because it has exited by the next one, so short runs read up to one update low.
 
 ## Later features
 
-- [ ] Update checks. There is no release address yet, and the app makes no network requests. Any future request needs a generic User-Agent and no personal data.
+- [ ] Update checks. Releases are on GitHub, but the app makes no network requests today. Any future request needs a generic User-Agent and no personal data.

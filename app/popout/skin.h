@@ -54,6 +54,9 @@ struct Skin {
     enum Shape { Rectangle, Circle, Ellipse, Capsule, Polygon, Mask } shape = Rectangle;
     QPolygonF polygon;   // in 0-1 units
     QImage maskImage;
+    // A folder skin's images are read only once it's chosen, from these.
+    QByteArray manifest;
+    QString imageFolder;
     int frameInset = 0;
 
     bool builtIn = true;

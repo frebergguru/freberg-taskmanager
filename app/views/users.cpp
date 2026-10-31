@@ -1,6 +1,7 @@
 #include "users.h"
 
 #include "../format.h"
+#include "../widgets/confirm.h"
 #include "../system/dbus.h"
 
 #include <QHBoxLayout>
@@ -24,6 +25,7 @@ struct Totals {
     int count = 0;
     bool cpuKnown = false;
     bool diskKnown = false;
+    Availability diskWhy = Availability::NotYetSampled;
 };
 } // namespace
 
@@ -83,6 +85,8 @@ void UsersView::onSnapshot(const Snapshot& snapshot)
             t.cpu += process.cpuPct.value;
             t.cpuKnown = true;
         }
+        if (!process.readBps.known() && !t.diskKnown)
+            t.diskWhy = process.readBps.state; // only "denied" if the system said so, not on the first sample
         if (process.readBps.known() || process.writeBps.known()) {
             t.disk += (process.readBps.known() ? process.readBps.value : 0) + (process.writeBps.known() ? process.writeBps.value : 0);
             t.diskKnown = true;
@@ -103,7 +107,7 @@ void UsersView::onSnapshot(const Snapshot& snapshot)
         item->setText(2, t.cpuKnown ? Format::percent(t.cpu) : Format::why(Availability::NotYetSampled));
         item->setText(3, Format::bytes(t.memory));
         // Other users' disk counters are closed to us, so say so rather than show 0.
-        item->setText(4, t.diskKnown ? Format::diskRate(t.disk) : Format::why(Availability::AccessDenied));
+        item->setText(4, t.diskKnown ? Format::diskRate(t.disk) : Format::why(t.diskWhy));
     }
 }
 
@@ -114,11 +118,13 @@ void UsersView::sessionAction(const char* method, const QString& label)
         m_message->setText(tr("Select a session first."));
         return;
     }
-    if (QMessageBox::warning(this, label, tr("%1 session %2 of %3?\n\nUnsaved work may be lost.").arg(label, item->text(0), item->text(1)), QMessageBox::Yes | QMessageBox::No, QMessageBox::No) != QMessageBox::Yes)
+    if (!confirmed(this, label, tr("%1 session %2 of %3?\n\nUnsaved work may be lost.").arg(label, item->text(0), item->text(1))))
         return;
-    const QString error = sessionCall(QDBusObjectPath(item->data(0, kPathRole).toString()), method);
-    m_message->setText(error.isEmpty() ? tr("%1: done.").arg(label) : tr("%1 failed: %2").arg(label, error));
-    refresh();
+    m_message->setText(tr("%1: waiting for the system...").arg(label));
+    sessionCall(QDBusObjectPath(item->data(0, kPathRole).toString()), method, this, [this, label](const QString& error) {
+        m_message->setText(error.isEmpty() ? tr("%1: done.").arg(label) : tr("%1 failed: %2").arg(label, error));
+        refresh();
+    });
 }
 
 } // namespace fg

@@ -76,8 +76,8 @@ void parseCpuStat(std::string_view text, std::vector<CpuTimes>& out)
         std::string_view line = nextLine(text);
         if (!line.starts_with("cpu"))
             break; // the cpu lines come first, and the rest of the file is long
-        nextField(line);
         CpuTimes times;
+        times.id = static_cast<int>(parseI64(nextField(line).substr(3)).value_or(-1));
         for (int column = 0; column < 8; ++column) { // guest time is already in user
             const std::string_view field = nextField(line);
             if (field.empty())

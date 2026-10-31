@@ -127,6 +127,20 @@ void readSurface(const QJsonValue& value, SkinSurface& out)
 }
 
 // File names only: a skin can't reach outside its own folder.
+// Built-in names are in the manifests above, so the translation tool needs them here too.
+[[maybe_unused]] constexpr const char* kBuiltInNames[] = {
+    QT_TRANSLATE_NOOP("fg::Skin", "Default"),
+    QT_TRANSLATE_NOOP("fg::Skin", "Console"),
+    QT_TRANSLATE_NOOP("fg::Skin", "Traces"),
+    QT_TRANSLATE_NOOP("fg::Skin", "Classic Column"),
+    QT_TRANSLATE_NOOP("fg::Skin", "Cassette Deck"),
+    QT_TRANSLATE_NOOP("fg::Skin", "Modern Light"),
+    QT_TRANSLATE_NOOP("fg::Skin", "Modern Dark"),
+    QT_TRANSLATE_NOOP("fg::Skin", "Neon Glow Light"),
+    QT_TRANSLATE_NOOP("fg::Skin", "Neon Glow"),
+    QT_TRANSLATE_NOOP("fg::Skin", "Dashboard"),
+};
+
 bool safeImageName(const QString& name)
 {
     return !name.isEmpty() && !name.contains(QLatin1Char('/')) && !name.contains(QLatin1Char('\\')) && name != QLatin1String("..") && name != QLatin1String(".") && !name.contains(QLatin1Char(':'));
@@ -137,11 +151,11 @@ QImage readImage(const QString& folder, const QString& name)
     if (folder.isEmpty() || !safeImageName(name))
         return {};
     const QFileInfo info(QDir(folder), name);
-    if (!info.isFile() || info.size() > kImageFileLimit)
+    if (info.isSymLink() || !info.isFile() || info.size() > kImageFileLimit) // a link could lead out of the folder
         return {};
     QImageReader reader(info.filePath());
     const QSize size = reader.size();
-    if (size.width() > kImageSideLimit || size.height() > kImageSideLimit || static_cast<qint64>(size.width()) * size.height() > kImagePixelLimit)
+    if (!size.isValid() || size.width() > kImageSideLimit || size.height() > kImageSideLimit || static_cast<qint64>(size.width()) * size.height() > kImagePixelLimit)
         return {};
     return reader.read();
 }
@@ -278,7 +292,7 @@ bool parseSkin(const QByteArray& json, const QString& imageFolder, Skin& out, QS
     const QJsonArray quadrants = root.value(QStringLiteral("quadrants")).toArray();
     QStringList chosen;
     for (const QJsonValue& value : quadrants)
-        if (skinChannels().contains(value.toString()) && value.toString() != QLatin1String("alert"))
+        if (skinChannels().contains(value.toString()) && value.toString() != QLatin1String("alert") && !chosen.contains(value.toString()))
             chosen << value.toString();
     if (!chosen.isEmpty())
         s.quadrants = chosen; // none valid leaves the default four
@@ -350,18 +364,21 @@ SkinLibrary loadSkins(const QString& folder)
             continue;
         }
 
+        // Only a real file: a link to a device or a pipe would never finish being read.
         QFile file(manifestPath);
-        if (!file.open(QIODevice::ReadOnly)) {
+        if (!QFileInfo(manifestPath).isFile() || !file.open(QIODevice::ReadOnly)) {
             library.problems.append({entry.fileName(), QCoreApplication::translate("fg::Skin", "The manifest can't be read.")});
             continue;
         }
-        if (file.size() > kManifestLimit) {
+        const QByteArray manifestText = file.read(kManifestLimit + 1);
+        if (manifestText.size() > kManifestLimit) {
             library.problems.append({entry.fileName(), QCoreApplication::translate("fg::Skin", "The manifest is larger than 256 KB.")});
             continue;
         }
         Skin skin;
         QString reason;
-        if (!parseSkin(file.readAll(), imageFolder, skin, reason)) {
+        // Images wait until the skin is chosen, so the rest of the library stays small in memory.
+        if (!parseSkin(manifestText, QString(), skin, reason)) {
             library.problems.append({entry.fileName(), reason});
             continue;
         }
@@ -374,6 +391,8 @@ SkinLibrary loadSkins(const QString& folder)
             continue;
         }
         skin.builtIn = false;
+        skin.manifest = manifestText;
+        skin.imageFolder = imageFolder;
         ids.insert(skin.id);
         names.insert(skin.name);
         library.skins << skin;

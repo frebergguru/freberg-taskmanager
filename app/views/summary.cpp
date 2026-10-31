@@ -99,7 +99,7 @@ void SummaryView::onSnapshot(const Snapshot& snapshot)
 
     double rx = 0, tx = 0;
     double linkUse = 0;
-    bool netKnown = false;
+    bool netKnown = false, linkKnown = false;
     for (const NetworkSample& net : snapshot.networks) {
         if (!countsTowardTotal(net, snapshot.networks) || !net.rxBps.known() || !net.txBps.known())
             continue;
@@ -107,10 +107,10 @@ void SummaryView::onSnapshot(const Snapshot& snapshot)
         tx += net.txBps.value;
         netKnown = true;
         if (net.linkMbps.known() && net.linkMbps.value > 0)
-            linkUse = std::max(linkUse, 100.0 * (net.rxBps.value + net.txBps.value) * 8.0 / (net.linkMbps.value * 1e6));
+            linkKnown = true, linkUse = std::max(linkUse, 100.0 * (net.rxBps.value + net.txBps.value) * 8.0 / (net.linkMbps.value * 1e6));
     }
     m_network.value->setText(netKnown ? tr("Receive %1\nSend %2").arg(Format::rate(rx), Format::rate(tx)) : Format::why(Availability::NotYetSampled));
-    setBar(m_network, linkUse, netKnown);
+    setBar(m_network, linkUse, linkKnown); // the share of the link, which needs a link speed
 
     if (!snapshot.gpus.empty()) {
         const GpuSample& gpu = snapshot.gpus.front();

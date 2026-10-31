@@ -5,6 +5,7 @@
 
 #include <QHash>
 #include <deque>
+#include <list>
 #include <memory>
 
 class QComboBox;
@@ -53,14 +54,16 @@ private:
     void updateEnergy(const Snapshot& snapshot);
     void rebuildCoreGraphs();
     void selectionChanged();
+    void dropGonePages(const Snapshot& snapshot);
 
     SamplerHub& m_hub;
     QListWidget* m_list;
     QStackedWidget* m_stack;
     bool isShown(const Page& page) const;
     bool m_updating = false;
-    std::deque<Page> m_pages; // deque, so Graphs may keep pointers to the histories
+    std::list<Page> m_pages; // a list, so Graphs may keep pointers to the histories, and pages can leave
     QHash<QString, Page*> m_byKey;
+    QString m_savedKey; // read once, since choosing the first page overwrites what is saved
 
     // CPU page: one small graph per logical processor or NUMA node.
     QComboBox* m_cpuMode = nullptr;

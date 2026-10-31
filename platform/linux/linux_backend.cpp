@@ -2,6 +2,7 @@
 #include "samplers.h"
 
 #include <cerrno>
+#include <charconv>
 #include <climits>
 #include <csignal>
 #include <cstring>
@@ -52,7 +53,7 @@ private:
 
 class LinuxBackend final : public ISystemBackend {
 public:
-    explicit LinuxBackend(std::string root) : m_root(std::move(root)) {}
+    explicit LinuxBackend(std::string root) : m_root(std::move(root)), m_stat(m_root + "/proc/stat") {}
 
     SnapshotPtr sample(Subsystems wanted) override
     {
@@ -124,8 +125,16 @@ public:
         }
 
         std::string uptime;
-        if (readFile(m_root + "/proc/uptime", uptime) == ReadStatus::Ok)
-            facts.uptimeSeconds = std::strtod(uptime.c_str(), nullptr);
+        const ReadStatus uptimeStatus = readFile(m_root + "/proc/uptime", uptime);
+        // from_chars always reads a point. strtod follows the locale, and in Norwegian stops at it.
+        double seconds = 0;
+        const char* const uptimeEnd = uptime.data() + uptime.size();
+        if (uptimeStatus != ReadStatus::Ok)
+            facts.uptimeSeconds = Reading<double>::missing(toAvailability(uptimeStatus));
+        else if (std::from_chars(uptime.data(), uptimeEnd, seconds).ec == std::errc{})
+            facts.uptimeSeconds = Reading<double>::measured(seconds);
+        else
+            facts.uptimeSeconds = Reading<double>::missing(Availability::Unsupported);
 
         // Launched through sudo, pkexec or doas: name both the account and who asked.
         const uid_t uid = ::geteuid();
@@ -213,7 +222,8 @@ public:
         cpu_set_t set;
         CPU_ZERO(&set);
         for (const int cpu : cpus)
-            CPU_SET(cpu, &set);
+            if (cpu >= 0 && cpu < CPU_SETSIZE)
+                CPU_SET(cpu, &set);
         return forEachThread(id.pid, [&set](int thread) { return ::sched_setaffinity(thread, sizeof set, &set); });
     }
 
@@ -240,13 +250,14 @@ public:
 
         const std::string dir = m_root + "/proc/" + std::to_string(id.pid);
         constexpr std::size_t kMapsLimit = 256 * 1024;
-        readFile(dir + "/status", out.status);
-        readFile(dir + "/limits", out.limits);
+        const auto stateOf = [](ReadStatus status) { return status == ReadStatus::Ok ? Availability::Measured : toAvailability(status); };
+        out.statusState = stateOf(readFile(dir + "/status", out.status));
+        out.limitsState = stateOf(readFile(dir + "/limits", out.limits));
         readFile(dir + "/cgroup", out.cgroup);
-        readFile(dir + "/maps", out.memoryMaps);
+        out.memoryMapsState = stateOf(readFile(dir + "/maps", out.memoryMaps));
         if (out.memoryMaps.size() > kMapsLimit)
             out.memoryMaps.resize(kMapsLimit);
-        readFile(dir + "/environ", out.environment);
+        out.environmentState = stateOf(readFile(dir + "/environ", out.environment));
         for (char& c : out.environment)
             if (c == '\0')
                 c = '\n';
@@ -294,17 +305,28 @@ private:
     ActionResult forEachThread(int pid, Apply apply)
     {
         std::vector<int> threads;
-        if (DIR* tasks = ::opendir((m_root + "/proc/" + std::to_string(pid) + "/task").c_str())) {
+        const std::string taskDir = m_root + "/proc/" + std::to_string(pid) + "/task/";
+        if (DIR* tasks = ::opendir(taskDir.c_str())) {
             while (const dirent* entry = ::readdir(tasks))
                 if (const auto thread = parseI64(entry->d_name))
                     threads.push_back(static_cast<int>(*thread));
             ::closedir(tasks);
         }
         if (threads.empty())
-            threads.push_back(pid);
-        for (const int thread : threads)
-            if (apply(thread) != 0 && errno != ESRCH)
-                return failure();
+            return {ActionResult::ProcessGone, {}};
+        std::size_t applied = 0;
+        for (const int thread : threads) {
+            // A thread number can only be reused once that thread ended. Skip one that no longer belongs here.
+            if (::access((taskDir + std::to_string(thread)).c_str(), F_OK) != 0)
+                continue;
+            if (apply(thread) != 0 && errno != ESRCH) {
+                ActionResult result = failure();
+                if (applied > 0)
+                    result.detail += " (" + std::to_string(applied) + " of " + std::to_string(threads.size()) + " threads were already changed)";
+                return result;
+            }
+            ++applied;
+        }
         return {};
     }
 
@@ -330,7 +352,7 @@ private:
     // Process CPU shares need the whole machine's ticks over the same interval.
     std::uint64_t totalTicksDelta()
     {
-        if (readFile(m_root + "/proc/stat", m_buffer) != ReadStatus::Ok)
+        if (m_stat.read(m_buffer) != ReadStatus::Ok)
             return 0;
         parseCpuStat(m_buffer, m_ticks);
         if (m_ticks.empty())
@@ -342,6 +364,7 @@ private:
     }
 
     std::string m_root;
+    CachedFile m_stat;
     std::uint64_t m_sequence = 0;
     std::unique_ptr<CpuSampler> m_cpu;
     std::unique_ptr<MemorySampler> m_memory;

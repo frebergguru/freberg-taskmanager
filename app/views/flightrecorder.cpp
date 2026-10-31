@@ -5,11 +5,13 @@
 #include "../recorder.h"
 #include "../settings.h"
 #include "../style/style.h"
+#include "../widgets/confirm.h"
 #include "../widgets/infogrid.h"
 
 #include <QAccessible>
 #include <QApplication>
 #include <QCheckBox>
+#include <QCoreApplication>
 #include <QFileDialog>
 #include <QGridLayout>
 #include <QHBoxLayout>
@@ -57,6 +59,15 @@ const Panel kPanels[] = {
 };
 
 } // namespace
+
+// A peak with nothing behind it says so, and is never shown as 0.
+static QString notRecorded() { return QCoreApplication::translate("fg::FlightRecorderView", "Not recorded"); }
+static QString peakPercent(double value) { return std::isnan(value) ? notRecorded() : Format::percent(value); }
+static QString peakBytes(double value) { return std::isnan(value) ? notRecorded() : Format::bytes(static_cast<std::uint64_t>(value)); }
+static QString peakDiskRate(double value) { return std::isnan(value) ? notRecorded() : Format::diskRate(value); }
+static QString peakRate(double value) { return std::isnan(value) ? notRecorded() : Format::rate(value); }
+static QString peakTemperature(double value) { return std::isnan(value) ? notRecorded() : Format::temperature(value); }
+static QString peakWatts(double value) { return std::isnan(value) ? notRecorded() : Format::watts(value); }
 
 // One panel: the whole recording across its width, with a line at the cursor.
 class TraceStrip final : public QWidget {
@@ -128,7 +139,7 @@ protected:
             top = top > 0 ? top * 1.1 : 1.0;
         }
 
-        const auto draw = [&](TraceChannel channel, const QColor& color) {
+        const auto draw = [&](TraceChannel channel, const QColor& color, bool second) {
             const int height = area.height() - 1;
             // More frames than pixels: each column shows its highest value, so spikes survive.
             QPainterPath line;
@@ -155,11 +166,11 @@ protected:
                     line.moveTo(point);
                 have = true;
             }
-            strokeSeries(p, line, color, area.bottom());
+            strokeSeries(p, line, color, area.bottom(), second);
         };
-        draw(m_panel.channel, scheme.graphLine);
+        draw(m_panel.channel, scheme.graphLine, false);
         if (m_panel.hasSecond)
-            draw(m_panel.second, scheme.graphLine2);
+            draw(m_panel.second, scheme.graphLine2, true);
 
         if (m_cursor >= 0 && size > 0) {
             const int x = area.left() + static_cast<int>(static_cast<double>(m_cursor) / static_cast<double>(std::max<std::size_t>(1, size - 1)) * (area.width() - 1));
@@ -329,7 +340,9 @@ void FlightRecorderView::toggleRecording()
         m_opened.clear();
         m_cursor = -1;
         m_recorder.start();
-        m_status->setText(tr("Recording. It keeps going on other pages and while the window is hidden. All sensors and processes are read on each update until you stop it."));
+        // With updates paused there are no samples, so nothing gets recorded either.
+        m_status->setText(Settings::instance().updateMs() <= 0 ? tr("Recording, but updates are paused, so nothing is captured until you turn them back on in the View menu.")
+                                                               : tr("Recording. It keeps going on other pages and while the window is hidden. All sensors and processes are read on each update until you stop it."));
     }
     showFrames();
     updateButtons();
@@ -337,6 +350,8 @@ void FlightRecorderView::toggleRecording()
 
 void FlightRecorderView::clearRecording()
 {
+    if (!m_showingFile && !m_recorder.buffer().frames().empty() && !confirmed(this, tr("Clear"), tr("Clear this recording?\n\nWhat hasn't been saved will be lost.")))
+        return;
     if (m_showingFile) {
         m_showingFile = false;
         m_opened.clear();
@@ -485,13 +500,13 @@ void FlightRecorderView::analyse()
 
     QStringList lines;
     lines << tr("Over %1 seconds around this moment:").arg(locale.toString(a.seconds, 'f', 0));
-    lines << tr("Highest CPU use: %1").arg(Format::percent(a.peakCpu));
-    lines << tr("Highest memory use: %1").arg(Format::bytes(static_cast<std::uint64_t>(a.peakMemoryBytes)));
-    lines << tr("Highest disk traffic: %1").arg(Format::diskRate(a.peakDiskBps));
-    lines << tr("Highest network traffic: %1").arg(Format::rate(a.peakNetBps));
-    lines << tr("Highest temperature: %1").arg(Format::temperature(a.peakTempC));
-    lines << tr("Highest power: %1").arg(Format::watts(a.peakPowerW));
-    lines << tr("Highest pressure: %1").arg(Format::percent(a.peakPressure));
+    lines << tr("Highest CPU use: %1").arg(peakPercent(a.peakCpu));
+    lines << tr("Highest memory use: %1").arg(peakBytes(a.peakMemoryBytes));
+    lines << tr("Highest disk traffic: %1").arg(peakDiskRate(a.peakDiskBps));
+    lines << tr("Highest network traffic: %1").arg(peakRate(a.peakNetBps));
+    lines << tr("Highest temperature: %1").arg(peakTemperature(a.peakTempC));
+    lines << tr("Highest power: %1").arg(peakWatts(a.peakPowerW));
+    lines << tr("Highest pressure: %1").arg(peakPercent(a.peakPressure));
     if (a.gaps > 0)
         lines << tr("%n sample(s) are missing in this stretch.", nullptr, static_cast<int>(a.gaps));
     lines << QString() << tr("Biggest users of the CPU:");
@@ -519,12 +534,12 @@ void FlightRecorderView::compareFile()
 
     QStringList lines;
     lines << row(tr("Length"), tr("%1 s").arg(locale.toString(a.seconds, 'f', 0)), tr("%1 s").arg(locale.toString(b.seconds, 'f', 0)));
-    lines << row(tr("Highest CPU use"), Format::percent(a.peakCpu), Format::percent(b.peakCpu));
-    lines << row(tr("Highest memory use"), Format::bytes(static_cast<std::uint64_t>(a.peakMemoryBytes)), Format::bytes(static_cast<std::uint64_t>(b.peakMemoryBytes)));
-    lines << row(tr("Highest disk traffic"), Format::diskRate(a.peakDiskBps), Format::diskRate(b.peakDiskBps));
-    lines << row(tr("Highest network traffic"), Format::rate(a.peakNetBps), Format::rate(b.peakNetBps));
-    lines << row(tr("Highest temperature"), Format::temperature(a.peakTempC), Format::temperature(b.peakTempC));
-    lines << row(tr("Highest power"), Format::watts(a.peakPowerW), Format::watts(b.peakPowerW));
+    lines << row(tr("Highest CPU use"), peakPercent(a.peakCpu), peakPercent(b.peakCpu));
+    lines << row(tr("Highest memory use"), peakBytes(a.peakMemoryBytes), peakBytes(b.peakMemoryBytes));
+    lines << row(tr("Highest disk traffic"), peakDiskRate(a.peakDiskBps), peakDiskRate(b.peakDiskBps));
+    lines << row(tr("Highest network traffic"), peakRate(a.peakNetBps), peakRate(b.peakNetBps));
+    lines << row(tr("Highest temperature"), peakTemperature(a.peakTempC), peakTemperature(b.peakTempC));
+    lines << row(tr("Highest power"), peakWatts(a.peakPowerW), peakWatts(b.peakPowerW));
     m_report->setPlainText(lines.join(QLatin1Char('\n')));
 }
 

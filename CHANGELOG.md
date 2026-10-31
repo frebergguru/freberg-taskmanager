@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Readings: peaks with no data say "Not recorded" instead of 0. Closing a connection, turning a column back on, a counter wrap and a GPU driver with no engine times no longer give a false figure. Offline processors keep their numbers, every CPU package counts towards power, and throttle events are no longer counted once per processor.
+- Actions: End Process Tree works out the family before asking. Suspend and Clear now ask first, and uninstalling a Debian package can no longer remove others that need it.
+- The window no longer freezes while a service or session action waits for a password.
+- Exit really exits with close-to-tray on, a stopped tray meter no longer looks like a reading, and alerts fall back to the tray when no notification service answers.
+- Skins: a manifest that is a link to a device or pipe can't hang the app, image links are refused, and images load only when the skin is chosen.
+- Exports and recordings report a full disk, damaged recordings are refused, and JSON export stays valid when a process name is cut mid-character.
+- `--record=file` now works, as does a decimal comma locale when reading uptime.
+
+### Changed
+
+- Graphs draw their second line dashed, the popout follows the text size, every saturation setting keeps WCAG AA, and the Processes page can choose columns and sort from the keyboard.
+- Files are kept open rather than reopened on each sample. Network and disk devices that leave no longer stay in memory.
+- `tools/grant-sensor-access.sh` applies the power counter rule without a reboot. `tools/measure-idle.sh` counts every thread and page. `tools/release.sh` refuses a version already tagged on other code, a missing library or plugin, and sets the `.deb`'s real dependencies. Building now requires Qt 6.7.
+
 ## 0.1.0 (2026-10-31)
 
 ### License

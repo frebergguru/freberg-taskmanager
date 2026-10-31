@@ -53,7 +53,7 @@ Version 1. An open format, so other tools can read recordings. All numbers are l
 
 - **A value that wasn't measured is NaN.** It means a gap, never 0. CSV export leaves those cells empty, and JSON export writes `null`.
 - **Readers must accept more channels than they know,** and skip the extra ones. If a file has fewer, the rest are gaps.
-- **Damaged files are refused,** not guessed at: a wrong magic, a newer version, a count past the limits above, or a file that ends early.
+- **Damaged files are refused,** not guessed at: a wrong magic, a newer version, a count past the limits above, or a file that ends early. This reader also stops at more than 1024 channels or 100,000,000 frames, a timestamp past 2^63, and a value that is infinite, negative (only temperature may be) or past 1e18.
 - **Files are written to `<name>.part`** and renamed when complete, so a file with the real name is whole.
 
 Exports use a decimal point and field names as above, whatever the system's language.

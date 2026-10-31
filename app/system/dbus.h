@@ -5,7 +5,9 @@
 #include <QDBusArgument>
 #include <QDBusObjectPath>
 #include <QList>
+#include <QObject>
 #include <QString>
+#include <functional>
 
 namespace fg {
 
@@ -37,15 +39,18 @@ const QDBusArgument& operator>>(const QDBusArgument& in, DBusSession& session);
 
 void registerDBusTypes();
 
-// An empty string means it worked; otherwise the reason it did not.
-QString manageUnit(bool userBus, const char* method, const QString& unit);
-QString setUnitEnabled(bool userBus, const QString& unit, bool enabled);
+// An empty string means it worked; otherwise the reason it did not. These can wait on a
+// password prompt, so the answer comes later and the window keeps working meanwhile. It
+// is not delivered if context has gone by then.
+using DBusDone = std::function<void(const QString& error)>;
+void manageUnit(bool userBus, const char* method, const QString& unit, QObject* context, DBusDone done);
+void setUnitEnabled(bool userBus, const QString& unit, bool enabled, QObject* context, DBusDone done);
 QList<DBusUnit> listUnits(bool userBus, QString* error);
 QList<DBusUnitFile> listUnitFiles(bool userBus, QString* error);
 bool systemdAvailable();
 
 QList<DBusSession> listSessions(QString* error);
-QString sessionCall(const QDBusObjectPath& session, const char* method);
+void sessionCall(const QDBusObjectPath& session, const char* method, QObject* context, DBusDone done);
 
 } // namespace fg
 

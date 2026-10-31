@@ -210,15 +210,28 @@ void StartupView::toggleSelected(bool enabled)
         return;
     }
     const QString key = item->data(0, kKeyRole).toString();
-    const QString error = item->data(0, kKindRole).toInt() == UserUnit ? setUnitEnabled(true, key, enabled) : writeOverride(key, enabled);
-    m_message->setText(error.isEmpty() ? tr("%1 will %2 at the next login.").arg(item->text(0), enabled ? tr("start") : tr("not start")) : tr("Could not change %1: %2").arg(item->text(0), error));
-    refresh();
+    const QString name = item->text(0);
+    const auto finish = [this, name, enabled](const QString& error) {
+        m_message->setText(error.isEmpty() ? tr("%1 will %2 at the next login.").arg(name, enabled ? tr("start") : tr("not start")) : tr("Could not change %1: %2").arg(name, error));
+        refresh();
+    };
+    if (item->data(0, kKindRole).toInt() == UserUnit)
+        setUnitEnabled(true, key, enabled, this, finish);
+    else
+        finish(writeOverride(key, enabled));
 }
 
 void StartupView::measureTimes()
 {
     auto* process = new QProcess(this);
     m_measure->setEnabled(false);
+    connect(process, &QProcess::errorOccurred, this, [this, process](QProcess::ProcessError error) {
+        if (error != QProcess::FailedToStart)
+            return;
+        m_measure->setEnabled(true);
+        m_message->setText(tr("Start times are not available on this system."));
+        process->deleteLater();
+    });
     connect(process, &QProcess::finished, this, [this, process](int code) {
         m_measure->setEnabled(true);
         if (code != 0) {

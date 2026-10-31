@@ -8,6 +8,7 @@
 #include <cstring>
 #include <limits>
 #include <memory>
+#include <string_view>
 #include <unordered_map>
 
 namespace fg {
@@ -22,6 +23,7 @@ constexpr std::uint32_t kVersion = 1;
 constexpr std::uint32_t kMaxTopProcesses = 64;
 constexpr std::uint32_t kMaxNameBytes = 4096;
 constexpr std::uint64_t kMaxFrames = 100000000;
+constexpr float kMaxValue = 1e18f; // far past any real figure, and still fits every integer it is turned into
 
 constexpr float kGap = std::numeric_limits<float>::quiet_NaN();
 
@@ -58,6 +60,12 @@ void putFloat(std::string& out, float value)
     std::uint32_t bits;
     std::memcpy(&bits, &value, 4);
     putU32(out, bits);
+}
+
+// Stored values are NaN for a gap, or a figure that later code can safely convert and sum.
+bool plausibleChannel(float value, bool mayBeNegative)
+{
+    return std::isnan(value) || (value <= kMaxValue && value >= (mayBeNegative ? -kMaxValue : 0.0f));
 }
 
 class Reader {
@@ -140,11 +148,49 @@ std::string secondsText(std::int64_t ms)
     return std::string(text, end);
 }
 
+// How many bytes the UTF-8 character at this position takes, or 0 if it isn't valid.
+std::size_t utf8Length(std::string_view text)
+{
+    const auto byte = [text](std::size_t i) { return static_cast<unsigned char>(text[i]); };
+    const unsigned char first = byte(0);
+    std::size_t length = 0;
+    unsigned char low = 0x80, high = 0xbf; // the range the second byte may be in
+    if (first < 0x80)
+        return 1;
+    if (first >= 0xc2 && first <= 0xdf) {
+        length = 2;
+    } else if (first >= 0xe0 && first <= 0xef) {
+        length = 3;
+        low = first == 0xe0 ? 0xa0 : 0x80; // no overlong forms
+        high = first == 0xed ? 0x9f : 0xbf; // no surrogates
+    } else if (first >= 0xf0 && first <= 0xf4) {
+        length = 4;
+        low = first == 0xf0 ? 0x90 : 0x80;
+        high = first == 0xf4 ? 0x8f : 0xbf;
+    } else {
+        return 0;
+    }
+    if (text.size() < length || byte(1) < low || byte(1) > high)
+        return 0;
+    for (std::size_t i = 2; i < length; ++i)
+        if (byte(i) < 0x80 || byte(i) > 0xbf)
+            return 0;
+    return length;
+}
+
+// JSON must be valid UTF-8, and the kernel can cut a process name in the middle of a character.
 std::string jsonEscaped(const std::string& text)
 {
     std::string out;
     out.reserve(text.size());
-    for (const char c : text) {
+    for (std::size_t i = 0; i < text.size();) {
+        const char c = text[i];
+        const std::size_t length = utf8Length(std::string_view(text).substr(i));
+        if (length == 0) {
+            out += "\xef\xbf\xbd"; // the replacement character
+            ++i;
+            continue;
+        }
         if (c == '"' || c == '\\') {
             out += '\\';
             out += c;
@@ -153,10 +199,26 @@ std::string jsonEscaped(const std::string& text)
             std::snprintf(escape, sizeof escape, "\\u%04x", static_cast<unsigned>(static_cast<unsigned char>(c)));
             out += escape;
         } else {
-            out += c;
+            out.append(text, i, length);
         }
+        i += length;
     }
     return out;
+}
+
+// Reports a full disk or similar, which a buffered write only shows when it is flushed.
+bool finishWriting(File& file, const std::string& path, std::string& error)
+{
+    const bool wroteAll = std::ferror(file.get()) == 0;
+    const int savedErrno = errno;
+    std::FILE* raw = file.release();
+    const bool closed = std::fclose(raw) == 0;
+    if (wroteAll && closed)
+        return true;
+    if (!wroteAll)
+        errno = savedErrno;
+    error = errnoText(path);
+    return false;
 }
 
 } // namespace
@@ -308,8 +370,8 @@ bool saveTrace(const std::string& path, const std::deque<TraceFrame>& frames, st
                 out.clear();
             }
         }
-        if (std::fwrite(out.data(), 1, out.size(), file.get()) != out.size() || std::fflush(file.get()) != 0) {
-            error = errnoText(path);
+        std::fwrite(out.data(), 1, out.size(), file.get());
+        if (!finishWriting(file, path, error)) {
             std::remove(temporary.c_str());
             return false;
         }
@@ -352,7 +414,7 @@ bool loadTrace(const std::string& path, std::deque<TraceFrame>& frames, std::str
     for (std::uint64_t i = 0; i < count; ++i) {
         TraceFrame frame;
         std::uint64_t ms = 0;
-        if (!in.u64(ms) || !in.f32(frame.memoryTotalBytes))
+        if (!in.u64(ms) || ms > static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max()) || !in.f32(frame.memoryTotalBytes) || !plausibleChannel(frame.memoryTotalBytes, false))
             return damaged();
         frame.ms = static_cast<std::int64_t>(ms);
         // Channels a later version adds are read past; ones this file lacks stay gaps.
@@ -360,7 +422,7 @@ bool loadTrace(const std::string& path, std::deque<TraceFrame>& frames, std::str
             *channelSlot(frame, channel) = kGap;
         for (std::uint32_t channel = 0; channel < channels; ++channel) {
             float value = 0;
-            if (!in.f32(value))
+            if (!in.f32(value) || !plausibleChannel(value, channel == static_cast<std::uint32_t>(TraceChannel::Temp)))
                 return damaged();
             if (channel < static_cast<std::uint32_t>(TraceChannel::Count))
                 *channelSlot(frame, static_cast<int>(channel)) = value;
@@ -374,7 +436,8 @@ bool loadTrace(const std::string& path, std::deque<TraceFrame>& frames, std::str
             if (!in.u32(size) || size > kMaxNameBytes)
                 return damaged();
             process.name.resize(size);
-            if ((size && !in.bytes(process.name.data(), size)) || !in.u32(pid) || !in.f32(process.cpuPct) || !in.f32(process.rssBytes))
+            if ((size && !in.bytes(process.name.data(), size)) || !in.u32(pid) || !in.f32(process.cpuPct) || !in.f32(process.rssBytes)
+                || std::isnan(process.cpuPct) || std::isnan(process.rssBytes) || !plausibleChannel(process.cpuPct, false) || !plausibleChannel(process.rssBytes, false))
                 return damaged();
             process.pid = static_cast<int>(pid);
         }
@@ -408,7 +471,7 @@ bool exportCsv(const std::string& path, const std::deque<TraceFrame>& frames, st
         line += '\n';
         std::fputs(line.c_str(), file.get());
     }
-    return true;
+    return finishWriting(file, path, error);
 }
 
 bool exportJson(const std::string& path, const std::deque<TraceFrame>& frames, std::string& error)
@@ -442,7 +505,7 @@ bool exportJson(const std::string& path, const std::deque<TraceFrame>& frames, s
         std::fputs(line.c_str(), file.get());
     }
     std::fputs("\n]}\n", file.get());
-    return true;
+    return finishWriting(file, path, error);
 }
 
 TraceAnalysis analyseTrace(const std::deque<TraceFrame>& frames, std::size_t first, std::size_t last, std::size_t limit)
@@ -455,9 +518,15 @@ TraceAnalysis analyseTrace(const std::deque<TraceFrame>& frames, std::size_t fir
     out.frames = last - first + 1;
     out.seconds = static_cast<double>(frames[last].ms - frames[first].ms) / 1000.0;
 
-    const auto peak = [](double& best, float value) {
+    const auto peak = [](double& best, double value) {
         if (!std::isnan(value))
-            best = std::max(best, static_cast<double>(value));
+            best = std::isnan(best) ? value : std::max(best, value);
+    };
+    // One direction may be missing, and then the sum is what is known. Both missing stays a gap.
+    const auto sumOf = [](float a, float b) {
+        if (std::isnan(a))
+            return static_cast<double>(b);
+        return static_cast<double>(a) + (std::isnan(b) ? 0.0 : static_cast<double>(b));
     };
     struct Totals {
         double cpu = 0;
@@ -470,8 +539,8 @@ TraceAnalysis analyseTrace(const std::deque<TraceFrame>& frames, std::size_t fir
             ++out.gaps;
         peak(out.peakCpu, frame.cpuPct);
         peak(out.peakMemoryBytes, frame.memoryUsedBytes);
-        peak(out.peakDiskBps, (std::isnan(frame.diskReadBps) ? 0 : frame.diskReadBps) + (std::isnan(frame.diskWriteBps) ? 0 : frame.diskWriteBps));
-        peak(out.peakNetBps, (std::isnan(frame.netRxBps) ? 0 : frame.netRxBps) + (std::isnan(frame.netTxBps) ? 0 : frame.netTxBps));
+        peak(out.peakDiskBps, sumOf(frame.diskReadBps, frame.diskWriteBps));
+        peak(out.peakNetBps, sumOf(frame.netRxBps, frame.netTxBps));
         peak(out.peakTempC, frame.cpuTempC);
         peak(out.peakPowerW, frame.cpuPowerW);
         peak(out.peakPressure, frame.pressureCpu);

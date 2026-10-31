@@ -31,6 +31,8 @@ private:
     const ProcessSample* currentProcess() const;
     void showContextMenu(const QPoint& position);
     void showHeaderMenu(const QPoint& position);
+    void showColumnMenu(const QPoint& globalPosition);
+    void suspendSelected();
     void endSelected(bool force, bool wholeTree);
     void changePriority(int nice);
     void changeIoPriority(int choice);

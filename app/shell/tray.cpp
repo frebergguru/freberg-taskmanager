@@ -7,6 +7,7 @@
 #include <QApplication>
 #include <QDBusConnection>
 #include <QDBusMessage>
+#include <QDBusPendingCallWatcher>
 #include <QMenu>
 #include <QPainter>
 #include <QSystemTrayIcon>
@@ -48,6 +49,7 @@ void TrayAndAlerts::reconfigure()
     const bool wantIcon = settings.closeToTray() || meter;
     if (wantIcon && !m_icon && QSystemTrayIcon::isSystemTrayAvailable()) {
         m_icon = new QSystemTrayIcon(Icons::app(), this);
+        m_lastIconLevel = -1; // this icon shows no meter yet
         m_icon->setToolTip(QStringLiteral("Freberg.guru - Task manager"));
         auto* menu = new QMenu(m_window);
         menu->addAction(tr("&Show"), m_window, [this] {
@@ -56,7 +58,7 @@ void TrayAndAlerts::reconfigure()
             m_window->activateWindow();
         });
         menu->addSeparator();
-        menu->addAction(tr("E&xit"), qApp, &QApplication::quit);
+        menu->addAction(tr("E&xit"), this, &TrayAndAlerts::exitRequested);
         m_icon->setContextMenu(menu);
         connect(m_icon, &QSystemTrayIcon::activated, this, [this](QSystemTrayIcon::ActivationReason reason) {
             if (reason != QSystemTrayIcon::Trigger)
@@ -69,8 +71,14 @@ void TrayAndAlerts::reconfigure()
         });
         m_icon->show();
     } else if (!wantIcon && m_icon) {
+        delete m_icon->contextMenu(); // it belongs to the window, so it would outlive the icon
         delete m_icon;
         m_icon = nullptr;
+    } else if (m_icon && !meter && m_lastIconLevel >= 0) {
+        // A meter that has stopped updating must not go on looking like a reading.
+        m_icon->setIcon(Icons::app());
+        m_icon->setToolTip(QStringLiteral("Freberg.guru - Task manager"));
+        m_lastIconLevel = -1;
     }
 
     Subsystems wanted = SubNone;
@@ -141,8 +149,13 @@ void TrayAndAlerts::notify(const QString& title, const QString& message)
 {
     QDBusMessage call = QDBusMessage::createMethodCall(QStringLiteral("org.freedesktop.Notifications"), QStringLiteral("/org/freedesktop/Notifications"), QStringLiteral("org.freedesktop.Notifications"), QStringLiteral("Notify"));
     call << QStringLiteral("Freberg.guru - Task manager") << quint32(0) << QStringLiteral("utilities-system-monitor") << title << message << QStringList() << QVariantMap() << -1;
-    if (!QDBusConnection::sessionBus().send(call) && m_icon)
-        m_icon->showMessage(title, message);
+    // Sending only queues it, so whether anyone is there to show it comes back as an answer.
+    auto* watcher = new QDBusPendingCallWatcher(QDBusConnection::sessionBus().asyncCall(call), this);
+    connect(watcher, &QDBusPendingCallWatcher::finished, this, [this, watcher, title, message] {
+        watcher->deleteLater();
+        if (watcher->isError() && m_icon)
+            m_icon->showMessage(title, message);
+    });
 }
 
 } // namespace fg

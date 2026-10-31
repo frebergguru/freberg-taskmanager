@@ -3,6 +3,7 @@
 #include "../format.h"
 #include "../hub.h"
 #include "../settings.h"
+#include "../widgets/confirm.h"
 #include "../widgets/sortitem.h"
 
 #include <QCheckBox>
@@ -187,7 +188,7 @@ AppHistoryView::AppHistoryView(SamplerHub& hub)
         refresh();
     });
     connect(clear, &QPushButton::clicked, this, [this] {
-        if (QMessageBox::warning(this, tr("Delete History"), tr("Delete all app history?"), QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::Yes) {
+        if (confirmed(this, tr("Delete History"), tr("Delete all app history?"))) {
             m_log->clearAll();
             refresh();
         }

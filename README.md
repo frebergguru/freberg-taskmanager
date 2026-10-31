@@ -42,11 +42,11 @@ Measure it yourself with `tools/measure-idle.sh build/freberg-taskmanager`, or t
 
 ## Download
 
-Packages are on the [releases page](https://github.com/frebergguru/freberg-taskmanager/releases): an AppImage that runs on most Linux systems, a `.deb` and a `.tar.gz`. Each release also has its complete source and a `SHA256SUMS` file.
+Packages are on the [releases page](https://github.com/frebergguru/freberg-taskmanager/releases): an AppImage that carries its own Qt, a `.deb` and a `.tar.gz`. The AppImage still uses the system's C and C++ libraries, so it only runs on a system about as new as the one that built it. `tools/release.sh` prints what each build needs. Each release also has its complete source and a `SHA256SUMS` file.
 
 ## Build
 
-You need CMake 3.21 or later, a C++20 compiler and Qt 6.4 or later (Core, Gui, Widgets, DBus, Sql and LinguistTools).
+You need CMake 3.21 or later, a C++20 compiler and Qt 6.7 or later (Core, Gui, Widgets, DBus, Sql and LinguistTools). So far it has only been built and tested with Qt 6.11.
 
 ```sh
 cmake -S . -B build

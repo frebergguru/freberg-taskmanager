@@ -29,6 +29,9 @@ public:
     bool iconShown() const;
     void reconfigure();
 
+signals:
+    void exitRequested();
+
 private:
     void onSampled(const SnapshotPtr& snapshot);
     void paintIcon(double cpu);

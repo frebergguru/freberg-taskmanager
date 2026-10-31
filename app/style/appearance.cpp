@@ -64,6 +64,12 @@ void installAppearance()
         if (Settings::instance().followSystem())
             applyAppearance();
     });
+#if QT_VERSION >= QT_VERSION_CHECK(6, 10, 0)
+    QObject::connect(QGuiApplication::styleHints()->accessibility(), &QAccessibilityHints::contrastPreferenceChanged, qApp, [] {
+        if (Settings::instance().followSystem())
+            applyAppearance();
+    });
+#endif
 }
 
 void applyAppearance()

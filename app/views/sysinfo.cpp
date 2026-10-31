@@ -36,8 +36,12 @@ void SystemInfoView::refresh()
     m_grid->set(tr("Toolkit:"), tr("Qt %1").arg(QString::fromLatin1(qVersion())));
     m_grid->set(tr("Running as:"), text(facts.runningAs));
 
-    const int minutes = static_cast<int>(facts.uptimeSeconds / 60);
-    m_grid->set(tr("Up for:"), tr("%1 days, %2 hours, %3 minutes").arg(minutes / 1440).arg((minutes / 60) % 24).arg(minutes % 60));
+    if (facts.uptimeSeconds.known()) {
+        const int minutes = static_cast<int>(facts.uptimeSeconds.value / 60);
+        m_grid->set(tr("Up for:"), tr("%1, %2, %3").arg(tr("%n day(s)", nullptr, minutes / 1440), tr("%n hour(s)", nullptr, (minutes / 60) % 24), tr("%n minute(s)", nullptr, minutes % 60)));
+    } else {
+        m_grid->set(tr("Up for:"), Format::why(facts.uptimeSeconds.state));
+    }
 
     m_grid->set(tr("Manufacturer:"), text(facts.boardVendor));
     m_grid->set(tr("Product:"), text(facts.productName));
@@ -45,7 +49,7 @@ void SystemInfoView::refresh()
     m_grid->set(tr("BIOS version:"), text(facts.biosVersion));
 
     m_grid->set(tr("Processor:"), text(cpu.model));
-    m_grid->set(tr("Cores:"), tr("%1 physical, %2 logical").arg(cpu.physical).arg(cpu.logical));
+    m_grid->set(tr("Cores:"), cpu.physical > 0 ? tr("%1 physical, %2 logical").arg(cpu.physical).arg(cpu.logical) : tr("%1 logical").arg(cpu.logical));
     m_grid->set(tr("NUMA nodes:"), QString::number(cpu.numaNodes));
 
     QStringList gpus;
@@ -67,9 +71,9 @@ void SystemInfoView::refresh()
                 continue;
             }
             ++used;
-            modules << tr("%1: %2 %3 %4, %5 MT/s")
-                           .arg(QString::fromStdString(module.locator), Format::bytes(module.sizeBytes), QString::fromStdString(module.type), QString::fromStdString(module.formFactor))
-                           .arg(module.speedMTs);
+            const QString description = tr("%1: %2 %3 %4").arg(QString::fromStdString(module.locator), Format::bytes(module.sizeBytes), QString::fromStdString(module.type), QString::fromStdString(module.formFactor));
+            // A speed of 0 means the firmware doesn't say, which virtual machines often do.
+            modules << (module.speedMTs > 0 ? tr("%1, %2 MT/s").arg(description).arg(module.speedMTs) : description);
         }
         m_grid->set(tr("Memory slots used:"), tr("%1 of %2").arg(used).arg(facts.memoryModules.value.size()));
         m_grid->set(tr("Memory modules:"), modules.join(QLatin1Char('\n')));

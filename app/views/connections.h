@@ -32,6 +32,7 @@ private:
     QCheckBox* m_showUnix;
     QLabel* m_message;
     QTimer* m_timer;
+    QString m_outcome; // what the last action did, shown until the page is left
 };
 
 } // namespace fg

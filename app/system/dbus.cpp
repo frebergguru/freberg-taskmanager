@@ -3,6 +3,7 @@
 #include <QDBusConnection>
 #include <QDBusInterface>
 #include <QDBusMetaType>
+#include <QDBusPendingCallWatcher>
 #include <QDBusReply>
 #include <QFileInfo>
 
@@ -27,6 +28,15 @@ QDBusMessage managerCall(const QString& method)
 
 // Starting or stopping can wait on a password prompt, so allow it plenty of time.
 constexpr int kActionTimeoutMs = 120000;
+
+void whenAnswered(const QDBusConnection& bus, const QDBusMessage& call, QObject* context, DBusDone done)
+{
+    auto* watcher = new QDBusPendingCallWatcher(bus.asyncCall(call, kActionTimeoutMs), context);
+    QObject::connect(watcher, &QDBusPendingCallWatcher::finished, context, [watcher, done = std::move(done)] {
+        watcher->deleteLater();
+        done(watcher->isError() ? watcher->error().message() : QString());
+    });
+}
 
 } // namespace
 
@@ -119,16 +129,15 @@ QList<DBusUnitFile> listUnitFiles(bool userBus, QString* error)
     return reply.value();
 }
 
-QString manageUnit(bool userBus, const char* method, const QString& unit)
+void manageUnit(bool userBus, const char* method, const QString& unit, QObject* context, DBusDone done)
 {
     QDBusMessage call = managerCall(QLatin1String(method));
     call.setInteractiveAuthorizationAllowed(true);
     call << unit << QStringLiteral("replace");
-    const QDBusMessage reply = busFor(userBus).call(call, QDBus::Block, kActionTimeoutMs);
-    return reply.type() == QDBusMessage::ErrorMessage ? reply.errorMessage() : QString();
+    whenAnswered(busFor(userBus), call, context, std::move(done));
 }
 
-QString setUnitEnabled(bool userBus, const QString& unit, bool enabled)
+void setUnitEnabled(bool userBus, const QString& unit, bool enabled, QObject* context, DBusDone done)
 {
     QDBusMessage call = managerCall(enabled ? QStringLiteral("EnableUnitFiles") : QStringLiteral("DisableUnitFiles"));
     call.setInteractiveAuthorizationAllowed(true);
@@ -136,11 +145,16 @@ QString setUnitEnabled(bool userBus, const QString& unit, bool enabled)
         call << QStringList{unit} << false << false;
     else
         call << QStringList{unit} << false;
-    QDBusMessage reply = busFor(userBus).call(call, QDBus::Block, kActionTimeoutMs);
-    if (reply.type() == QDBusMessage::ErrorMessage)
-        return reply.errorMessage();
-    reply = busFor(userBus).call(managerCall(QStringLiteral("Reload")), QDBus::Block, kActionTimeoutMs);
-    return reply.type() == QDBusMessage::ErrorMessage ? reply.errorMessage() : QString();
+    whenAnswered(busFor(userBus), call, context, [userBus, context, done = std::move(done)](const QString& error) mutable {
+        if (!error.isEmpty()) {
+            done(error);
+            return;
+        }
+        // This has its own permission, so it may ask too.
+        QDBusMessage reload = managerCall(QStringLiteral("Reload"));
+        reload.setInteractiveAuthorizationAllowed(true);
+        whenAnswered(busFor(userBus), reload, context, std::move(done));
+    });
 }
 
 QList<DBusSession> listSessions(QString* error)
@@ -155,12 +169,11 @@ QList<DBusSession> listSessions(QString* error)
     return reply.value();
 }
 
-QString sessionCall(const QDBusObjectPath& session, const char* method)
+void sessionCall(const QDBusObjectPath& session, const char* method, QObject* context, DBusDone done)
 {
     QDBusMessage call = QDBusMessage::createMethodCall(kLogin, session.path(), QStringLiteral("org.freedesktop.login1.Session"), QLatin1String(method));
     call.setInteractiveAuthorizationAllowed(true);
-    const QDBusMessage reply = QDBusConnection::systemBus().call(call, QDBus::Block, kActionTimeoutMs);
-    return reply.type() == QDBusMessage::ErrorMessage ? reply.errorMessage() : QString();
+    whenAnswered(QDBusConnection::systemBus(), call, context, std::move(done));
 }
 
 } // namespace fg

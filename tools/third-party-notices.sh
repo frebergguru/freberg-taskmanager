@@ -85,10 +85,20 @@ $package $version
 ENTRY
 done
 
+# The runtime comes with appimagetool, so that package's version says which one it is. Only
+# what is on this machine can be copied: the texts of its MIT and BSD parts carry their authors'
+# names and are in the runtime's own source. See TODO.md.
+RUNTIME_DIR=$OUT/appimage-runtime
+mkdir -p "$RUNTIME_DIR"
+[ -f /usr/share/licenses/spdx/LGPL-2.1-only.txt ] && cp -L /usr/share/licenses/spdx/LGPL-2.1-only.txt "$RUNTIME_DIR/"
+[ -f /usr/share/licenses/zstd/LICENSE ] && cp -L /usr/share/licenses/zstd/LICENSE "$RUNTIME_DIR/zstd-LICENSE"
+TOOL_PACKAGE=$(pacman -Qo "$(command -v appimagetool)" 2>/dev/null | awk '{ print $(NF-1), $NF }') || TOOL_PACKAGE=
 cat >>"$NOTICES" <<ENTRY
 AppImage runtime
   The small program at the start of this file that mounts it. It includes libfuse,
-  squashfuse and zstd.
+  squashfuse and zstd. The license texts on hand when this was built are in the folder
+  appimage-runtime beside this file, and all of them are in the source at the address below.
   License:      MIT, with LGPL-2.1 and BSD parts
   Upstream:     $RUNTIME_URL
+  Comes from:   ${TOOL_PACKAGE:-appimagetool, version not known to a package manager}
 ENTRY

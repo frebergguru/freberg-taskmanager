@@ -46,6 +46,7 @@ signals:
     void nodeClicked(fg::DiskNode* node);
 
 protected:
+    bool event(QEvent* event) override;
     void paintEvent(QPaintEvent* event) override;
     void mousePressEvent(QMouseEvent* event) override;
     void keyPressEvent(QKeyEvent* event) override;

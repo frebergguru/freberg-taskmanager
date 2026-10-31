@@ -2,6 +2,7 @@
 
 #include "../format.h"
 #include "../hub.h"
+#include "../widgets/confirm.h"
 #include "../widgets/sortitem.h"
 
 #include <QCheckBox>
@@ -10,9 +11,11 @@
 #include <QLineEdit>
 #include <QMessageBox>
 #include <QPushButton>
+#include <QScrollBar>
 #include <QTimer>
 #include <QTreeWidget>
 #include <QVBoxLayout>
+#include <QWindow>
 
 namespace fg {
 
@@ -60,7 +63,12 @@ ConnectionsView::ConnectionsView(SamplerHub& hub)
 
     m_timer->setInterval(kAutoMs);
     m_timer->setTimerType(Qt::VeryCoarseTimer);
-    connect(m_timer, &QTimer::timeout, this, &ConnectionsView::refresh);
+    connect(m_timer, &QTimer::timeout, this, [this] {
+        // This walks every process's files, so never for a window nobody can see.
+        const QWindow* handle = window()->windowHandle();
+        if (window()->isVisible() && !window()->isMinimized() && handle && handle->isExposed())
+            refresh();
+    });
     connect(m_auto, &QCheckBox::toggled, this, [this](bool on) {
         if (on)
             m_timer->start();
@@ -82,6 +90,7 @@ void ConnectionsView::opened()
 void ConnectionsView::closed()
 {
     m_timer->stop();
+    m_outcome.clear();
     m_list->clear();
 }
 
@@ -90,6 +99,7 @@ void ConnectionsView::refresh()
     const int selectedPid = m_list->currentItem() ? m_list->currentItem()->data(0, kPidRole).toInt() : 0;
     const QString selectedLocal = m_list->currentItem() ? m_list->currentItem()->text(1) : QString();
     const bool showUnix = m_showUnix->isChecked();
+    const int scrolled = m_list->verticalScrollBar()->value();
 
     m_list->setSortingEnabled(false);
     m_list->clear();
@@ -113,7 +123,9 @@ void ConnectionsView::refresh()
     }
     m_list->setSortingEnabled(true);
     applyFilter();
-    m_message->setText(hidden > 0 ? tr("%n connection(s) belong to processes we may not look into.", nullptr, hidden) : QString());
+    m_list->verticalScrollBar()->setValue(scrolled);
+    const QString note = hidden > 0 ? tr("%n connection(s) belong to processes we may not look into.", nullptr, hidden) : QString();
+    m_message->setText(m_outcome.isEmpty() || note.isEmpty() ? m_outcome + note : m_outcome + QLatin1Char(' ') + note);
 }
 
 void ConnectionsView::applyFilter()
@@ -136,10 +148,10 @@ void ConnectionsView::endOwner()
         return;
     }
     const ProcessId id{item->data(0, kPidRole).toInt(), item->data(0, kStartRole).toULongLong()};
-    if (QMessageBox::warning(this, tr("End Process"), tr("Ask %1 (PID %2) to end?").arg(item->text(4)).arg(id.pid), QMessageBox::Yes | QMessageBox::No, QMessageBox::No) != QMessageBox::Yes)
+    if (!confirmed(this, tr("End Process"), tr("Ask %1 (PID %2) to end?").arg(item->text(4), QString::number(id.pid))))
         return;
     const ActionResult result = m_hub.backend().signalProcess(id, ProcessSignal::End);
-    m_message->setText(result.ok() ? tr("End process: done.") : (result.code == ActionResult::ProcessGone ? tr("The process has already ended.") : tr("End process failed: %1").arg(QString::fromStdString(result.detail))));
+    m_outcome = (result.ok() ? tr("End process: done.") : (result.code == ActionResult::ProcessGone ? tr("The process has already ended.") : tr("End process failed: %1").arg(QString::fromStdString(result.detail))));
     refresh();
 }
 

@@ -12,6 +12,8 @@ if [ "${FG_HEADLESS_INSIDE:-}" != 1 ]; then
         dbus-run-session --config-file="$HERE/headless-bus.conf" -- "$0" "$@" </dev/null
 fi
 
+# Checked before the compositor starts, so that stopping here leaves nothing running.
+: "${XDG_RUNTIME_DIR:?XDG_RUNTIME_DIR must be set.}"
 SOCKET=fg-headless-$$
 kwin_wayland --virtual --no-lockscreen --no-global-shortcuts --no-kactivities --socket "$SOCKET" --width 1400 --height 1000 >/dev/null 2>&1 &
 COMPOSITOR=$!

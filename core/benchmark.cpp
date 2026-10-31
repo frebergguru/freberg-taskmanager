@@ -134,7 +134,10 @@ std::optional<DiskBenchResult> benchDisk(const std::string& folder, std::size_t 
         }
         written += static_cast<std::size_t>(got);
     }
-    ::fsync(fd);
+    if (::fsync(fd) != 0 && !cancel.load(std::memory_order_relaxed)) {
+        ::close(fd);
+        return std::nullopt;
+    }
     double elapsed = secondsSince(start);
     result.writeMBs = elapsed > 0 ? static_cast<double>(written) / (1024.0 * 1024.0) / elapsed : 0;
 
@@ -145,8 +148,10 @@ std::optional<DiskBenchResult> benchDisk(const std::string& folder, std::size_t 
     start = Clock::now();
     while (read < written && !cancel.load(std::memory_order_relaxed)) {
         const ssize_t got = ::pread(fd, raw, kBlock, offset);
-        if (got <= 0)
-            break;
+        if (got <= 0) {
+            ::close(fd);
+            return std::nullopt; // a shorter read would look like a real speed
+        }
         read += static_cast<std::size_t>(got);
         offset += got;
     }

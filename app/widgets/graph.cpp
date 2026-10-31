@@ -93,7 +93,7 @@ void Graph::paintEvent(QPaintEvent*)
                 line.moveTo(point);
             havePrevious = true;
         }
-        strokeSeries(p, line, series.secondary ? scheme.graphLine2 : scheme.graphLine, area.bottom());
+        strokeSeries(p, line, series.secondary ? scheme.graphLine2 : scheme.graphLine, area.bottom(), series.secondary);
     }
 }
 

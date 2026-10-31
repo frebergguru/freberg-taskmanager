@@ -29,8 +29,10 @@ int recordHeadless(const std::string& path, int seconds, int intervalMs)
     const auto backend = createLinuxBackend();
     TraceBuffer buffer;
     const long long wanted = seconds > 0 ? static_cast<long long>(seconds) * 1000 / intervalMs : -1;
+    bool dropped = false;
     for (long long taken = 0; !g_stop && (wanted < 0 || taken <= wanted); ++taken) {
         buffer.add(frameFromSnapshot(*backend->sample(SubAll)));
+        dropped = dropped || buffer.frames().size() <= static_cast<std::size_t>(taken);
         timespec pause{intervalMs / 1000, (intervalMs % 1000) * 1000000L};
         ::nanosleep(&pause, nullptr); // a signal cuts this short, and the loop then ends
     }
@@ -40,6 +42,8 @@ int recordHeadless(const std::string& path, int seconds, int intervalMs)
         std::fprintf(stderr, "%s\n", error.c_str());
         return 1;
     }
+    if (dropped)
+        std::fprintf(stderr, "The recording filled its buffer, so its oldest samples were dropped. The file holds the last %zu samples.\n", buffer.frames().size());
     return 0;
 }
 

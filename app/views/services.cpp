@@ -1,6 +1,7 @@
 #include "services.h"
 
 #include "../format.h"
+#include "../widgets/confirm.h"
 #include "../system/dbus.h"
 
 #include <QDir>
@@ -150,11 +151,13 @@ void ServicesView::act(const char* method, const QString& label)
         m_message->setText(tr("Select a service first."));
         return;
     }
-    if (QMessageBox::warning(this, label, tr("%1 the service %2?").arg(label, unit), QMessageBox::Yes | QMessageBox::No, QMessageBox::No) != QMessageBox::Yes)
+    if (!confirmed(this, label, tr("%1 the service %2?").arg(label, unit)))
         return;
-    const QString error = manageUnit(false, method, unit);
-    m_message->setText(error.isEmpty() ? tr("%1 %2: done.").arg(label, unit) : tr("%1 %2 failed: %3").arg(label, unit, error));
-    refresh();
+    m_message->setText(tr("%1 %2: waiting for the system...").arg(label, unit));
+    manageUnit(false, method, unit, this, [this, label, unit](const QString& error) {
+        m_message->setText(error.isEmpty() ? tr("%1 %2: done.").arg(label, unit) : tr("%1 %2 failed: %3").arg(label, unit, error));
+        refresh();
+    });
 }
 
 void ServicesView::setEnabledState(bool enabled)
@@ -165,11 +168,13 @@ void ServicesView::setEnabledState(bool enabled)
         return;
     }
     const QString label = enabled ? tr("Enable") : tr("Disable");
-    if (QMessageBox::warning(this, label, tr("%1 the service %2 at startup?").arg(label, unit), QMessageBox::Yes | QMessageBox::No, QMessageBox::No) != QMessageBox::Yes)
+    if (!confirmed(this, label, tr("%1 the service %2 at startup?").arg(label, unit)))
         return;
-    const QString error = setUnitEnabled(false, unit, enabled);
-    m_message->setText(error.isEmpty() ? tr("%1 %2: done.").arg(label, unit) : tr("%1 %2 failed: %3").arg(label, unit, error));
-    refresh();
+    m_message->setText(tr("%1 %2: waiting for the system...").arg(label, unit));
+    setUnitEnabled(false, unit, enabled, this, [this, label, unit](const QString& error) {
+        m_message->setText(error.isEmpty() ? tr("%1 %2: done.").arg(label, unit) : tr("%1 %2 failed: %3").arg(label, unit, error));
+        refresh();
+    });
 }
 
 void ServicesView::showJournal()
@@ -179,6 +184,10 @@ void ServicesView::showJournal()
     if (unit.isEmpty() || !m_managed)
         return;
     auto* process = new QProcess(this);
+    connect(process, &QProcess::errorOccurred, this, [process](QProcess::ProcessError error) {
+        if (error == QProcess::FailedToStart)
+            process->deleteLater();
+    });
     connect(process, &QProcess::finished, this, [this, process, unit] {
         if (selectedUnit() == unit)
             m_journal->setPlainText(QString::fromLocal8Bit(process->readAllStandardOutput()));

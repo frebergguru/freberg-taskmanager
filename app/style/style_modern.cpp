@@ -370,6 +370,13 @@ bool Style::drawModernComplex(ComplexControl control, const QStyleOptionComplex*
             p->drawPath(path);
             p->restore();
             chevron(p, subControlRect(CC_ComboBox, o, SC_ComboBoxArrow, w), Qt::DownArrow, o->palette.color(QPalette::ButtonText));
+            if (focus && !combo->editable) {
+                // A thin border that changes colour is too little to find the focus by.
+                QStyleOptionFocusRect outline;
+                outline.QStyleOption::operator=(*o);
+                outline.rect = subControlRect(CC_ComboBox, o, SC_ComboBoxEditField, w);
+                drawPrimitive(PE_FrameFocusRect, &outline, p, w);
+            }
             return true;
         }
     }

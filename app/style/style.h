@@ -55,6 +55,7 @@ void glowStroke(QPainter& painter, const QPainterPath& path, const QColor& color
 
 // One graph line in the current design: plain in Classic, with a soft fill below in
 // Modern, and glowing in Neon Glow. baseline is the y coordinate of the graph's floor.
-void strokeSeries(QPainter& painter, const QPainterPath& line, const QColor& color, double baseline);
+// dashed marks a graph's second line, so its two lines differ by more than colour.
+void strokeSeries(QPainter& painter, const QPainterPath& line, const QColor& color, double baseline, bool dashed = false);
 
 } // namespace fg

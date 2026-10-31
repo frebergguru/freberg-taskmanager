@@ -7,6 +7,7 @@
 
 #include <cstdint>
 #include <deque>
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -71,11 +72,13 @@ struct TraceContributor {
     double averageCpuPct = 0;
     double peakRssBytes = 0;
 };
+inline constexpr double kNoPeak = std::numeric_limits<double>::quiet_NaN();
 struct TraceAnalysis {
     std::size_t frames = 0;
     std::size_t gaps = 0; // frames where the CPU reading was missing
     double seconds = 0;
-    double peakCpu = 0, peakMemoryBytes = 0, peakDiskBps = 0, peakNetBps = 0, peakTempC = 0, peakPowerW = 0, peakPressure = 0;
+    // NaN when nothing was measured in this stretch, never 0.
+    double peakCpu = kNoPeak, peakMemoryBytes = kNoPeak, peakDiskBps = kNoPeak, peakNetBps = kNoPeak, peakTempC = kNoPeak, peakPowerW = kNoPeak, peakPressure = kNoPeak;
     std::vector<TraceContributor> contributors;
 };
 TraceAnalysis analyseTrace(const std::deque<TraceFrame>& frames, std::size_t first, std::size_t last, std::size_t limit = 8);

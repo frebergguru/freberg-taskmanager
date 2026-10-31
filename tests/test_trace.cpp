@@ -2,9 +2,11 @@
 
 #include <QCoreApplication>
 #include <QFile>
+#include <QJsonDocument>
 #include <QTemporaryDir>
 #include <QTest>
 #include <cmath>
+#include <limits>
 
 using namespace fg;
 
@@ -111,6 +113,86 @@ private slots:
         QCOMPARE(a.contributors.front().averageCpuPct, 40.0);
         QCOMPARE(a.contributors.front().peakRssBytes, 200.0);
         QCOMPARE(analyseTrace({}, 0, 0).frames, std::size_t(0));
+    }
+
+    void peaksOfMissingReadingsStayMissing()
+    {
+        std::deque<TraceFrame> frames;
+        frames.push_back(frame(0, 50.0f));
+        frames.back().netRxBps = 10.0f; // only one direction known
+        const TraceAnalysis a = analyseTrace(frames, 0, 0);
+        QCOMPARE(a.peakCpu, 50.0);
+        QCOMPARE(a.peakNetBps, 10.0);
+        QVERIFY(std::isnan(a.peakPowerW));
+        QVERIFY(std::isnan(a.peakTempC));
+        QVERIFY(std::isnan(a.peakDiskBps));
+        QVERIFY(std::isnan(a.peakPressure));
+    }
+
+    void impossibleValuesAreRefused_data()
+    {
+        QTest::addColumn<float>("cpu");
+        QTest::addColumn<float>("processCpu");
+        QTest::addColumn<std::int64_t>("ms");
+        const float inf = std::numeric_limits<float>::infinity();
+        QTest::newRow("infinite channel") << inf << 1.0f << std::int64_t(1);
+        QTest::newRow("negative channel") << -1.0f << 1.0f << std::int64_t(1);
+        QTest::newRow("NaN process") << 1.0f << std::nanf("") << std::int64_t(1);
+        QTest::newRow("impossible time") << 1.0f << 1.0f << std::int64_t(-1);
+    }
+
+    void impossibleValuesAreRefused()
+    {
+        QFETCH(float, cpu);
+        QFETCH(float, processCpu);
+        QFETCH(std::int64_t, ms);
+        std::deque<TraceFrame> frames;
+        frames.push_back(frame(ms, cpu));
+        frames.back().top = {{"x", 1, processCpu, 1.0f}};
+        std::string error;
+        QVERIFY(saveTrace(path("odd.fgtrace"), frames, error));
+        std::deque<TraceFrame> loaded;
+        QVERIFY(!loadTrace(path("odd.fgtrace"), loaded, error));
+    }
+
+    void aColdTemperatureIsNotDamage()
+    {
+        std::deque<TraceFrame> frames;
+        frames.push_back(frame(1, 1.0f));
+        frames.back().cpuTempC = -5.0f;
+        std::string error;
+        QVERIFY(saveTrace(path("cold.fgtrace"), frames, error));
+        std::deque<TraceFrame> loaded;
+        QVERIFY2(loadTrace(path("cold.fgtrace"), loaded, error), error.c_str());
+        QCOMPARE(loaded[0].cpuTempC, -5.0f);
+    }
+
+    void jsonStaysValidWhenANameIsCutMidCharacter()
+    {
+        std::deque<TraceFrame> frames;
+        frames.push_back(frame(0, 1.0f));
+        frames.back().top = {{"caf\xc3", 1, 1.0f, 2.0f}, {"\xc3\xa6", 2, 1.0f, 2.0f}};
+        std::string error;
+        QVERIFY(exportJson(path("cut.json"), frames, error));
+        QFile json(QString::fromStdString(path("cut.json")));
+        QVERIFY(json.open(QIODevice::ReadOnly));
+        const QByteArray text = json.readAll();
+        QVERIFY(text.contains("caf\xef\xbf\xbd\""));
+        QVERIFY(QJsonDocument::fromJson(text).isObject());
+    }
+
+    void exportsReportAFullDisk()
+    {
+        if (!QFile::exists("/dev/full"))
+            QSKIP("This system has no /dev/full.");
+        std::deque<TraceFrame> frames;
+        frames.push_back(frame(0, 1.0f));
+        std::string error;
+        QVERIFY(!exportCsv("/dev/full", frames, error));
+        QVERIFY(!error.empty());
+        error.clear();
+        QVERIFY(!exportJson("/dev/full", frames, error));
+        QVERIFY(!error.empty());
     }
 
     void exportsWriteGapsAsEmpty()

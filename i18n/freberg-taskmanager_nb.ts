@@ -4,82 +4,82 @@
 <context>
     <name>fg::AppHistoryView</name>
     <message>
-        <location filename="../app/views/apphistory.cpp" line="164"/>
+        <location filename="../app/views/apphistory.cpp" line="165"/>
         <source>&amp;Keep app history (walks all processes on each update, even when this window is hidden)</source>
         <translation>&amp;Behold apphistorikk (går gjennom alle prosesser ved hver oppdatering, også når vinduet er skjult)</translation>
     </message>
     <message>
-        <location filename="../app/views/apphistory.cpp" line="173"/>
+        <location filename="../app/views/apphistory.cpp" line="174"/>
         <source>App</source>
         <translation>App</translation>
     </message>
     <message>
-        <location filename="../app/views/apphistory.cpp" line="173"/>
+        <location filename="../app/views/apphistory.cpp" line="174"/>
         <source>CPU time</source>
         <translation>CPU-tid</translation>
     </message>
     <message>
-        <location filename="../app/views/apphistory.cpp" line="173"/>
+        <location filename="../app/views/apphistory.cpp" line="174"/>
         <source>Disk</source>
         <translation>Disk</translation>
     </message>
     <message>
-        <location filename="../app/views/apphistory.cpp" line="173"/>
+        <location filename="../app/views/apphistory.cpp" line="174"/>
         <source>Network</source>
         <translation>Nettverk</translation>
     </message>
     <message>
-        <location filename="../app/views/apphistory.cpp" line="173"/>
+        <location filename="../app/views/apphistory.cpp" line="174"/>
         <source>First seen</source>
         <translation>Først sett</translation>
     </message>
     <message>
-        <location filename="../app/views/apphistory.cpp" line="173"/>
+        <location filename="../app/views/apphistory.cpp" line="174"/>
         <source>Last seen</source>
         <translation>Sist sett</translation>
     </message>
     <message>
-        <location filename="../app/views/apphistory.cpp" line="174"/>
+        <location filename="../app/views/apphistory.cpp" line="175"/>
         <source>App history</source>
         <translation>Apphistorikk</translation>
     </message>
     <message>
-        <location filename="../app/views/apphistory.cpp" line="181"/>
+        <location filename="../app/views/apphistory.cpp" line="182"/>
         <source>&amp;Delete History</source>
         <translation>&amp;Slett historikk</translation>
     </message>
     <message>
-        <location filename="../app/views/apphistory.cpp" line="190"/>
+        <location filename="../app/views/apphistory.cpp" line="191"/>
         <source>Delete History</source>
         <translation>Slett historikk</translation>
     </message>
     <message>
-        <location filename="../app/views/apphistory.cpp" line="190"/>
+        <location filename="../app/views/apphistory.cpp" line="191"/>
         <source>Delete all app history?</source>
         <translation>Slette all apphistorikk?</translation>
     </message>
     <message>
-        <location filename="../app/views/apphistory.cpp" line="210"/>
+        <location filename="../app/views/apphistory.cpp" line="211"/>
         <source>%1 h %2 min</source>
         <translation>%1 t %2 min</translation>
     </message>
     <message>
-        <location filename="../app/views/apphistory.cpp" line="210"/>
+        <location filename="../app/views/apphistory.cpp" line="211"/>
         <source>%1 s</source>
         <translation>%1 s</translation>
     </message>
     <message>
-        <location filename="../app/views/apphistory.cpp" line="211"/>
+        <location filename="../app/views/apphistory.cpp" line="212"/>
         <source>Not measured</source>
         <translation>Ikke målt</translation>
     </message>
     <message>
-        <location filename="../app/views/apphistory.cpp" line="221"/>
+        <location filename="../app/views/apphistory.cpp" line="222"/>
         <source>Collecting. Figures appear within a minute.</source>
         <translation>Samler inn. Tallene dukker opp i løpet av et minutt.</translation>
     </message>
     <message>
-        <location filename="../app/views/apphistory.cpp" line="221"/>
+        <location filename="../app/views/apphistory.cpp" line="222"/>
         <source>App history is off, so nothing is being collected.</source>
         <translation>Apphistorikk er av, så ingenting samles inn.</translation>
     </message>
@@ -237,84 +237,97 @@
     </message>
 </context>
 <context>
+    <name>fg::ConfirmDialog</name>
+    <message>
+        <location filename="../app/widgets/confirm.cpp" line="41"/>
+        <source>&amp;Yes</source>
+        <translation>&amp;Ja</translation>
+    </message>
+    <message>
+        <location filename="../app/widgets/confirm.cpp" line="42"/>
+        <source>&amp;No</source>
+        <translation>&amp;Nei</translation>
+    </message>
+</context>
+<context>
     <name>fg::ConnectionsView</name>
     <message>
-        <location filename="../app/views/connections.cpp" line="26"/>
+        <location filename="../app/views/connections.cpp" line="29"/>
         <source>&amp;Update automatically</source>
         <translation>&amp;Oppdater automatisk</translation>
     </message>
     <message>
-        <location filename="../app/views/connections.cpp" line="27"/>
+        <location filename="../app/views/connections.cpp" line="30"/>
         <source>Show &amp;local (Unix) sockets</source>
         <translation>Vis &amp;lokale (Unix-)socketer</translation>
     </message>
     <message>
-        <location filename="../app/views/connections.cpp" line="33"/>
+        <location filename="../app/views/connections.cpp" line="36"/>
         <source>&amp;Filter:</source>
         <translation>&amp;Filter:</translation>
     </message>
     <message>
-        <location filename="../app/views/connections.cpp" line="35"/>
+        <location filename="../app/views/connections.cpp" line="38"/>
         <source>Filter connections</source>
         <translation>Filtrer tilkoblinger</translation>
     </message>
     <message>
-        <location filename="../app/views/connections.cpp" line="45"/>
+        <location filename="../app/views/connections.cpp" line="48"/>
         <source>Protocol</source>
         <translation>Protokoll</translation>
     </message>
     <message>
-        <location filename="../app/views/connections.cpp" line="45"/>
+        <location filename="../app/views/connections.cpp" line="48"/>
         <source>Local address</source>
         <translation>Lokal adresse</translation>
     </message>
     <message>
-        <location filename="../app/views/connections.cpp" line="45"/>
+        <location filename="../app/views/connections.cpp" line="48"/>
         <source>Remote address</source>
         <translation>Ekstern adresse</translation>
     </message>
     <message>
-        <location filename="../app/views/connections.cpp" line="45"/>
+        <location filename="../app/views/connections.cpp" line="48"/>
         <source>State</source>
         <translation>Tilstand</translation>
     </message>
     <message>
-        <location filename="../app/views/connections.cpp" line="45"/>
+        <location filename="../app/views/connections.cpp" line="48"/>
         <source>Process</source>
         <translation>Prosess</translation>
     </message>
     <message>
-        <location filename="../app/views/connections.cpp" line="45"/>
+        <location filename="../app/views/connections.cpp" line="48"/>
         <source>PID</source>
         <translation>PID</translation>
     </message>
     <message>
-        <location filename="../app/views/connections.cpp" line="45"/>
+        <location filename="../app/views/connections.cpp" line="48"/>
         <source>Sent</source>
         <translation>Sendt</translation>
     </message>
     <message>
-        <location filename="../app/views/connections.cpp" line="45"/>
+        <location filename="../app/views/connections.cpp" line="48"/>
         <source>Received</source>
         <translation>Mottatt</translation>
     </message>
     <message>
-        <location filename="../app/views/connections.cpp" line="46"/>
+        <location filename="../app/views/connections.cpp" line="49"/>
         <source>Network connections</source>
         <translation>Nettverkstilkoblinger</translation>
     </message>
     <message>
-        <location filename="../app/views/connections.cpp" line="57"/>
+        <location filename="../app/views/connections.cpp" line="60"/>
         <source>&amp;End Process</source>
         <translation>&amp;Avslutt prosess</translation>
     </message>
     <message>
-        <location filename="../app/views/connections.cpp" line="104"/>
+        <location filename="../app/views/connections.cpp" line="114"/>
         <source>Hidden (other user)</source>
         <translation>Skjult (annen bruker)</translation>
     </message>
     <message numerus="yes">
-        <location filename="../app/views/connections.cpp" line="116"/>
+        <location filename="../app/views/connections.cpp" line="127"/>
         <source>%n connection(s) belong to processes we may not look into.</source>
         <translation>
             <numerusform>%n tilkobling tilhører en prosess vi ikke får se inn i.</numerusform>
@@ -322,32 +335,32 @@
         </translation>
     </message>
     <message>
-        <location filename="../app/views/connections.cpp" line="135"/>
+        <location filename="../app/views/connections.cpp" line="147"/>
         <source>Select a connection with a known process first.</source>
         <translation>Velg først en tilkobling med kjent prosess.</translation>
     </message>
     <message>
-        <location filename="../app/views/connections.cpp" line="139"/>
+        <location filename="../app/views/connections.cpp" line="151"/>
         <source>End Process</source>
         <translation>Avslutt prosess</translation>
     </message>
     <message>
-        <location filename="../app/views/connections.cpp" line="139"/>
+        <location filename="../app/views/connections.cpp" line="151"/>
         <source>Ask %1 (PID %2) to end?</source>
         <translation>Be %1 (PID %2) om å avslutte?</translation>
     </message>
     <message>
-        <location filename="../app/views/connections.cpp" line="142"/>
+        <location filename="../app/views/connections.cpp" line="154"/>
         <source>End process: done.</source>
         <translation>Avslutt prosess: ferdig.</translation>
     </message>
     <message>
-        <location filename="../app/views/connections.cpp" line="142"/>
+        <location filename="../app/views/connections.cpp" line="154"/>
         <source>The process has already ended.</source>
         <translation>Prosessen er allerede avsluttet.</translation>
     </message>
     <message>
-        <location filename="../app/views/connections.cpp" line="142"/>
+        <location filename="../app/views/connections.cpp" line="154"/>
         <source>End process failed: %1</source>
         <translation>Klarte ikke å avslutte prosessen: %1</translation>
     </message>
@@ -355,27 +368,27 @@
 <context>
     <name>fg::DiskModel</name>
     <message>
-        <location filename="../app/views/diskspace.cpp" line="81"/>
+        <location filename="../app/views/diskspace.cpp" line="86"/>
         <source>%1 (access denied)</source>
         <translation>%1 (ingen tilgang)</translation>
     </message>
     <message>
-        <location filename="../app/views/diskspace.cpp" line="96"/>
+        <location filename="../app/views/diskspace.cpp" line="101"/>
         <source>Name</source>
         <translation>Navn</translation>
     </message>
     <message>
-        <location filename="../app/views/diskspace.cpp" line="97"/>
+        <location filename="../app/views/diskspace.cpp" line="102"/>
         <source>Size</source>
         <translation>Størrelse</translation>
     </message>
     <message>
-        <location filename="../app/views/diskspace.cpp" line="98"/>
+        <location filename="../app/views/diskspace.cpp" line="103"/>
         <source>Share of folder</source>
         <translation>Andel av mappen</translation>
     </message>
     <message>
-        <location filename="../app/views/diskspace.cpp" line="99"/>
+        <location filename="../app/views/diskspace.cpp" line="104"/>
         <source>Files</source>
         <translation>Filer</translation>
     </message>
@@ -383,98 +396,101 @@
 <context>
     <name>fg::DiskSpaceView</name>
     <message>
-        <location filename="../app/views/diskspace.cpp" line="258"/>
+        <location filename="../app/views/diskspace.cpp" line="280"/>
         <source>&amp;Scan</source>
         <translation>&amp;Skann</translation>
     </message>
     <message>
-        <location filename="../app/views/diskspace.cpp" line="258"/>
+        <location filename="../app/views/diskspace.cpp" line="280"/>
         <source>&amp;Cancel</source>
         <translation>&amp;Avbryt</translation>
     </message>
     <message>
-        <location filename="../app/views/diskspace.cpp" line="258"/>
+        <location filename="../app/views/diskspace.cpp" line="280"/>
         <source>Move to &amp;Trash...</source>
         <translation>Flytt til &amp;papirkurven ...</translation>
     </message>
     <message>
-        <location filename="../app/views/diskspace.cpp" line="265"/>
+        <location filename="../app/views/diskspace.cpp" line="287"/>
         <source>&amp;Folder:</source>
         <translation>&amp;Mappe:</translation>
     </message>
     <message>
-        <location filename="../app/views/diskspace.cpp" line="268"/>
-        <location filename="../app/views/diskspace.cpp" line="269"/>
+        <location filename="../app/views/diskspace.cpp" line="290"/>
+        <location filename="../app/views/diskspace.cpp" line="291"/>
         <source>Folder to scan</source>
         <translation>Mappe som skal skannes</translation>
     </message>
     <message>
-        <location filename="../app/views/diskspace.cpp" line="274"/>
+        <location filename="../app/views/diskspace.cpp" line="296"/>
         <source>&amp;Browse...</source>
         <translation>&amp;Bla gjennom ...</translation>
     </message>
     <message>
-        <location filename="../app/views/diskspace.cpp" line="285"/>
+        <location filename="../app/views/diskspace.cpp" line="307"/>
         <source>Folders and files, largest first</source>
         <translation>Mapper og filer, størst først</translation>
     </message>
     <message>
-        <location filename="../app/views/diskspace.cpp" line="289"/>
+        <location filename="../app/views/diskspace.cpp" line="311"/>
         <source>Finished</source>
         <translation>Ferdig</translation>
     </message>
     <message>
-        <location filename="../app/views/diskspace.cpp" line="289"/>
+        <location filename="../app/views/diskspace.cpp" line="311"/>
         <source>Folder</source>
         <translation>Mappe</translation>
     </message>
     <message>
-        <location filename="../app/views/diskspace.cpp" line="289"/>
+        <location filename="../app/views/diskspace.cpp" line="311"/>
         <source>Size</source>
         <translation>Størrelse</translation>
     </message>
     <message>
-        <location filename="../app/views/diskspace.cpp" line="289"/>
+        <location filename="../app/views/diskspace.cpp" line="311"/>
         <source>Files</source>
         <translation>Filer</translation>
     </message>
     <message>
-        <location filename="../app/views/diskspace.cpp" line="289"/>
+        <location filename="../app/views/diskspace.cpp" line="311"/>
         <source>Took</source>
         <translation>Tok</translation>
     </message>
     <message>
-        <location filename="../app/views/diskspace.cpp" line="290"/>
+        <location filename="../app/views/diskspace.cpp" line="312"/>
         <source>Earlier scans</source>
         <translation>Tidligere skanninger</translation>
     </message>
     <message>
-        <location filename="../app/views/diskspace.cpp" line="310"/>
+        <location filename="../app/views/diskspace.cpp" line="332"/>
         <source>Scanning... %1 files so far.</source>
         <translation>Skanner ... %1 filer så langt.</translation>
     </message>
     <message>
-        <location filename="../app/views/diskspace.cpp" line="312"/>
+        <location filename="../app/views/diskspace.cpp" line="334"/>
         <source>Choose a folder</source>
         <translation>Velg en mappe</translation>
     </message>
     <message>
-        <location filename="../app/views/diskspace.cpp" line="387"/>
+        <location filename="../app/views/diskspace.cpp" line="409"/>
         <source>Scan cancelled.</source>
         <translation>Skanningen ble avbrutt.</translation>
     </message>
     <message>
-        <location filename="../app/views/diskspace.cpp" line="391"/>
+        <location filename="../app/views/diskspace.cpp" line="413"/>
         <source>Could not open that folder.</source>
         <translation>Fikk ikke åpnet den mappen.</translation>
     </message>
-    <message>
-        <location filename="../app/views/diskspace.cpp" line="400"/>
-        <source>%1 in %2 files.</source>
-        <translation>%1 i %2 filer.</translation>
+    <message numerus="yes">
+        <location filename="../app/views/diskspace.cpp" line="422"/>
+        <source>%1 in %Ln file(s).</source>
+        <translation>
+            <numerusform>%1 i %Ln fil.</numerusform>
+            <numerusform>%1 i %Ln filer.</numerusform>
+        </translation>
     </message>
     <message numerus="yes">
-        <location filename="../app/views/diskspace.cpp" line="401"/>
+        <location filename="../app/views/diskspace.cpp" line="423"/>
         <source>%1 %n folder(s) could not be read, so the true size is larger.</source>
         <translation>
             <numerusform>%1 %n mappe kunne ikke leses, så den virkelige størrelsen er større.</numerusform>
@@ -482,17 +498,17 @@
         </translation>
     </message>
     <message>
-        <location filename="../app/views/diskspace.cpp" line="410"/>
+        <location filename="../app/views/diskspace.cpp" line="432"/>
         <source>Select something first.</source>
         <translation>Velg noe først.</translation>
     </message>
     <message>
-        <location filename="../app/views/diskspace.cpp" line="414"/>
+        <location filename="../app/views/diskspace.cpp" line="436"/>
         <source>Move to Trash</source>
         <translation>Flytt til papirkurven</translation>
     </message>
     <message>
-        <location filename="../app/views/diskspace.cpp" line="414"/>
+        <location filename="../app/views/diskspace.cpp" line="436"/>
         <source>Move this to the trash?
 
 %1</source>
@@ -501,17 +517,17 @@
 %1</translation>
     </message>
     <message>
-        <location filename="../app/views/diskspace.cpp" line="417"/>
+        <location filename="../app/views/diskspace.cpp" line="439"/>
         <source>Could not move %1 to the trash.</source>
         <translation>Fikk ikke flyttet %1 til papirkurven.</translation>
     </message>
     <message>
-        <location filename="../app/views/diskspace.cpp" line="423"/>
+        <location filename="../app/views/diskspace.cpp" line="445"/>
         <source>Moved to the trash: %1</source>
         <translation>Flyttet til papirkurven: %1</translation>
     </message>
     <message>
-        <location filename="../app/views/diskspace.cpp" line="434"/>
+        <location filename="../app/views/diskspace.cpp" line="456"/>
         <source>%1 s</source>
         <translation>%1 s</translation>
     </message>
@@ -577,326 +593,346 @@
 <context>
     <name>fg::FlightRecorderView</name>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="49"/>
+        <location filename="../app/views/flightrecorder.cpp" line="51"/>
         <source>CPU</source>
         <translation>CPU</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="50"/>
+        <location filename="../app/views/flightrecorder.cpp" line="52"/>
         <source>Memory</source>
         <translation>Minne</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="51"/>
+        <location filename="../app/views/flightrecorder.cpp" line="53"/>
         <source>Disk (read, write)</source>
         <translation>Disk (lesing, skriving)</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="52"/>
+        <location filename="../app/views/flightrecorder.cpp" line="54"/>
         <source>Network (receive, send)</source>
         <translation>Nettverk (mottak, sending)</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="53"/>
+        <location filename="../app/views/flightrecorder.cpp" line="55"/>
         <source>GPU</source>
         <translation>GPU</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="54"/>
+        <location filename="../app/views/flightrecorder.cpp" line="56"/>
         <source>Temperature</source>
         <translation>Temperatur</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="55"/>
+        <location filename="../app/views/flightrecorder.cpp" line="57"/>
         <source>Power</source>
         <translation>Effekt</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="56"/>
+        <location filename="../app/views/flightrecorder.cpp" line="58"/>
         <source>Pressure (CPU, memory)</source>
         <translation>Press (CPU, minne)</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="188"/>
+        <location filename="../app/views/flightrecorder.cpp" line="199"/>
         <source>&amp;Save...</source>
         <translation>&amp;Lagre ...</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="189"/>
+        <location filename="../app/views/flightrecorder.cpp" line="200"/>
         <source>&amp;Open...</source>
         <translation>Å&amp;pne ...</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="189"/>
+        <location filename="../app/views/flightrecorder.cpp" line="200"/>
         <source>E&amp;xport...</source>
         <translation>&amp;Eksporter ...</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="189"/>
+        <location filename="../app/views/flightrecorder.cpp" line="200"/>
         <source>Co&amp;mpare...</source>
         <translation>Sa&amp;mmenlign ...</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="189"/>
+        <location filename="../app/views/flightrecorder.cpp" line="200"/>
         <source>C&amp;lear</source>
         <translation>&amp;Tøm</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="190"/>
+        <location filename="../app/views/flightrecorder.cpp" line="201"/>
         <source>&amp;Why Was It Slow?</source>
         <translation>&amp;Hvorfor gikk det tregt?</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="199"/>
+        <location filename="../app/views/flightrecorder.cpp" line="210"/>
         <source>Save when CPU passes:</source>
         <translation>Lagre når CPU passerer:</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="202"/>
+        <location filename="../app/views/flightrecorder.cpp" line="213"/>
         <source>%</source>
         <translation>%</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="203"/>
+        <location filename="../app/views/flightrecorder.cpp" line="214"/>
         <source>Off</source>
         <translation>Av</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="205"/>
+        <location filename="../app/views/flightrecorder.cpp" line="216"/>
         <source>Save automatically when CPU use passes this level</source>
         <translation>Lagre automatisk når CPU-bruken passerer dette nivået</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="210"/>
+        <location filename="../app/views/flightrecorder.cpp" line="221"/>
         <source>&amp;Begin recording when the app starts (reads all sensors and processes until stopped, even with the window hidden)</source>
         <translation>&amp;Begynn opptak når appen starter (leser alle sensorer og prosesser til det stoppes, også når vinduet er skjult)</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="229"/>
+        <location filename="../app/views/flightrecorder.cpp" line="240"/>
         <source>Position in the recording</source>
         <translation>Posisjon i opptaket</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="240"/>
+        <location filename="../app/views/flightrecorder.cpp" line="251"/>
         <source>Analysis</source>
         <translation>Analyse</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="241"/>
+        <location filename="../app/views/flightrecorder.cpp" line="252"/>
         <source>Choose a moment in the recording, then ask why it was slow. The report covers about a minute around it.</source>
         <translation>Velg et tidspunkt i opptaket, og spør så hvorfor det gikk tregt. Rapporten dekker omtrent ett minutt rundt det.</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="278"/>
+        <location filename="../app/views/flightrecorder.cpp" line="289"/>
         <source>CPU passed the level, so the recording was saved to %1</source>
         <translation>CPU passerte nivået, så opptaket ble lagret i %1</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="278"/>
+        <location filename="../app/views/flightrecorder.cpp" line="289"/>
         <source>Could not save the recording: %1</source>
         <translation>Fikk ikke lagret opptaket: %1</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="312"/>
+        <location filename="../app/views/flightrecorder.cpp" line="323"/>
         <source>Stop &amp;Recording</source>
         <translation>Stopp &amp;opptak</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="312"/>
+        <location filename="../app/views/flightrecorder.cpp" line="323"/>
         <source>&amp;Record</source>
         <translation>&amp;Ta opp</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="319"/>
+        <location filename="../app/views/flightrecorder.cpp" line="330"/>
         <source>&amp;Pause</source>
         <translation>&amp;Pause</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="319"/>
+        <location filename="../app/views/flightrecorder.cpp" line="330"/>
         <source>&amp;Play</source>
         <translation>&amp;Spill av</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="326"/>
+        <location filename="../app/views/flightrecorder.cpp" line="337"/>
         <source>Stopped.</source>
         <translation>Stoppet.</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="332"/>
+        <location filename="../app/views/flightrecorder.cpp" line="345"/>
         <source>Recording. It keeps going on other pages and while the window is hidden. All sensors and processes are read on each update until you stop it.</source>
         <translation>Tar opp. Opptaket fortsetter på andre sider og mens vinduet er skjult. Alle sensorer og prosesser leses ved hver oppdatering til du stopper det.</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="399"/>
+        <location filename="../app/views/flightrecorder.cpp" line="64"/>
+        <location filename="../app/views/flightrecorder.cpp" line="414"/>
         <source>Not recorded</source>
         <translation>Ikke tatt opp</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="401"/>
+        <location filename="../app/views/flightrecorder.cpp" line="344"/>
+        <source>Recording, but updates are paused, so nothing is captured until you turn them back on in the View menu.</source>
+        <translation>Tar opp, men oppdateringene står på pause, så ingenting fanges opp før du slår dem på igjen i Vis-menyen.</translation>
+    </message>
+    <message>
+        <location filename="../app/views/flightrecorder.cpp" line="353"/>
+        <source>Clear</source>
+        <translation>Tøm</translation>
+    </message>
+    <message>
+        <location filename="../app/views/flightrecorder.cpp" line="353"/>
+        <source>Clear this recording?
+
+What hasn&apos;t been saved will be lost.</source>
+        <translation>Vil du tømme dette opptaket?
+
+Det som ikke er lagret, går tapt.</translation>
+    </message>
+    <message>
+        <location filename="../app/views/flightrecorder.cpp" line="416"/>
         <source>Time:</source>
         <translation>Tid:</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="401"/>
+        <location filename="../app/views/flightrecorder.cpp" line="416"/>
         <source>%1 s of %2 s</source>
         <translation>%1 s av %2 s</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="402"/>
+        <location filename="../app/views/flightrecorder.cpp" line="417"/>
         <source>CPU:</source>
         <translation>CPU:</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="403"/>
+        <location filename="../app/views/flightrecorder.cpp" line="418"/>
         <source>Memory:</source>
         <translation>Minne:</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="404"/>
+        <location filename="../app/views/flightrecorder.cpp" line="419"/>
         <source>Disk read, write:</source>
         <translation>Disk, lesing og skriving:</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="404"/>
-        <location filename="../app/views/flightrecorder.cpp" line="405"/>
+        <location filename="../app/views/flightrecorder.cpp" line="419"/>
+        <location filename="../app/views/flightrecorder.cpp" line="420"/>
         <source>%1, %2</source>
         <translation>%1, %2</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="405"/>
+        <location filename="../app/views/flightrecorder.cpp" line="420"/>
         <source>Network receive, send:</source>
         <translation>Nettverk, mottak og sending:</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="406"/>
+        <location filename="../app/views/flightrecorder.cpp" line="421"/>
         <source>GPU:</source>
         <translation>GPU:</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="407"/>
+        <location filename="../app/views/flightrecorder.cpp" line="422"/>
         <source>Temperature:</source>
         <translation>Temperatur:</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="408"/>
+        <location filename="../app/views/flightrecorder.cpp" line="423"/>
         <source>Power:</source>
         <translation>Effekt:</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="411"/>
+        <location filename="../app/views/flightrecorder.cpp" line="426"/>
         <source>%1 (%2)</source>
         <translation>%1 (%2)</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="412"/>
+        <location filename="../app/views/flightrecorder.cpp" line="427"/>
         <source>Busiest:</source>
         <translation>Travlest:</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="429"/>
+        <location filename="../app/views/flightrecorder.cpp" line="444"/>
         <source>Save Recording</source>
         <translation>Lagre opptak</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="429"/>
-        <location filename="../app/views/flightrecorder.cpp" line="440"/>
-        <location filename="../app/views/flightrecorder.cpp" line="505"/>
+        <location filename="../app/views/flightrecorder.cpp" line="444"/>
+        <location filename="../app/views/flightrecorder.cpp" line="455"/>
+        <location filename="../app/views/flightrecorder.cpp" line="520"/>
         <source>Recordings (*.fgtrace)</source>
         <translation>Opptak (*.fgtrace)</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="435"/>
+        <location filename="../app/views/flightrecorder.cpp" line="450"/>
         <source>Saved to %1</source>
         <translation>Lagret i %1</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="435"/>
+        <location filename="../app/views/flightrecorder.cpp" line="450"/>
         <source>Could not save: %1</source>
         <translation>Fikk ikke lagret: %1</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="440"/>
+        <location filename="../app/views/flightrecorder.cpp" line="455"/>
         <source>Open Recording</source>
         <translation>Åpne opptak</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="446"/>
-        <location filename="../app/views/flightrecorder.cpp" line="511"/>
+        <location filename="../app/views/flightrecorder.cpp" line="461"/>
+        <location filename="../app/views/flightrecorder.cpp" line="526"/>
         <source>Could not open: %1</source>
         <translation>Fikk ikke åpnet: %1</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="453"/>
+        <location filename="../app/views/flightrecorder.cpp" line="468"/>
         <source>Opened %1</source>
         <translation>Åpnet %1</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="460"/>
+        <location filename="../app/views/flightrecorder.cpp" line="475"/>
         <source>Spreadsheet (*.csv)</source>
         <translation>Regneark (*.csv)</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="461"/>
+        <location filename="../app/views/flightrecorder.cpp" line="476"/>
         <source>JSON (*.json)</source>
         <translation>JSON (*.json)</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="463"/>
+        <location filename="../app/views/flightrecorder.cpp" line="478"/>
         <source>Export Recording</source>
         <translation>Eksporter opptak</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="472"/>
+        <location filename="../app/views/flightrecorder.cpp" line="487"/>
         <source>Exported to %1</source>
         <translation>Eksportert til %1</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="472"/>
+        <location filename="../app/views/flightrecorder.cpp" line="487"/>
         <source>Could not export: %1</source>
         <translation>Fikk ikke eksportert: %1</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="487"/>
+        <location filename="../app/views/flightrecorder.cpp" line="502"/>
         <source>Over %1 seconds around this moment:</source>
         <translation>I løpet av %1 sekunder rundt dette tidspunktet:</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="488"/>
+        <location filename="../app/views/flightrecorder.cpp" line="503"/>
         <source>Highest CPU use: %1</source>
         <translation>Høyeste CPU-bruk: %1</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="489"/>
+        <location filename="../app/views/flightrecorder.cpp" line="504"/>
         <source>Highest memory use: %1</source>
         <translation>Høyeste minnebruk: %1</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="490"/>
+        <location filename="../app/views/flightrecorder.cpp" line="505"/>
         <source>Highest disk traffic: %1</source>
         <translation>Høyeste disktrafikk: %1</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="491"/>
+        <location filename="../app/views/flightrecorder.cpp" line="506"/>
         <source>Highest network traffic: %1</source>
         <translation>Høyeste nettverkstrafikk: %1</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="492"/>
+        <location filename="../app/views/flightrecorder.cpp" line="507"/>
         <source>Highest temperature: %1</source>
         <translation>Høyeste temperatur: %1</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="493"/>
+        <location filename="../app/views/flightrecorder.cpp" line="508"/>
         <source>Highest power: %1</source>
         <translation>Høyeste effekt: %1</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="494"/>
+        <location filename="../app/views/flightrecorder.cpp" line="509"/>
         <source>Highest pressure: %1</source>
         <translation>Høyeste press: %1</translation>
     </message>
     <message numerus="yes">
-        <location filename="../app/views/flightrecorder.cpp" line="496"/>
+        <location filename="../app/views/flightrecorder.cpp" line="511"/>
         <source>%n sample(s) are missing in this stretch.</source>
         <translation>
             <numerusform>%n måling mangler i denne perioden.</numerusform>
@@ -904,63 +940,63 @@
         </translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="497"/>
+        <location filename="../app/views/flightrecorder.cpp" line="512"/>
         <source>Biggest users of the CPU:</source>
         <translation>Størst CPU-bruk:</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="499"/>
+        <location filename="../app/views/flightrecorder.cpp" line="514"/>
         <source>  %1: %2 on average, up to %3 of memory</source>
         <translation>  %1: %2 i snitt, opptil %3 minne</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="505"/>
+        <location filename="../app/views/flightrecorder.cpp" line="520"/>
         <source>Compare With Recording</source>
         <translation>Sammenlign med opptak</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="518"/>
+        <location filename="../app/views/flightrecorder.cpp" line="533"/>
         <source>%1: this one %2, the other %3</source>
         <translation>%1: dette %2, det andre %3</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="521"/>
+        <location filename="../app/views/flightrecorder.cpp" line="536"/>
         <source>Length</source>
         <translation>Lengde</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="521"/>
-        <location filename="../app/views/flightrecorder.cpp" line="521"/>
+        <location filename="../app/views/flightrecorder.cpp" line="536"/>
+        <location filename="../app/views/flightrecorder.cpp" line="536"/>
         <source>%1 s</source>
         <translation>%1 s</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="522"/>
+        <location filename="../app/views/flightrecorder.cpp" line="537"/>
         <source>Highest CPU use</source>
         <translation>Høyeste CPU-bruk</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="523"/>
+        <location filename="../app/views/flightrecorder.cpp" line="538"/>
         <source>Highest memory use</source>
         <translation>Høyeste minnebruk</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="524"/>
+        <location filename="../app/views/flightrecorder.cpp" line="539"/>
         <source>Highest disk traffic</source>
         <translation>Høyeste disktrafikk</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="525"/>
+        <location filename="../app/views/flightrecorder.cpp" line="540"/>
         <source>Highest network traffic</source>
         <translation>Høyeste nettverkstrafikk</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="526"/>
+        <location filename="../app/views/flightrecorder.cpp" line="541"/>
         <source>Highest temperature</source>
         <translation>Høyeste temperatur</translation>
     </message>
     <message>
-        <location filename="../app/views/flightrecorder.cpp" line="527"/>
+        <location filename="../app/views/flightrecorder.cpp" line="542"/>
         <source>Highest power</source>
         <translation>Høyeste effekt</translation>
     </message>
@@ -1078,17 +1114,22 @@
 <context>
     <name>fg::InspectorDialog</name>
     <message>
-        <location filename="../app/views/inspector.cpp" line="40"/>
+        <location filename="../app/views/inspector.cpp" line="37"/>
+        <source>Nothing here.</source>
+        <translation>Ingenting her.</translation>
+    </message>
+    <message>
+        <location filename="../app/views/inspector.cpp" line="42"/>
         <source>None visible. Other users&apos; processes are closed to us.</source>
         <translation>Ingen synlige. Andre brukeres prosesser er stengt for oss.</translation>
     </message>
     <message>
-        <location filename="../app/views/inspector.cpp" line="47"/>
+        <location filename="../app/views/inspector.cpp" line="49"/>
         <source>Properties: %1 (PID %2)</source>
         <translation>Egenskaper: %1 (PID %2)</translation>
     </message>
     <message>
-        <location filename="../app/views/inspector.cpp" line="53"/>
+        <location filename="../app/views/inspector.cpp" line="55"/>
         <source>Executable: %1
 Command line: %2
 cgroup: %3
@@ -1101,44 +1142,44 @@ cgroup: %3
 %4</translation>
     </message>
     <message>
-        <location filename="../app/views/inspector.cpp" line="55"/>
-        <location filename="../app/views/inspector.cpp" line="55"/>
+        <location filename="../app/views/inspector.cpp" line="57"/>
+        <location filename="../app/views/inspector.cpp" line="57"/>
         <source>General</source>
         <translation>Generelt</translation>
     </message>
     <message>
-        <location filename="../app/views/inspector.cpp" line="56"/>
-        <location filename="../app/views/inspector.cpp" line="56"/>
+        <location filename="../app/views/inspector.cpp" line="58"/>
+        <location filename="../app/views/inspector.cpp" line="58"/>
         <source>Open Files</source>
         <translation>Åpne filer</translation>
     </message>
     <message>
-        <location filename="../app/views/inspector.cpp" line="57"/>
-        <location filename="../app/views/inspector.cpp" line="57"/>
+        <location filename="../app/views/inspector.cpp" line="59"/>
+        <location filename="../app/views/inspector.cpp" line="59"/>
         <source>Sockets</source>
         <translation>Socketer</translation>
     </message>
     <message>
-        <location filename="../app/views/inspector.cpp" line="58"/>
-        <location filename="../app/views/inspector.cpp" line="58"/>
+        <location filename="../app/views/inspector.cpp" line="60"/>
+        <location filename="../app/views/inspector.cpp" line="60"/>
         <source>Threads</source>
         <translation>Tråder</translation>
     </message>
     <message>
-        <location filename="../app/views/inspector.cpp" line="59"/>
-        <location filename="../app/views/inspector.cpp" line="59"/>
+        <location filename="../app/views/inspector.cpp" line="61"/>
+        <location filename="../app/views/inspector.cpp" line="61"/>
         <source>Memory Map</source>
         <translation>Minnekart</translation>
     </message>
     <message>
-        <location filename="../app/views/inspector.cpp" line="60"/>
-        <location filename="../app/views/inspector.cpp" line="60"/>
+        <location filename="../app/views/inspector.cpp" line="62"/>
+        <location filename="../app/views/inspector.cpp" line="62"/>
         <source>Environment</source>
         <translation>Miljø</translation>
     </message>
     <message>
-        <location filename="../app/views/inspector.cpp" line="61"/>
-        <location filename="../app/views/inspector.cpp" line="61"/>
+        <location filename="../app/views/inspector.cpp" line="63"/>
+        <location filename="../app/views/inspector.cpp" line="63"/>
         <source>Limits</source>
         <translation>Grenser</translation>
     </message>
@@ -1146,57 +1187,57 @@ cgroup: %3
 <context>
     <name>fg::InstalledAppsView</name>
     <message>
-        <location filename="../app/views/installedapps.cpp" line="181"/>
+        <location filename="../app/views/installedapps.cpp" line="191"/>
         <source>&amp;Uninstall...</source>
         <translation>&amp;Avinstaller ...</translation>
     </message>
     <message>
-        <location filename="../app/views/installedapps.cpp" line="187"/>
+        <location filename="../app/views/installedapps.cpp" line="197"/>
         <source>&amp;Filter:</source>
         <translation>&amp;Filter:</translation>
     </message>
     <message>
-        <location filename="../app/views/installedapps.cpp" line="189"/>
+        <location filename="../app/views/installedapps.cpp" line="199"/>
         <source>Filter installed apps</source>
         <translation>Filtrer installerte apper</translation>
     </message>
     <message>
-        <location filename="../app/views/installedapps.cpp" line="196"/>
+        <location filename="../app/views/installedapps.cpp" line="206"/>
         <source>Name</source>
         <translation>Navn</translation>
     </message>
     <message>
-        <location filename="../app/views/installedapps.cpp" line="196"/>
+        <location filename="../app/views/installedapps.cpp" line="206"/>
         <source>Version</source>
         <translation>Versjon</translation>
     </message>
     <message>
-        <location filename="../app/views/installedapps.cpp" line="196"/>
+        <location filename="../app/views/installedapps.cpp" line="206"/>
         <source>Source</source>
         <translation>Kilde</translation>
     </message>
     <message>
-        <location filename="../app/views/installedapps.cpp" line="196"/>
+        <location filename="../app/views/installedapps.cpp" line="206"/>
         <source>Size</source>
         <translation>Størrelse</translation>
     </message>
     <message>
-        <location filename="../app/views/installedapps.cpp" line="196"/>
+        <location filename="../app/views/installedapps.cpp" line="206"/>
         <source>Description</source>
         <translation>Beskrivelse</translation>
     </message>
     <message>
-        <location filename="../app/views/installedapps.cpp" line="197"/>
+        <location filename="../app/views/installedapps.cpp" line="207"/>
         <source>Installed apps</source>
         <translation>Installerte apper</translation>
     </message>
     <message>
-        <location filename="../app/views/installedapps.cpp" line="221"/>
+        <location filename="../app/views/installedapps.cpp" line="243"/>
         <source>Reading the list of installed apps...</source>
         <translation>Leser listen over installerte apper ...</translation>
     </message>
     <message numerus="yes">
-        <location filename="../app/views/installedapps.cpp" line="246"/>
+        <location filename="../app/views/installedapps.cpp" line="282"/>
         <source>%n app(s) installed.</source>
         <translation>
             <numerusform>%n app installert.</numerusform>
@@ -1204,22 +1245,22 @@ cgroup: %3
         </translation>
     </message>
     <message>
-        <location filename="../app/views/installedapps.cpp" line="264"/>
+        <location filename="../app/views/installedapps.cpp" line="300"/>
         <source>Select an app first.</source>
         <translation>Velg en app først.</translation>
     </message>
     <message>
-        <location filename="../app/views/installedapps.cpp" line="271"/>
+        <location filename="../app/views/installedapps.cpp" line="307"/>
         <source>This kind of app is removed by deleting its file: %1</source>
         <translation>Denne typen app fjernes ved å slette filen: %1</translation>
     </message>
     <message>
-        <location filename="../app/views/installedapps.cpp" line="274"/>
+        <location filename="../app/views/installedapps.cpp" line="310"/>
         <source>Uninstall</source>
         <translation>Avinstaller</translation>
     </message>
     <message>
-        <location filename="../app/views/installedapps.cpp" line="274"/>
+        <location filename="../app/views/installedapps.cpp" line="310"/>
         <source>Uninstall %1 (%2)?
 
 This will run:
@@ -1230,22 +1271,22 @@ Dette kjører:
 %3</translation>
     </message>
     <message>
-        <location filename="../app/views/installedapps.cpp" line="279"/>
+        <location filename="../app/views/installedapps.cpp" line="315"/>
         <source>Uninstalling %1...</source>
         <translation>Avinstallerer %1 ...</translation>
     </message>
     <message>
-        <location filename="../app/views/installedapps.cpp" line="282"/>
+        <location filename="../app/views/installedapps.cpp" line="318"/>
         <source>%1 was uninstalled.</source>
         <translation>%1 ble avinstallert.</translation>
     </message>
     <message>
-        <location filename="../app/views/installedapps.cpp" line="282"/>
+        <location filename="../app/views/installedapps.cpp" line="318"/>
         <source>Could not uninstall %1: %2</source>
         <translation>Fikk ikke avinstallert %1: %2</translation>
     </message>
     <message>
-        <location filename="../app/views/installedapps.cpp" line="290"/>
+        <location filename="../app/views/installedapps.cpp" line="326"/>
         <source>Could not uninstall %1: the tool it needs is not installed.</source>
         <translation>Fikk ikke avinstallert %1: verktøyet som trengs, er ikke installert.</translation>
     </message>
@@ -1253,184 +1294,184 @@ Dette kjører:
 <context>
     <name>fg::MainWindow</name>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="144"/>
+        <location filename="../app/shell/mainwindow.cpp" line="150"/>
         <source>&amp;File</source>
         <translation>&amp;Fil</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="145"/>
+        <location filename="../app/shell/mainwindow.cpp" line="151"/>
         <source>&amp;New Task (Run...)</source>
         <translation>&amp;Ny oppgave (kjør ...)</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="147"/>
+        <location filename="../app/shell/mainwindow.cpp" line="153"/>
         <source>E&amp;xit</source>
         <translation>&amp;Avslutt</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="149"/>
+        <location filename="../app/shell/mainwindow.cpp" line="155"/>
         <source>&amp;Options</source>
         <translation>&amp;Valg</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="150"/>
+        <location filename="../app/shell/mainwindow.cpp" line="156"/>
         <source>&amp;Always On Top</source>
         <translation>&amp;Alltid øverst</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="159"/>
+        <location filename="../app/shell/mainwindow.cpp" line="165"/>
         <source>&amp;Settings...</source>
         <translation>&amp;Innstillinger ...</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="161"/>
+        <location filename="../app/shell/mainwindow.cpp" line="167"/>
         <source>&amp;View</source>
         <translation>V&amp;is</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="162"/>
+        <location filename="../app/shell/mainwindow.cpp" line="168"/>
         <source>&amp;Refresh Now</source>
         <translation>&amp;Oppdater nå</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="167"/>
+        <location filename="../app/shell/mainwindow.cpp" line="173"/>
         <source>&amp;Popout Readout</source>
         <translation>&amp;Miniviser</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="168"/>
+        <location filename="../app/shell/mainwindow.cpp" line="174"/>
         <source>&amp;Full-Screen Load</source>
         <translation>&amp;Belastning i fullskjerm</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="170"/>
+        <location filename="../app/shell/mainwindow.cpp" line="176"/>
         <source>&amp;Theme</source>
         <translation>&amp;Tema</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="192"/>
+        <location filename="../app/shell/mainwindow.cpp" line="198"/>
         <source>&amp;Dark</source>
         <translation>&amp;Mørk</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="192"/>
+        <location filename="../app/shell/mainwindow.cpp" line="198"/>
         <source>&amp;Light</source>
         <translation>&amp;Lys</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="205"/>
+        <location filename="../app/shell/mainwindow.cpp" line="211"/>
         <source>&amp;Update Speed</source>
         <translation>O&amp;ppdateringshastighet</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="210"/>
+        <location filename="../app/shell/mainwindow.cpp" line="216"/>
         <source>&amp;High (every 1/2 second)</source>
         <translation>&amp;Høy (hvert halve sekund)</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="210"/>
+        <location filename="../app/shell/mainwindow.cpp" line="216"/>
         <source>&amp;Normal (every second)</source>
         <translation>&amp;Normal (hvert sekund)</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="210"/>
+        <location filename="../app/shell/mainwindow.cpp" line="216"/>
         <source>&amp;Low (every 4 seconds)</source>
         <translation>&amp;Lav (hvert 4. sekund)</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="210"/>
+        <location filename="../app/shell/mainwindow.cpp" line="216"/>
         <source>&amp;Paused</source>
         <translation>&amp;Pause</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="219"/>
+        <location filename="../app/shell/mainwindow.cpp" line="225"/>
         <source>&amp;Help</source>
         <translation>&amp;Hjelp</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="220"/>
+        <location filename="../app/shell/mainwindow.cpp" line="226"/>
         <source>&amp;Accessibility Statement...</source>
         <translation>&amp;Tilgjengelighetserklæring ...</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="222"/>
+        <location filename="../app/shell/mainwindow.cpp" line="228"/>
         <source>&amp;License...</source>
         <translation>&amp;Lisens...</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="223"/>
+        <location filename="../app/shell/mainwindow.cpp" line="229"/>
         <source>&amp;About...</source>
         <translation>&amp;Om ...</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="230"/>
+        <location filename="../app/shell/mainwindow.cpp" line="236"/>
         <source>Refresh Now</source>
         <translation>Oppdater nå</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="236"/>
+        <location filename="../app/shell/mainwindow.cpp" line="242"/>
         <source>Settings</source>
         <translation>Innstillinger</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="237"/>
+        <location filename="../app/shell/mainwindow.cpp" line="243"/>
         <source>Popout Readout</source>
         <translation>Miniviser</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="297"/>
+        <location filename="../app/shell/mainwindow.cpp" line="303"/>
         <source>CPU Usage: %1</source>
         <translation>CPU-bruk: %1</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="299"/>
+        <location filename="../app/shell/mainwindow.cpp" line="305"/>
         <source>Memory: %1 / %2</source>
         <translation>Minne: %1 / %2</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="305"/>
+        <location filename="../app/shell/mainwindow.cpp" line="311"/>
         <source>This app: %1 s CPU, peak %2</source>
         <translation>Denne appen: %1 s CPU, topp %2</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="339"/>
-        <location filename="../app/shell/mainwindow.cpp" line="347"/>
+        <location filename="../app/shell/mainwindow.cpp" line="345"/>
+        <location filename="../app/shell/mainwindow.cpp" line="353"/>
         <source>Create New Task</source>
         <translation>Opprett ny oppgave</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="339"/>
+        <location filename="../app/shell/mainwindow.cpp" line="345"/>
         <source>Type the name of a program to open:</source>
         <translation>Skriv navnet på et program som skal åpnes:</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="347"/>
+        <location filename="../app/shell/mainwindow.cpp" line="353"/>
         <source>Could not start %1.</source>
         <translation>Fikk ikke startet %1.</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="380"/>
+        <location filename="../app/shell/mainwindow.cpp" line="395"/>
         <source>About</source>
         <translation>Om</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="380"/>
+        <location filename="../app/shell/mainwindow.cpp" line="395"/>
         <source>&lt;b&gt;Freberg.guru - Task manager&lt;/b&gt;&lt;br&gt;Version %1&lt;br&gt;&lt;br&gt;Copyright © 2026 Freberg.guru&lt;br&gt;&lt;br&gt;Sends no usage data, hardware details or process information anywhere.&lt;br&gt;&lt;br&gt;Free software: you may share and change it under the GNU General Public License, version 3 or later. It comes with no warranty. See Help, License, for the terms. The source code is released with every version.</source>
         <translation>&lt;b&gt;Freberg.guru - Task manager&lt;/b&gt;&lt;br&gt;Versjon %1&lt;br&gt;&lt;br&gt;Copyright © 2026 Freberg.guru&lt;br&gt;&lt;br&gt;Sender ikke bruksdata, maskinvaredetaljer eller prosessinformasjon noe sted.&lt;br&gt;&lt;br&gt;Fri programvare: du kan dele og endre den under GNU General Public License, versjon 3 eller nyere. Den kommer uten garanti. Se Hjelp, Lisens, for vilkårene. Kildekoden utgis med hver versjon.</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="387"/>
-        <location filename="../app/shell/mainwindow.cpp" line="394"/>
+        <location filename="../app/shell/mainwindow.cpp" line="402"/>
+        <location filename="../app/shell/mainwindow.cpp" line="409"/>
         <source>License</source>
         <translation>Lisens</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="406"/>
+        <location filename="../app/shell/mainwindow.cpp" line="421"/>
         <source>Accessibility Statement</source>
         <translation>Tilgjengelighetserklæring</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="407"/>
+        <location filename="../app/shell/mainwindow.cpp" line="422"/>
         <source>This app aims for full keyboard use, screen reader support through AT-SPI, WCAG AA contrast in every colour scheme, text size from 100% to 200%, and no information conveyed by colour or sound alone.
 
 Known limits are listed in the README.</source>
@@ -1601,514 +1642,528 @@ Kjente begrensninger står i README-filen.</translation>
 <context>
     <name>fg::PerformanceView</name>
     <message>
-        <location filename="../app/views/performance.cpp" line="50"/>
+        <location filename="../app/views/performance.cpp" line="57"/>
         <source>Device</source>
         <translation>Enhet</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="155"/>
-        <location filename="../app/views/performance.cpp" line="155"/>
+        <location filename="../app/views/performance.cpp" line="194"/>
+        <location filename="../app/views/performance.cpp" line="194"/>
         <source>CPU</source>
         <translation>CPU</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="162"/>
+        <location filename="../app/views/performance.cpp" line="201"/>
         <source>Overall</source>
         <translation>Samlet</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="163"/>
+        <location filename="../app/views/performance.cpp" line="202"/>
         <source>Logical processors</source>
         <translation>Logiske prosessorer</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="164"/>
+        <location filename="../app/views/performance.cpp" line="203"/>
         <source>NUMA nodes</source>
         <translation>NUMA-noder</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="165"/>
+        <location filename="../app/views/performance.cpp" line="204"/>
         <source>Graph shows</source>
         <translation>Grafen viser</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="182"/>
+        <location filename="../app/views/performance.cpp" line="221"/>
         <source>CPU usage %1</source>
         <translation>CPU-bruk %1</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="195"/>
+        <location filename="../app/views/performance.cpp" line="234"/>
         <source>Processor %1: %2</source>
         <translation>Prosessor %1: %2</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="197"/>
-        <location filename="../app/views/performance.cpp" line="242"/>
+        <location filename="../app/views/performance.cpp" line="236"/>
+        <location filename="../app/views/performance.cpp" line="283"/>
         <source>NUMA node %1</source>
         <translation>NUMA-node %1</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="203"/>
-        <location filename="../app/views/performance.cpp" line="399"/>
+        <location filename="../app/views/performance.cpp" line="242"/>
+        <location filename="../app/views/performance.cpp" line="447"/>
         <source>Usage:</source>
         <translation>Bruk:</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="204"/>
-        <location filename="../app/views/performance.cpp" line="400"/>
+        <location filename="../app/views/performance.cpp" line="243"/>
+        <location filename="../app/views/performance.cpp" line="448"/>
         <source>Speed:</source>
         <translation>Hastighet:</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="205"/>
+        <location filename="../app/views/performance.cpp" line="244"/>
         <source>Maximum speed:</source>
         <translation>Maksimal hastighet:</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="206"/>
+        <location filename="../app/views/performance.cpp" line="245"/>
         <source>Cores:</source>
         <translation>Kjerner:</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="206"/>
+        <location filename="../app/views/performance.cpp" line="245"/>
         <source>%1 physical, %2 logical</source>
         <translation>%1 fysiske, %2 logiske</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="207"/>
+        <location filename="../app/views/performance.cpp" line="245"/>
+        <source>%1 logical</source>
+        <translation>%1 logiske</translation>
+    </message>
+    <message>
+        <location filename="../app/views/performance.cpp" line="246"/>
         <source>NUMA nodes:</source>
         <translation>NUMA-noder:</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="210"/>
+        <location filename="../app/views/performance.cpp" line="249"/>
         <source>Core types:</source>
         <translation>Kjernetyper:</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="210"/>
+        <location filename="../app/views/performance.cpp" line="249"/>
         <source>%1 performance (P), %2 efficiency (E)</source>
         <translation>%1 ytelse (P), %2 effektivitet (E)</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="237"/>
+        <location filename="../app/views/performance.cpp" line="277"/>
         <source>Processor %1 (%2)</source>
         <translation>Prosessor %1 (%2)</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="237"/>
+        <location filename="../app/views/performance.cpp" line="277"/>
         <source>E</source>
         <translation>E</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="237"/>
+        <location filename="../app/views/performance.cpp" line="277"/>
         <source>P</source>
         <translation>P</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="237"/>
+        <location filename="../app/views/performance.cpp" line="277"/>
         <source>Processor %1</source>
         <translation>Prosessor %1</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="251"/>
-        <location filename="../app/views/performance.cpp" line="251"/>
+        <location filename="../app/views/performance.cpp" line="292"/>
+        <location filename="../app/views/performance.cpp" line="292"/>
         <source>Memory</source>
         <translation>Minne</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="257"/>
+        <location filename="../app/views/performance.cpp" line="298"/>
         <source>Memory in use</source>
         <translation>Minne i bruk</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="264"/>
+        <location filename="../app/views/performance.cpp" line="305"/>
         <source>%1 in use of %2</source>
         <translation>%1 i bruk av %2</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="270"/>
+        <location filename="../app/views/performance.cpp" line="311"/>
         <source>Available:</source>
         <translation>Tilgjengelig:</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="271"/>
+        <location filename="../app/views/performance.cpp" line="312"/>
         <source>Cached:</source>
         <translation>Hurtigbuffer:</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="272"/>
+        <location filename="../app/views/performance.cpp" line="313"/>
         <source>Free:</source>
         <translation>Ledig:</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="273"/>
+        <location filename="../app/views/performance.cpp" line="314"/>
         <source>Buffers:</source>
         <translation>Buffere:</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="274"/>
+        <location filename="../app/views/performance.cpp" line="315"/>
         <source>Shared:</source>
         <translation>Delt:</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="275"/>
+        <location filename="../app/views/performance.cpp" line="316"/>
         <source>Swap:</source>
         <translation>Veksleminne:</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="275"/>
-        <location filename="../app/views/performance.cpp" line="328"/>
-        <location filename="../app/views/performance.cpp" line="401"/>
+        <location filename="../app/views/performance.cpp" line="316"/>
+        <location filename="../app/views/performance.cpp" line="376"/>
+        <location filename="../app/views/performance.cpp" line="449"/>
         <source>%1 of %2</source>
         <translation>%1 av %2</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="276"/>
+        <location filename="../app/views/performance.cpp" line="317"/>
         <source>Compressed (zram):</source>
         <translation>Komprimert (zram):</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="276"/>
-        <location filename="../app/views/performance.cpp" line="277"/>
+        <location filename="../app/views/performance.cpp" line="317"/>
+        <location filename="../app/views/performance.cpp" line="318"/>
         <source>%1 stored in %2</source>
         <translation>%1 lagret på %2</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="277"/>
+        <location filename="../app/views/performance.cpp" line="318"/>
         <source>Compressed (zswap):</source>
         <translation>Komprimert (zswap):</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="278"/>
+        <location filename="../app/views/performance.cpp" line="319"/>
         <source>%1 some, %2 full</source>
         <translation>%1 noe, %2 helt</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="279"/>
+        <location filename="../app/views/performance.cpp" line="320"/>
         <source>Pressure:</source>
         <translation>Press:</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="280"/>
+        <location filename="../app/views/performance.cpp" line="321"/>
         <source>Out-of-memory kills since start:</source>
         <translation>Prosesser stoppet på grunn av minnemangel siden start:</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="289"/>
-        <location filename="../app/views/performance.cpp" line="289"/>
+        <location filename="../app/views/performance.cpp" line="330"/>
+        <location filename="../app/views/performance.cpp" line="330"/>
         <source>Disk %1</source>
         <translation>Disk %1</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="294"/>
+        <location filename="../app/views/performance.cpp" line="335"/>
         <source>Check &amp;Health...</source>
         <translation>Sjekk &amp;helse ...</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="298"/>
+        <location filename="../app/views/performance.cpp" line="339"/>
         <source>Disk Health</source>
         <translation>Diskhelse</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="298"/>
+        <location filename="../app/views/performance.cpp" line="339"/>
         <source>Reading disk health needs the smartctl tool from the smartmontools package, which is not installed.</source>
         <translation>For å lese diskhelse trengs verktøyet smartctl fra pakken smartmontools, som ikke er installert.</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="306"/>
+        <location filename="../app/views/performance.cpp" line="348"/>
+        <location filename="../app/views/performance.cpp" line="354"/>
         <source>Disk Health: %1</source>
         <translation>Diskhelse: %1</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="306"/>
+        <location filename="../app/views/performance.cpp" line="348"/>
+        <source>Could not ask for permission, because the pkexec tool is not installed.</source>
+        <translation>Kunne ikke be om tillatelse fordi verktøyet pkexec ikke er installert.</translation>
+    </message>
+    <message>
+        <location filename="../app/views/performance.cpp" line="354"/>
         <source>No answer from the disk.</source>
         <translation>Ikke noe svar fra disken.</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="319"/>
-        <location filename="../app/views/performance.cpp" line="349"/>
+        <location filename="../app/views/performance.cpp" line="367"/>
+        <location filename="../app/views/performance.cpp" line="397"/>
         <source>Read %1, write %2</source>
         <translation>Lesing %1, skriving %2</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="323"/>
+        <location filename="../app/views/performance.cpp" line="371"/>
         <source>Active time:</source>
         <translation>Aktiv tid:</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="324"/>
-        <location filename="../app/views/performance.cpp" line="350"/>
+        <location filename="../app/views/performance.cpp" line="372"/>
+        <location filename="../app/views/performance.cpp" line="398"/>
         <source>Read (solid line):</source>
-        <translation>Lesing (første linje):</translation>
+        <translation>Lesing (heltrukken linje):</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="325"/>
-        <location filename="../app/views/performance.cpp" line="351"/>
-        <source>Write (second line):</source>
-        <translation>Skriving (andre linje):</translation>
+        <location filename="../app/views/performance.cpp" line="373"/>
+        <location filename="../app/views/performance.cpp" line="399"/>
+        <source>Write (dashed line):</source>
+        <translation>Skriving (stiplet linje):</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="326"/>
+        <location filename="../app/views/performance.cpp" line="421"/>
+        <source>Send (dashed line):</source>
+        <translation>Sending (stiplet linje):</translation>
+    </message>
+    <message numerus="yes">
+        <location filename="../app/views/performance.cpp" line="465"/>
+        <source>%n throttle event(s)</source>
+        <translation>
+            <numerusform>%n struping</numerusform>
+            <numerusform>%n strupinger</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location filename="../app/views/performance.cpp" line="374"/>
         <source>Capacity:</source>
         <translation>Kapasitet:</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="328"/>
-        <location filename="../app/views/performance.cpp" line="330"/>
+        <location filename="../app/views/performance.cpp" line="376"/>
+        <location filename="../app/views/performance.cpp" line="378"/>
         <source>Filesystem free:</source>
         <translation>Ledig i filsystemet:</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="331"/>
+        <location filename="../app/views/performance.cpp" line="379"/>
         <source>Type:</source>
         <translation>Type:</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="331"/>
+        <location filename="../app/views/performance.cpp" line="379"/>
         <source>Spinning</source>
         <translation>Roterende</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="331"/>
+        <location filename="../app/views/performance.cpp" line="379"/>
         <source>Solid state</source>
         <translation>SSD</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="332"/>
+        <location filename="../app/views/performance.cpp" line="380"/>
         <source>Removable:</source>
         <translation>Flyttbar:</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="332"/>
+        <location filename="../app/views/performance.cpp" line="380"/>
         <source>Yes</source>
         <translation>Ja</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="332"/>
+        <location filename="../app/views/performance.cpp" line="380"/>
         <source>No</source>
         <translation>Nei</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="337"/>
+        <location filename="../app/views/performance.cpp" line="385"/>
         <source>Mounted at:</source>
         <translation>Montert på:</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="342"/>
+        <location filename="../app/views/performance.cpp" line="390"/>
         <source>All disks</source>
         <translation>Alle disker</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="342"/>
+        <location filename="../app/views/performance.cpp" line="390"/>
         <source>All disks combined</source>
         <translation>Alle disker samlet</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="361"/>
-        <location filename="../app/views/performance.cpp" line="361"/>
+        <location filename="../app/views/performance.cpp" line="409"/>
+        <location filename="../app/views/performance.cpp" line="409"/>
         <source>Network %1</source>
         <translation>Nettverk %1</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="364"/>
+        <location filename="../app/views/performance.cpp" line="412"/>
         <source>Wi-Fi</source>
         <translation>Wi-Fi</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="364"/>
+        <location filename="../app/views/performance.cpp" line="412"/>
         <source>Wired or virtual</source>
         <translation>Kablet eller virtuelt</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="368"/>
+        <location filename="../app/views/performance.cpp" line="416"/>
         <source>Receive %1, send %2</source>
         <translation>Mottak %1, sending %2</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="372"/>
+        <location filename="../app/views/performance.cpp" line="420"/>
         <source>Receive (solid line):</source>
-        <translation>Mottak (første linje):</translation>
+        <translation>Mottak (heltrukken linje):</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="373"/>
-        <source>Send (second line):</source>
-        <translation>Sending (andre linje):</translation>
-    </message>
-    <message>
-        <location filename="../app/views/performance.cpp" line="374"/>
+        <location filename="../app/views/performance.cpp" line="422"/>
         <source>Received in total:</source>
         <translation>Mottatt totalt:</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="375"/>
+        <location filename="../app/views/performance.cpp" line="423"/>
         <source>Sent in total:</source>
         <translation>Sendt totalt:</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="376"/>
+        <location filename="../app/views/performance.cpp" line="424"/>
         <source>Link speed:</source>
         <translation>Linkhastighet:</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="376"/>
+        <location filename="../app/views/performance.cpp" line="424"/>
         <source>%1 Mbit/s</source>
         <translation>%1 Mbit/s</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="377"/>
+        <location filename="../app/views/performance.cpp" line="425"/>
         <source>State:</source>
         <translation>Tilstand:</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="379"/>
+        <location filename="../app/views/performance.cpp" line="427"/>
         <source>Wi-Fi network:</source>
         <translation>Wi-Fi-nett:</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="379"/>
+        <location filename="../app/views/performance.cpp" line="427"/>
         <source>Not connected</source>
         <translation>Ikke tilkoblet</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="380"/>
+        <location filename="../app/views/performance.cpp" line="428"/>
         <source>Wi-Fi signal:</source>
         <translation>Wi-Fi-signal:</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="380"/>
+        <location filename="../app/views/performance.cpp" line="428"/>
         <source>%1 dBm</source>
         <translation>%1 dBm</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="381"/>
+        <location filename="../app/views/performance.cpp" line="429"/>
         <source>Wi-Fi quality:</source>
         <translation>Wi-Fi-kvalitet:</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="383"/>
+        <location filename="../app/views/performance.cpp" line="431"/>
         <source>Hardware address:</source>
         <translation>Maskinvareadresse:</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="391"/>
-        <location filename="../app/views/performance.cpp" line="391"/>
+        <location filename="../app/views/performance.cpp" line="439"/>
+        <location filename="../app/views/performance.cpp" line="439"/>
         <source>GPU %1</source>
         <translation>GPU %1</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="393"/>
+        <location filename="../app/views/performance.cpp" line="441"/>
         <source>Driver: %1</source>
         <translation>Driver: %1</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="395"/>
+        <location filename="../app/views/performance.cpp" line="443"/>
         <source>GPU usage %1</source>
         <translation>GPU-bruk %1</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="401"/>
+        <location filename="../app/views/performance.cpp" line="449"/>
         <source>Video memory:</source>
         <translation>Videominne:</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="402"/>
+        <location filename="../app/views/performance.cpp" line="450"/>
         <source>Temperature:</source>
         <translation>Temperatur:</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="403"/>
+        <location filename="../app/views/performance.cpp" line="451"/>
         <source>Power:</source>
         <translation>Effekt:</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="409"/>
-        <location filename="../app/views/performance.cpp" line="409"/>
+        <location filename="../app/views/performance.cpp" line="457"/>
+        <location filename="../app/views/performance.cpp" line="457"/>
         <source>Thermals</source>
         <translation>Temperaturer</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="413"/>
+        <location filename="../app/views/performance.cpp" line="461"/>
         <source>CPU hotspot: %1</source>
         <translation>Varmeste punkt i CPU: %1</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="417"/>
+        <location filename="../app/views/performance.cpp" line="465"/>
         <source>Thermal pressure:</source>
         <translation>Varmebelastning:</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="417"/>
-        <source>%1 throttle events</source>
-        <translation>%1 strupinger</translation>
-    </message>
-    <message>
-        <location filename="../app/views/performance.cpp" line="424"/>
-        <location filename="../app/views/performance.cpp" line="424"/>
+        <location filename="../app/views/performance.cpp" line="472"/>
+        <location filename="../app/views/performance.cpp" line="472"/>
         <source>Energy</source>
         <translation>Energi</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="428"/>
+        <location filename="../app/views/performance.cpp" line="476"/>
         <source>Power access restricted. The kernel lets only root read this counter. See the permission guide in the README for how to grant read access.</source>
         <translation>Effektmåling er begrenset. Kjernen lar bare root lese denne telleren. Se tilgangsveiledningen i README-filen for hvordan du gir lesetilgang.</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="429"/>
+        <location filename="../app/views/performance.cpp" line="477"/>
         <source>CPU package power: %1</source>
         <translation>Effekt for CPU-pakken: %1</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="434"/>
+        <location filename="../app/views/performance.cpp" line="482"/>
         <source>Power source:</source>
         <translation>Strømkilde:</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="434"/>
+        <location filename="../app/views/performance.cpp" line="482"/>
         <source>Mains</source>
         <translation>Strømnett</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="434"/>
+        <location filename="../app/views/performance.cpp" line="482"/>
         <source>Battery</source>
         <translation>Batteri</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="436"/>
+        <location filename="../app/views/performance.cpp" line="484"/>
         <source>Battery %1:</source>
         <translation>Batteri %1:</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="437"/>
+        <location filename="../app/views/performance.cpp" line="485"/>
         <source>%1, %2, %3</source>
         <translation>%1, %2, %3</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="438"/>
+        <location filename="../app/views/performance.cpp" line="486"/>
         <source>Governor:</source>
         <translation>Styring (governor):</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="439"/>
+        <location filename="../app/views/performance.cpp" line="487"/>
         <source>Energy preference:</source>
         <translation>Energipreferanse:</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="440"/>
+        <location filename="../app/views/performance.cpp" line="488"/>
         <source>Platform profile:</source>
         <translation>Plattformprofil:</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="456"/>
+        <location filename="../app/views/performance.cpp" line="504"/>
         <source>%1: about %2 (estimated)</source>
         <translation>%1: omtrent %2 (anslått)</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="458"/>
+        <location filename="../app/views/performance.cpp" line="506"/>
         <source>%1: %2 of CPU</source>
         <translation>%1: %2 av CPU</translation>
     </message>
     <message>
-        <location filename="../app/views/performance.cpp" line="460"/>
+        <location filename="../app/views/performance.cpp" line="508"/>
         <source>Responsible processes:</source>
         <translation>Ansvarlige prosesser:</translation>
     </message>
@@ -2126,88 +2181,88 @@ Kjente begrensninger står i README-filen.</translation>
         <translation>Systemvisning</translation>
     </message>
     <message>
-        <location filename="../app/popout/popout.cpp" line="119"/>
+        <location filename="../app/popout/popout.cpp" line="133"/>
         <source>CPU</source>
         <translation>CPU</translation>
     </message>
     <message>
-        <location filename="../app/popout/popout.cpp" line="120"/>
-        <location filename="../app/popout/popout.cpp" line="152"/>
+        <location filename="../app/popout/popout.cpp" line="134"/>
+        <location filename="../app/popout/popout.cpp" line="166"/>
         <source>Memory</source>
         <translation>Minne</translation>
     </message>
     <message>
-        <location filename="../app/popout/popout.cpp" line="121"/>
+        <location filename="../app/popout/popout.cpp" line="135"/>
         <source>GPU</source>
         <translation>GPU</translation>
     </message>
     <message>
-        <location filename="../app/popout/popout.cpp" line="122"/>
+        <location filename="../app/popout/popout.cpp" line="136"/>
         <source>Temp</source>
         <translation>Temp</translation>
     </message>
     <message>
-        <location filename="../app/popout/popout.cpp" line="123"/>
+        <location filename="../app/popout/popout.cpp" line="137"/>
         <source>Disk</source>
         <translation>Disk</translation>
     </message>
     <message>
-        <location filename="../app/popout/popout.cpp" line="124"/>
+        <location filename="../app/popout/popout.cpp" line="138"/>
         <source>Net</source>
         <translation>Nett</translation>
     </message>
     <message>
-        <location filename="../app/popout/popout.cpp" line="125"/>
+        <location filename="../app/popout/popout.cpp" line="139"/>
         <source>Power</source>
         <translation>Effekt</translation>
     </message>
     <message>
-        <location filename="../app/popout/popout.cpp" line="271"/>
+        <location filename="../app/popout/popout.cpp" line="299"/>
         <source>%1 %2</source>
         <translation>%1 %2</translation>
     </message>
     <message>
-        <location filename="../app/popout/popout.cpp" line="479"/>
+        <location filename="../app/popout/popout.cpp" line="508"/>
         <source>System</source>
         <translation>System</translation>
     </message>
     <message>
-        <location filename="../app/popout/popout.cpp" line="543"/>
+        <location filename="../app/popout/popout.cpp" line="572"/>
         <source>&amp;Skin</source>
         <translation>&amp;Drakt</translation>
     </message>
     <message>
-        <location filename="../app/popout/popout.cpp" line="557"/>
+        <location filename="../app/popout/popout.cpp" line="586"/>
         <source>&amp;Reload Skins</source>
         <translation>&amp;Last drakter på nytt</translation>
     </message>
     <message>
-        <location filename="../app/popout/popout.cpp" line="558"/>
+        <location filename="../app/popout/popout.cpp" line="587"/>
         <source>&amp;Open Skins Folder</source>
         <translation>&amp;Åpne draktmappen</translation>
     </message>
     <message>
-        <location filename="../app/popout/popout.cpp" line="560"/>
+        <location filename="../app/popout/popout.cpp" line="589"/>
         <source>Skin &amp;Problems (%1)...</source>
         <translation>Drakt&amp;problemer (%1) ...</translation>
     </message>
     <message>
-        <location filename="../app/popout/popout.cpp" line="563"/>
+        <location filename="../app/popout/popout.cpp" line="592"/>
         <source>%1: %2</source>
         <translation>%1: %2</translation>
     </message>
     <message>
-        <location filename="../app/popout/popout.cpp" line="564"/>
+        <location filename="../app/popout/popout.cpp" line="593"/>
         <source>Skin Problems</source>
         <translation>Draktproblemer</translation>
     </message>
     <message>
-        <location filename="../app/popout/popout.cpp" line="567"/>
+        <location filename="../app/popout/popout.cpp" line="596"/>
         <source>&amp;Keep Above Other Windows</source>
         <translation>&amp;Hold over andre vinduer</translation>
     </message>
     <message>
-        <location filename="../app/popout/popout.cpp" line="572"/>
+        <location filename="../app/popout/popout.cpp" line="601"/>
         <source>&amp;Close</source>
         <translation>&amp;Lukk</translation>
     </message>
@@ -2434,83 +2489,88 @@ Kjente begrensninger står i README-filen.</translation>
 <context>
     <name>fg::ProcessesView</name>
     <message>
-        <location filename="../app/views/processes.cpp" line="30"/>
+        <location filename="../app/views/processes.cpp" line="32"/>
         <source>Show as &amp;tree</source>
         <translation>Vis som &amp;tre</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="30"/>
-        <location filename="../app/views/processes.cpp" line="294"/>
+        <location filename="../app/views/processes.cpp" line="32"/>
+        <location filename="../app/views/processes.cpp" line="316"/>
         <source>&amp;End Task</source>
         <translation>&amp;Avslutt oppgave</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="30"/>
+        <location filename="../app/views/processes.cpp" line="32"/>
         <source>E&amp;xport...</source>
         <translation>&amp;Eksporter ...</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="36"/>
+        <location filename="../app/views/processes.cpp" line="38"/>
         <source>&amp;Filter:</source>
         <translation>&amp;Filter:</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="38"/>
+        <location filename="../app/views/processes.cpp" line="40"/>
         <source>Name, command, user or PID</source>
         <translation>Navn, kommando, bruker eller PID</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="40"/>
+        <location filename="../app/views/processes.cpp" line="42"/>
         <source>Filter processes</source>
         <translation>Filtrer prosesser</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="53"/>
+        <location filename="../app/views/processes.cpp" line="54"/>
         <source>Processes</source>
         <translation>Prosesser</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="154"/>
+        <location filename="../app/views/processes.cpp" line="88"/>
+        <source>Co&amp;lumns...</source>
+        <translation>Ko&amp;lonner ...</translation>
+    </message>
+    <message>
+        <location filename="../app/views/processes.cpp" line="159"/>
         <source>That process is hidden by the current filter.</source>
         <translation>Den prosessen er skjult av gjeldende filter.</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="158"/>
+        <location filename="../app/views/processes.cpp" line="163"/>
         <source>Looking for process %1...</source>
         <translation>Ser etter prosess %1 ...</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="160"/>
+        <location filename="../app/views/processes.cpp" line="165"/>
         <source>Process %1 has ended.</source>
         <translation>Prosess %1 er avsluttet.</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="168"/>
+        <location filename="../app/views/processes.cpp" line="173"/>
         <source>%1: done.</source>
         <translation>%1: ferdig.</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="171"/>
+        <location filename="../app/views/processes.cpp" line="176"/>
         <source>%1: the process has already ended.</source>
         <translation>%1: prosessen er allerede avsluttet.</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="174"/>
+        <location filename="../app/views/processes.cpp" line="179"/>
         <source>%1: access denied.</source>
         <translation>%1: ingen tilgang.</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="177"/>
+        <location filename="../app/views/processes.cpp" line="182"/>
         <source>%1: failed (%2).</source>
         <translation>%1: mislyktes (%2).</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="186"/>
+        <location filename="../app/views/processes.cpp" line="191"/>
         <source>Select a process first.</source>
         <translation>Velg en prosess først.</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="191"/>
+        <location filename="../app/views/processes.cpp" line="197"/>
         <source>End %1 (PID %2) and everything it started?
 
 Unsaved work in those programs will be lost.</source>
@@ -2519,7 +2579,7 @@ Unsaved work in those programs will be lost.</source>
 Ulagret arbeid i disse programmene går tapt.</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="192"/>
+        <location filename="../app/views/processes.cpp" line="198"/>
         <source>Force %1 (PID %2) to end now?
 
 It gets no chance to save its work.</source>
@@ -2528,187 +2588,208 @@ It gets no chance to save its work.</source>
 Den får ikke sjanse til å lagre arbeidet sitt.</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="193"/>
+        <location filename="../app/views/processes.cpp" line="199"/>
         <source>Ask %1 (PID %2) to end?</source>
         <translation>Be %1 (PID %2) om å avslutte?</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="194"/>
+        <location filename="../app/views/processes.cpp" line="202"/>
         <source>End Task</source>
         <translation>Avslutt oppgave</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="199"/>
+        <location filename="../app/views/processes.cpp" line="207"/>
         <source>Force end</source>
         <translation>Tving avslutning</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="199"/>
+        <location filename="../app/views/processes.cpp" line="207"/>
         <source>End task</source>
         <translation>Avslutt oppgave</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="210"/>
+        <location filename="../app/views/processes.cpp" line="217"/>
         <source>End tree</source>
         <translation>Avslutt tre</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="216"/>
+        <location filename="../app/views/processes.cpp" line="227"/>
+        <source>This app can&apos;t suspend itself, because nothing could then resume it.</source>
+        <translation>Denne appen kan ikke sette seg selv på vent, for da kan ingenting starte den igjen.</translation>
+    </message>
+    <message>
+        <location filename="../app/views/processes.cpp" line="230"/>
+        <source>Suspend %1 (PID %2)?
+
+It stops until you choose Resume. Suspending a part of the desktop can freeze the screen.</source>
+        <translation>Vil du sette %1 (PID %2) på vent?
+
+Den står stille til du velger Fortsett. Setter du en del av skrivebordet på vent, kan skjermen fryse.</translation>
+    </message>
+    <message>
+        <location filename="../app/views/processes.cpp" line="238"/>
         <source>Set priority</source>
         <translation>Sett prioritet</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="225"/>
+        <location filename="../app/views/processes.cpp" line="247"/>
         <source>Set disk priority</source>
         <translation>Sett diskprioritet</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="236"/>
+        <location filename="../app/views/processes.cpp" line="258"/>
         <source>Read processor affinity</source>
         <translation>Les prosessortilknytning</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="241"/>
+        <location filename="../app/views/processes.cpp" line="263"/>
         <source>Processor Affinity</source>
         <translation>Prosessortilknytning</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="243"/>
+        <location filename="../app/views/processes.cpp" line="265"/>
         <source>Processors %1 may run on:</source>
         <translation>Prosessorer %1 kan kjøre på:</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="245"/>
+        <location filename="../app/views/processes.cpp" line="267"/>
         <source>Processors</source>
         <translation>Prosessorer</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="248"/>
+        <location filename="../app/views/processes.cpp" line="270"/>
         <source>Processor %1</source>
         <translation>Prosessor %1</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="265"/>
+        <location filename="../app/views/processes.cpp" line="287"/>
         <source>A process needs at least one processor. Nothing was changed.</source>
         <translation>En prosess trenger minst én prosessor. Ingenting ble endret.</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="268"/>
+        <location filename="../app/views/processes.cpp" line="290"/>
         <source>Set processor affinity</source>
         <translation>Sett prosessortilknytning</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="279"/>
+        <location filename="../app/views/processes.cpp" line="301"/>
         <source>Read process details</source>
         <translation>Les prosessdetaljer</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="295"/>
+        <location filename="../app/views/processes.cpp" line="317"/>
         <source>&amp;Force End</source>
         <translation>&amp;Tving avslutning</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="296"/>
+        <location filename="../app/views/processes.cpp" line="318"/>
         <source>End Process &amp;Tree</source>
         <translation>Avslutt prosess&amp;tre</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="298"/>
+        <location filename="../app/views/processes.cpp" line="320"/>
         <source>&amp;Suspend</source>
         <translation>&amp;Sett på vent</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="298"/>
+        <location filename="../app/views/processes.cpp" line="399"/>
+        <source>&amp;Sort By</source>
+        <translation>&amp;Sorter etter</translation>
+    </message>
+    <message>
+        <location filename="../app/views/processes.cpp" line="230"/>
+        <location filename="../app/views/processes.cpp" line="232"/>
         <source>Suspend</source>
         <translation>Sett på vent</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="299"/>
+        <location filename="../app/views/processes.cpp" line="321"/>
         <source>&amp;Resume</source>
         <translation>&amp;Fortsett</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="299"/>
+        <location filename="../app/views/processes.cpp" line="321"/>
         <source>Resume</source>
         <translation>Fortsett</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="302"/>
+        <location filename="../app/views/processes.cpp" line="324"/>
         <source>Set &amp;Priority</source>
         <translation>Sett &amp;prioritet</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="306"/>
+        <location filename="../app/views/processes.cpp" line="328"/>
         <source>High (-10)</source>
         <translation>Høy (-10)</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="306"/>
+        <location filename="../app/views/processes.cpp" line="328"/>
         <source>Above Normal (-5)</source>
         <translation>Over normal (-5)</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="306"/>
+        <location filename="../app/views/processes.cpp" line="328"/>
         <source>Normal (0)</source>
         <translation>Normal (0)</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="306"/>
+        <location filename="../app/views/processes.cpp" line="328"/>
         <source>Below Normal (5)</source>
         <translation>Under normal (5)</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="306"/>
+        <location filename="../app/views/processes.cpp" line="328"/>
         <source>Low (19)</source>
         <translation>Lav (19)</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="312"/>
+        <location filename="../app/views/processes.cpp" line="334"/>
         <source>Set &amp;Disk Priority</source>
         <translation>Sett &amp;diskprioritet</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="313"/>
+        <location filename="../app/views/processes.cpp" line="335"/>
         <source>Idle</source>
         <translation>Hviler</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="314"/>
+        <location filename="../app/views/processes.cpp" line="336"/>
         <source>Normal</source>
         <translation>Normal</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="315"/>
+        <location filename="../app/views/processes.cpp" line="337"/>
         <source>High</source>
         <translation>Høy</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="316"/>
+        <location filename="../app/views/processes.cpp" line="338"/>
         <source>Set Processor &amp;Affinity...</source>
         <translation>Sett prosessor&amp;tilknytning ...</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="318"/>
+        <location filename="../app/views/processes.cpp" line="340"/>
         <source>P&amp;roperties...</source>
         <translation>&amp;Egenskaper ...</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="325"/>
+        <location filename="../app/views/processes.cpp" line="347"/>
         <source>Export Process List</source>
         <translation>Eksporter prosessliste</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="325"/>
+        <location filename="../app/views/processes.cpp" line="347"/>
         <source>Spreadsheet (*.csv)</source>
         <translation>Regneark (*.csv)</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="332"/>
+        <location filename="../app/views/processes.cpp" line="354"/>
+        <location filename="../app/views/processes.cpp" line="386"/>
         <source>Could not export: %1</source>
         <translation>Fikk ikke eksportert: %1</translation>
     </message>
     <message>
-        <location filename="../app/views/processes.cpp" line="358"/>
+        <location filename="../app/views/processes.cpp" line="386"/>
         <source>Exported to %1</source>
         <translation>Eksportert til %1</translation>
     </message>
@@ -2774,32 +2855,32 @@ Den får ikke sjanse til å lagre arbeidet sitt.</translation>
 <context>
     <name>fg::Screensaver</name>
     <message>
-        <location filename="../app/shell/screensaver.cpp" line="46"/>
+        <location filename="../app/shell/screensaver.cpp" line="48"/>
         <source>System load</source>
         <translation>Systembelastning</translation>
     </message>
     <message>
-        <location filename="../app/shell/screensaver.cpp" line="48"/>
+        <location filename="../app/shell/screensaver.cpp" line="50"/>
         <source>System load. Press Escape to return.</source>
         <translation>Systembelastning. Trykk Esc for å gå tilbake.</translation>
     </message>
     <message>
-        <location filename="../app/shell/screensaver.cpp" line="83"/>
+        <location filename="../app/shell/screensaver.cpp" line="99"/>
         <source>CPU %1</source>
         <translation>CPU %1</translation>
     </message>
     <message>
-        <location filename="../app/shell/screensaver.cpp" line="89"/>
+        <location filename="../app/shell/screensaver.cpp" line="105"/>
         <source>Memory %1 of %2</source>
         <translation>Minne %1 av %2</translation>
     </message>
     <message>
-        <location filename="../app/shell/screensaver.cpp" line="92"/>
+        <location filename="../app/shell/screensaver.cpp" line="108"/>
         <source>Temperature %1</source>
         <translation>Temperatur %1</translation>
     </message>
     <message>
-        <location filename="../app/shell/screensaver.cpp" line="94"/>
+        <location filename="../app/shell/screensaver.cpp" line="110"/>
         <source>Power %1</source>
         <translation>Effekt %1</translation>
     </message>
@@ -2807,150 +2888,156 @@ Den får ikke sjanse til å lagre arbeidet sitt.</translation>
 <context>
     <name>fg::ServicesView</name>
     <message>
-        <location filename="../app/views/services.cpp" line="24"/>
+        <location filename="../app/views/services.cpp" line="25"/>
         <source>&amp;Start</source>
         <translation>&amp;Start</translation>
     </message>
     <message>
-        <location filename="../app/views/services.cpp" line="24"/>
+        <location filename="../app/views/services.cpp" line="25"/>
         <source>St&amp;op</source>
         <translation>St&amp;opp</translation>
     </message>
     <message>
-        <location filename="../app/views/services.cpp" line="24"/>
+        <location filename="../app/views/services.cpp" line="25"/>
         <source>&amp;Restart</source>
         <translation>Start på &amp;nytt</translation>
     </message>
     <message>
-        <location filename="../app/views/services.cpp" line="25"/>
+        <location filename="../app/views/services.cpp" line="26"/>
         <source>&amp;Enable</source>
         <translation>&amp;Slå på</translation>
     </message>
     <message>
-        <location filename="../app/views/services.cpp" line="25"/>
+        <location filename="../app/views/services.cpp" line="26"/>
         <source>&amp;Disable</source>
         <translation>Slå &amp;av</translation>
     </message>
     <message>
-        <location filename="../app/views/services.cpp" line="31"/>
+        <location filename="../app/views/services.cpp" line="32"/>
         <source>&amp;Filter:</source>
         <translation>&amp;Filter:</translation>
     </message>
     <message>
-        <location filename="../app/views/services.cpp" line="33"/>
+        <location filename="../app/views/services.cpp" line="34"/>
         <source>Filter services</source>
         <translation>Filtrer tjenester</translation>
     </message>
     <message>
-        <location filename="../app/views/services.cpp" line="41"/>
+        <location filename="../app/views/services.cpp" line="42"/>
         <source>Name</source>
         <translation>Navn</translation>
     </message>
     <message>
-        <location filename="../app/views/services.cpp" line="41"/>
+        <location filename="../app/views/services.cpp" line="42"/>
         <source>State</source>
         <translation>Tilstand</translation>
     </message>
     <message>
-        <location filename="../app/views/services.cpp" line="41"/>
+        <location filename="../app/views/services.cpp" line="42"/>
         <source>Detail</source>
         <translation>Detalj</translation>
     </message>
     <message>
-        <location filename="../app/views/services.cpp" line="41"/>
+        <location filename="../app/views/services.cpp" line="42"/>
         <source>At startup</source>
         <translation>Ved oppstart</translation>
     </message>
     <message>
-        <location filename="../app/views/services.cpp" line="41"/>
+        <location filename="../app/views/services.cpp" line="42"/>
         <source>Description</source>
         <translation>Beskrivelse</translation>
     </message>
     <message>
-        <location filename="../app/views/services.cpp" line="42"/>
+        <location filename="../app/views/services.cpp" line="43"/>
         <source>Services</source>
         <translation>Tjenester</translation>
     </message>
     <message>
-        <location filename="../app/views/services.cpp" line="48"/>
+        <location filename="../app/views/services.cpp" line="49"/>
         <source>Recent log lines</source>
         <translation>Nyeste logglinjer</translation>
     </message>
     <message>
-        <location filename="../app/views/services.cpp" line="49"/>
+        <location filename="../app/views/services.cpp" line="50"/>
         <source>Recent log lines appear here when a service is selected.</source>
         <translation>De nyeste logglinjene vises her når du velger en tjeneste.</translation>
     </message>
     <message>
-        <location filename="../app/views/services.cpp" line="67"/>
+        <location filename="../app/views/services.cpp" line="68"/>
         <source>Start</source>
         <translation>Start</translation>
     </message>
     <message>
-        <location filename="../app/views/services.cpp" line="68"/>
+        <location filename="../app/views/services.cpp" line="69"/>
         <source>Stop</source>
         <translation>Stopp</translation>
     </message>
     <message>
-        <location filename="../app/views/services.cpp" line="69"/>
+        <location filename="../app/views/services.cpp" line="70"/>
         <source>Restart</source>
         <translation>Start på nytt</translation>
     </message>
     <message>
-        <location filename="../app/views/services.cpp" line="100"/>
+        <location filename="../app/views/services.cpp" line="101"/>
         <source>Could not list services: %1</source>
         <translation>Fikk ikke listet tjenester: %1</translation>
     </message>
     <message>
-        <location filename="../app/views/services.cpp" line="116"/>
+        <location filename="../app/views/services.cpp" line="117"/>
         <source>inactive</source>
         <translation>inaktiv</translation>
     </message>
     <message>
-        <location filename="../app/views/services.cpp" line="116"/>
+        <location filename="../app/views/services.cpp" line="117"/>
         <source>dead</source>
         <translation>stoppet</translation>
     </message>
     <message>
-        <location filename="../app/views/services.cpp" line="127"/>
+        <location filename="../app/views/services.cpp" line="128"/>
         <source>This system does not use systemd. Services are listed, but can&apos;t be controlled from here.</source>
         <translation>Dette systemet bruker ikke systemd. Tjenester vises, men kan ikke styres herfra.</translation>
     </message>
     <message>
-        <location filename="../app/views/services.cpp" line="150"/>
-        <location filename="../app/views/services.cpp" line="164"/>
+        <location filename="../app/views/services.cpp" line="151"/>
+        <location filename="../app/views/services.cpp" line="167"/>
         <source>Select a service first.</source>
         <translation>Velg en tjeneste først.</translation>
     </message>
     <message>
-        <location filename="../app/views/services.cpp" line="153"/>
+        <location filename="../app/views/services.cpp" line="154"/>
         <source>%1 the service %2?</source>
         <translation>%1 tjenesten %2?</translation>
     </message>
     <message>
         <location filename="../app/views/services.cpp" line="156"/>
-        <location filename="../app/views/services.cpp" line="171"/>
+        <location filename="../app/views/services.cpp" line="173"/>
+        <source>%1 %2: waiting for the system...</source>
+        <translation>%1 %2: venter på systemet ...</translation>
+    </message>
+    <message>
+        <location filename="../app/views/services.cpp" line="158"/>
+        <location filename="../app/views/services.cpp" line="175"/>
         <source>%1 %2: done.</source>
         <translation>%1 %2: ferdig.</translation>
     </message>
     <message>
-        <location filename="../app/views/services.cpp" line="156"/>
-        <location filename="../app/views/services.cpp" line="171"/>
+        <location filename="../app/views/services.cpp" line="158"/>
+        <location filename="../app/views/services.cpp" line="175"/>
         <source>%1 %2 failed: %3</source>
         <translation>%1 %2 mislyktes: %3</translation>
     </message>
     <message>
-        <location filename="../app/views/services.cpp" line="167"/>
+        <location filename="../app/views/services.cpp" line="170"/>
         <source>Enable</source>
         <translation>Slå på</translation>
     </message>
     <message>
-        <location filename="../app/views/services.cpp" line="167"/>
+        <location filename="../app/views/services.cpp" line="170"/>
         <source>Disable</source>
         <translation>Slå av</translation>
     </message>
     <message>
-        <location filename="../app/views/services.cpp" line="168"/>
+        <location filename="../app/views/services.cpp" line="171"/>
         <source>%1 the service %2 at startup?</source>
         <translation>%1 tjenesten %2 ved oppstart?</translation>
     </message>
@@ -2958,48 +3045,98 @@ Den får ikke sjanse til å lagre arbeidet sitt.</translation>
 <context>
     <name>fg::Skin</name>
     <message>
-        <location filename="../app/popout/skin.cpp" line="338"/>
+        <location filename="../app/popout/skin.cpp" line="352"/>
         <source>Only the first 64 entries are read.</source>
         <translation>Bare de første 64 oppføringene leses.</translation>
     </message>
     <message>
-        <location filename="../app/popout/skin.cpp" line="355"/>
+        <location filename="../app/popout/skin.cpp" line="370"/>
         <source>The manifest can&apos;t be read.</source>
         <translation>Manifestet kan ikke leses.</translation>
     </message>
     <message>
-        <location filename="../app/popout/skin.cpp" line="195"/>
-        <location filename="../app/popout/skin.cpp" line="359"/>
+        <location filename="../app/popout/skin.cpp" line="209"/>
+        <location filename="../app/popout/skin.cpp" line="375"/>
         <source>The manifest is larger than 256 KB.</source>
         <translation>Manifestet er større enn 256 KB.</translation>
     </message>
     <message>
-        <location filename="../app/popout/skin.cpp" line="201"/>
+        <location filename="../app/popout/skin.cpp" line="132"/>
+        <source>Default</source>
+        <translation>Standard</translation>
+    </message>
+    <message>
+        <location filename="../app/popout/skin.cpp" line="133"/>
+        <source>Console</source>
+        <translation>Konsoll</translation>
+    </message>
+    <message>
+        <location filename="../app/popout/skin.cpp" line="134"/>
+        <source>Traces</source>
+        <translation>Spor</translation>
+    </message>
+    <message>
+        <location filename="../app/popout/skin.cpp" line="135"/>
+        <source>Classic Column</source>
+        <translation>Klassisk søyle</translation>
+    </message>
+    <message>
+        <location filename="../app/popout/skin.cpp" line="136"/>
+        <source>Cassette Deck</source>
+        <translation>Kassettspiller</translation>
+    </message>
+    <message>
+        <location filename="../app/popout/skin.cpp" line="137"/>
+        <source>Modern Light</source>
+        <translation>Moderne lys</translation>
+    </message>
+    <message>
+        <location filename="../app/popout/skin.cpp" line="138"/>
+        <source>Modern Dark</source>
+        <translation>Moderne mørk</translation>
+    </message>
+    <message>
+        <location filename="../app/popout/skin.cpp" line="139"/>
+        <source>Neon Glow Light</source>
+        <translation>Neonglød lys</translation>
+    </message>
+    <message>
+        <location filename="../app/popout/skin.cpp" line="140"/>
+        <source>Neon Glow</source>
+        <translation>Neonglød</translation>
+    </message>
+    <message>
+        <location filename="../app/popout/skin.cpp" line="141"/>
+        <source>Dashboard</source>
+        <translation>Dashbord</translation>
+    </message>
+    <message>
+        <location filename="../app/popout/skin.cpp" line="215"/>
         <source>The manifest is not valid JSON.</source>
         <translation>Manifestet er ikke gyldig JSON.</translation>
     </message>
     <message>
-        <location filename="../app/popout/skin.cpp" line="206"/>
+        <location filename="../app/popout/skin.cpp" line="220"/>
         <source>The format value must be 1.</source>
         <translation>Verdien for format må være 1.</translation>
     </message>
     <message>
-        <location filename="../app/popout/skin.cpp" line="212"/>
+        <location filename="../app/popout/skin.cpp" line="226"/>
         <source>The id is missing or has characters other than letters, digits, dot, dash and underscore.</source>
         <translation>ID-en mangler, eller har andre tegn enn bokstaver, sifre, punktum, bindestrek og understrek.</translation>
     </message>
     <message>
-        <location filename="../app/popout/skin.cpp" line="217"/>
+        <location filename="../app/popout/skin.cpp" line="231"/>
         <source>The name is missing.</source>
         <translation>Navnet mangler.</translation>
     </message>
     <message>
-        <location filename="../app/popout/skin.cpp" line="369"/>
+        <location filename="../app/popout/skin.cpp" line="386"/>
         <source>This id is already taken.</source>
         <translation>Denne ID-en er allerede i bruk.</translation>
     </message>
     <message>
-        <location filename="../app/popout/skin.cpp" line="373"/>
+        <location filename="../app/popout/skin.cpp" line="390"/>
         <source>This name is already taken.</source>
         <translation>Dette navnet er allerede i bruk.</translation>
     </message>
@@ -3094,37 +3231,38 @@ Den får ikke sjanse til å lagre arbeidet sitt.</translation>
         <translation>Velg et element først.</translation>
     </message>
     <message>
-        <location filename="../app/views/startup.cpp" line="214"/>
+        <location filename="../app/views/startup.cpp" line="215"/>
         <source>%1 will %2 at the next login.</source>
         <translation>%1 vil %2 ved neste innlogging.</translation>
     </message>
     <message>
-        <location filename="../app/views/startup.cpp" line="214"/>
+        <location filename="../app/views/startup.cpp" line="215"/>
         <source>start</source>
         <translation>starte</translation>
     </message>
     <message>
-        <location filename="../app/views/startup.cpp" line="214"/>
+        <location filename="../app/views/startup.cpp" line="215"/>
         <source>not start</source>
         <translation>ikke starte</translation>
     </message>
     <message>
-        <location filename="../app/views/startup.cpp" line="214"/>
+        <location filename="../app/views/startup.cpp" line="215"/>
         <source>Could not change %1: %2</source>
         <translation>Fikk ikke endret %1: %2</translation>
     </message>
     <message>
-        <location filename="../app/views/startup.cpp" line="225"/>
+        <location filename="../app/views/startup.cpp" line="232"/>
+        <location filename="../app/views/startup.cpp" line="238"/>
         <source>Start times are not available on this system.</source>
         <translation>Starttider er ikke tilgjengelige på dette systemet.</translation>
     </message>
     <message>
-        <location filename="../app/views/startup.cpp" line="239"/>
+        <location filename="../app/views/startup.cpp" line="252"/>
         <source>Not measured</source>
         <translation>Ikke målt</translation>
     </message>
     <message>
-        <location filename="../app/views/startup.cpp" line="241"/>
+        <location filename="../app/views/startup.cpp" line="254"/>
         <source>Start times are from the last login.</source>
         <translation>Starttidene er fra siste innlogging.</translation>
     </message>
@@ -3289,94 +3427,129 @@ Sending %2</translation>
         <translation>Kjører som:</translation>
     </message>
     <message>
-        <location filename="../app/views/sysinfo.cpp" line="40"/>
+        <location filename="../app/views/sysinfo.cpp" line="41"/>
+        <location filename="../app/views/sysinfo.cpp" line="43"/>
         <source>Up for:</source>
         <translation>Oppe i:</translation>
     </message>
     <message>
-        <location filename="../app/views/sysinfo.cpp" line="40"/>
-        <source>%1 days, %2 hours, %3 minutes</source>
-        <translation>%1 dager, %2 timer, %3 minutter</translation>
+        <location filename="../app/views/sysinfo.cpp" line="41"/>
+        <source>%1, %2, %3</source>
+        <translation>%1, %2, %3</translation>
+    </message>
+    <message numerus="yes">
+        <location filename="../app/views/sysinfo.cpp" line="41"/>
+        <source>%n day(s)</source>
+        <translation>
+            <numerusform>%n dag</numerusform>
+            <numerusform>%n dager</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location filename="../app/views/sysinfo.cpp" line="41"/>
+        <source>%n hour(s)</source>
+        <translation>
+            <numerusform>%n time</numerusform>
+            <numerusform>%n timer</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location filename="../app/views/sysinfo.cpp" line="41"/>
+        <source>%n minute(s)</source>
+        <translation>
+            <numerusform>%n minutt</numerusform>
+            <numerusform>%n minutter</numerusform>
+        </translation>
     </message>
     <message>
-        <location filename="../app/views/sysinfo.cpp" line="42"/>
+        <location filename="../app/views/sysinfo.cpp" line="46"/>
         <source>Manufacturer:</source>
         <translation>Produsent:</translation>
     </message>
     <message>
-        <location filename="../app/views/sysinfo.cpp" line="43"/>
+        <location filename="../app/views/sysinfo.cpp" line="47"/>
         <source>Product:</source>
         <translation>Produkt:</translation>
     </message>
     <message>
-        <location filename="../app/views/sysinfo.cpp" line="44"/>
+        <location filename="../app/views/sysinfo.cpp" line="48"/>
         <source>Motherboard:</source>
         <translation>Hovedkort:</translation>
     </message>
     <message>
-        <location filename="../app/views/sysinfo.cpp" line="45"/>
+        <location filename="../app/views/sysinfo.cpp" line="49"/>
         <source>BIOS version:</source>
         <translation>BIOS-versjon:</translation>
     </message>
     <message>
-        <location filename="../app/views/sysinfo.cpp" line="47"/>
+        <location filename="../app/views/sysinfo.cpp" line="51"/>
         <source>Processor:</source>
         <translation>Prosessor:</translation>
     </message>
     <message>
-        <location filename="../app/views/sysinfo.cpp" line="48"/>
+        <location filename="../app/views/sysinfo.cpp" line="52"/>
         <source>Cores:</source>
         <translation>Kjerner:</translation>
     </message>
     <message>
-        <location filename="../app/views/sysinfo.cpp" line="48"/>
+        <location filename="../app/views/sysinfo.cpp" line="52"/>
         <source>%1 physical, %2 logical</source>
         <translation>%1 fysiske, %2 logiske</translation>
     </message>
     <message>
-        <location filename="../app/views/sysinfo.cpp" line="49"/>
+        <location filename="../app/views/sysinfo.cpp" line="52"/>
+        <source>%1 logical</source>
+        <translation>%1 logiske</translation>
+    </message>
+    <message>
+        <location filename="../app/views/sysinfo.cpp" line="53"/>
         <source>NUMA nodes:</source>
         <translation>NUMA-noder:</translation>
     </message>
     <message>
-        <location filename="../app/views/sysinfo.cpp" line="54"/>
+        <location filename="../app/views/sysinfo.cpp" line="58"/>
         <source>Graphics:</source>
         <translation>Grafikk:</translation>
     </message>
     <message>
-        <location filename="../app/views/sysinfo.cpp" line="62"/>
+        <location filename="../app/views/sysinfo.cpp" line="66"/>
         <source>%1: size not reported</source>
         <translation>%1: størrelsen er ikke oppgitt</translation>
     </message>
     <message>
-        <location filename="../app/views/sysinfo.cpp" line="66"/>
+        <location filename="../app/views/sysinfo.cpp" line="70"/>
         <source>%1: empty</source>
         <translation>%1: tom</translation>
     </message>
     <message>
-        <location filename="../app/views/sysinfo.cpp" line="70"/>
-        <source>%1: %2 %3 %4, %5 MT/s</source>
-        <translation>%1: %2 %3 %4, %5 MT/s</translation>
+        <location filename="../app/views/sysinfo.cpp" line="74"/>
+        <source>%1: %2 %3 %4</source>
+        <translation>%1: %2 %3 %4</translation>
     </message>
     <message>
-        <location filename="../app/views/sysinfo.cpp" line="74"/>
-        <location filename="../app/views/sysinfo.cpp" line="80"/>
+        <location filename="../app/views/sysinfo.cpp" line="76"/>
+        <source>%1, %2 MT/s</source>
+        <translation>%1, %2 MT/s</translation>
+    </message>
+    <message>
+        <location filename="../app/views/sysinfo.cpp" line="78"/>
+        <location filename="../app/views/sysinfo.cpp" line="84"/>
         <source>Memory slots used:</source>
         <translation>Minneplasser i bruk:</translation>
     </message>
     <message>
-        <location filename="../app/views/sysinfo.cpp" line="74"/>
+        <location filename="../app/views/sysinfo.cpp" line="78"/>
         <source>%1 of %2</source>
         <translation>%1 av %2</translation>
     </message>
     <message>
-        <location filename="../app/views/sysinfo.cpp" line="75"/>
-        <location filename="../app/views/sysinfo.cpp" line="81"/>
+        <location filename="../app/views/sysinfo.cpp" line="79"/>
+        <location filename="../app/views/sysinfo.cpp" line="85"/>
         <source>Memory modules:</source>
         <translation>Minnemoduler:</translation>
     </message>
     <message>
-        <location filename="../app/views/sysinfo.cpp" line="78"/>
+        <location filename="../app/views/sysinfo.cpp" line="82"/>
         <source>Access denied. The kernel lets only root read this table. See the permission guide in the README.</source>
         <translation>Ingen tilgang. Kjernen lar bare root lese denne tabellen. Se tilgangsveiledningen i README-filen.</translation>
     </message>
@@ -3384,164 +3557,167 @@ Sending %2</translation>
 <context>
     <name>fg::ThermalsView</name>
     <message>
-        <location filename="../app/views/thermals.cpp" line="62"/>
-        <location filename="../app/views/thermals.cpp" line="76"/>
+        <location filename="../app/views/thermals.cpp" line="63"/>
+        <location filename="../app/views/thermals.cpp" line="77"/>
         <source>Chip</source>
         <translation>Brikke</translation>
     </message>
     <message>
-        <location filename="../app/views/thermals.cpp" line="62"/>
+        <location filename="../app/views/thermals.cpp" line="63"/>
         <source>Sensor</source>
         <translation>Sensor</translation>
     </message>
     <message>
-        <location filename="../app/views/thermals.cpp" line="62"/>
+        <location filename="../app/views/thermals.cpp" line="63"/>
         <source>Now</source>
         <translation>Nå</translation>
     </message>
     <message>
-        <location filename="../app/views/thermals.cpp" line="62"/>
+        <location filename="../app/views/thermals.cpp" line="63"/>
         <source>Lowest</source>
         <translation>Lavest</translation>
     </message>
     <message>
-        <location filename="../app/views/thermals.cpp" line="62"/>
+        <location filename="../app/views/thermals.cpp" line="63"/>
         <source>Highest</source>
         <translation>Høyest</translation>
     </message>
     <message>
-        <location filename="../app/views/thermals.cpp" line="62"/>
+        <location filename="../app/views/thermals.cpp" line="63"/>
         <source>Limit</source>
         <translation>Grense</translation>
     </message>
     <message>
-        <location filename="../app/views/thermals.cpp" line="62"/>
+        <location filename="../app/views/thermals.cpp" line="63"/>
         <source>Margin</source>
         <translation>Margin</translation>
     </message>
     <message>
-        <location filename="../app/views/thermals.cpp" line="62"/>
+        <location filename="../app/views/thermals.cpp" line="63"/>
         <source>State</source>
         <translation>Tilstand</translation>
     </message>
     <message>
-        <location filename="../app/views/thermals.cpp" line="63"/>
+        <location filename="../app/views/thermals.cpp" line="64"/>
         <source>Temperature sensors. Choose one to see its history in the graph.</source>
         <translation>Temperatursensorer. Velg en for å se historikken i grafen.</translation>
     </message>
     <message>
-        <location filename="../app/views/thermals.cpp" line="37"/>
+        <location filename="../app/views/thermals.cpp" line="38"/>
         <source>&amp;Fans:</source>
         <translation>&amp;Vifter:</translation>
     </message>
     <message>
-        <location filename="../app/views/thermals.cpp" line="76"/>
+        <location filename="../app/views/thermals.cpp" line="77"/>
         <source>Fan</source>
         <translation>Vifte</translation>
     </message>
     <message>
-        <location filename="../app/views/thermals.cpp" line="76"/>
+        <location filename="../app/views/thermals.cpp" line="77"/>
         <source>Speed</source>
         <translation>Hastighet</translation>
     </message>
     <message>
-        <location filename="../app/views/thermals.cpp" line="76"/>
+        <location filename="../app/views/thermals.cpp" line="77"/>
         <source>Power</source>
         <translation>Effekt</translation>
     </message>
     <message>
-        <location filename="../app/views/thermals.cpp" line="77"/>
+        <location filename="../app/views/thermals.cpp" line="78"/>
         <source>Fans</source>
         <translation>Vifter</translation>
     </message>
     <message>
-        <location filename="../app/views/thermals.cpp" line="78"/>
+        <location filename="../app/views/thermals.cpp" line="79"/>
         <source>This system reports no fan sensors. Many laptops leave the fans to their firmware.</source>
         <translation>Dette systemet oppgir ingen viftesensorer. Mange bærbare overlater viftene til fastvaren.</translation>
     </message>
     <message>
-        <location filename="../app/views/thermals.cpp" line="117"/>
+        <location filename="../app/views/thermals.cpp" line="118"/>
         <source>%1 %2</source>
         <translation>%1 %2</translation>
     </message>
     <message>
-        <location filename="../app/views/thermals.cpp" line="120"/>
+        <location filename="../app/views/thermals.cpp" line="121"/>
         <source>CPU hotspot</source>
         <translation>Varmeste punkt i CPU</translation>
     </message>
     <message>
-        <location filename="../app/views/thermals.cpp" line="132"/>
+        <location filename="../app/views/thermals.cpp" line="133"/>
         <source>No limit</source>
         <translation>Ingen grense</translation>
     </message>
     <message>
-        <location filename="../app/views/thermals.cpp" line="135"/>
+        <location filename="../app/views/thermals.cpp" line="136"/>
         <source>Over the limit</source>
         <translation>Over grensen</translation>
     </message>
     <message>
-        <location filename="../app/views/thermals.cpp" line="137"/>
+        <location filename="../app/views/thermals.cpp" line="138"/>
         <source>At the limit</source>
         <translation>Ved grensen</translation>
     </message>
     <message>
-        <location filename="../app/views/thermals.cpp" line="139"/>
+        <location filename="../app/views/thermals.cpp" line="140"/>
         <source>Near the limit</source>
         <translation>Nær grensen</translation>
     </message>
     <message>
-        <location filename="../app/views/thermals.cpp" line="140"/>
+        <location filename="../app/views/thermals.cpp" line="141"/>
         <source>Normal</source>
         <translation>Normal</translation>
     </message>
     <message>
-        <location filename="../app/views/thermals.cpp" line="204"/>
+        <location filename="../app/views/thermals.cpp" line="205"/>
         <source>CPU hotspot:</source>
         <translation>Varmeste punkt i CPU:</translation>
     </message>
     <message>
-        <location filename="../app/views/thermals.cpp" line="205"/>
+        <location filename="../app/views/thermals.cpp" line="206"/>
         <source>Hottest sensor:</source>
         <translation>Varmeste sensor:</translation>
     </message>
     <message>
-        <location filename="../app/views/thermals.cpp" line="205"/>
+        <location filename="../app/views/thermals.cpp" line="206"/>
         <source>%1 %2: %3</source>
         <translation>%1 %2: %3</translation>
     </message>
     <message>
-        <location filename="../app/views/thermals.cpp" line="206"/>
+        <location filename="../app/views/thermals.cpp" line="207"/>
         <source>Closest to its limit:</source>
         <translation>Nærmest grensen sin:</translation>
     </message>
     <message>
-        <location filename="../app/views/thermals.cpp" line="206"/>
+        <location filename="../app/views/thermals.cpp" line="207"/>
         <source>%1 %2: %3 left</source>
         <translation>%1 %2: %3 igjen</translation>
     </message>
     <message>
-        <location filename="../app/views/thermals.cpp" line="206"/>
+        <location filename="../app/views/thermals.cpp" line="207"/>
         <source>No sensor here reports a limit</source>
         <translation>Ingen sensor her oppgir en grense</translation>
     </message>
     <message>
-        <location filename="../app/views/thermals.cpp" line="211"/>
-        <location filename="../app/views/thermals.cpp" line="213"/>
+        <location filename="../app/views/thermals.cpp" line="212"/>
+        <location filename="../app/views/thermals.cpp" line="214"/>
         <source>Thermal pressure:</source>
         <translation>Varmebelastning:</translation>
     </message>
-    <message>
-        <location filename="../app/views/thermals.cpp" line="211"/>
-        <source>%1 throttle events since start, %2 since this page opened</source>
-        <translation>%1 strupinger siden start, %2 siden denne siden ble åpnet</translation>
+    <message numerus="yes">
+        <location filename="../app/views/thermals.cpp" line="212"/>
+        <source>%n throttle event(s) since start, %1 since this page opened</source>
+        <translation>
+            <numerusform>%n struping siden start, %1 siden denne siden ble åpnet</numerusform>
+            <numerusform>%n strupinger siden start, %1 siden denne siden ble åpnet</numerusform>
+        </translation>
     </message>
     <message>
-        <location filename="../app/views/thermals.cpp" line="228"/>
+        <location filename="../app/views/thermals.cpp" line="229"/>
         <source>%1 RPM</source>
         <translation>%1 o/min</translation>
     </message>
     <message>
-        <location filename="../app/views/thermals.cpp" line="234"/>
+        <location filename="../app/views/thermals.cpp" line="235"/>
         <source>%1: %2</source>
         <translation>%1: %2</translation>
     </message>
@@ -3577,47 +3753,47 @@ Sending %2</translation>
 <context>
     <name>fg::TrayAndAlerts</name>
     <message>
-        <location filename="../app/shell/tray.cpp" line="53"/>
+        <location filename="../app/shell/tray.cpp" line="55"/>
         <source>&amp;Show</source>
         <translation>&amp;Vis</translation>
     </message>
     <message>
-        <location filename="../app/shell/tray.cpp" line="59"/>
+        <location filename="../app/shell/tray.cpp" line="61"/>
         <source>E&amp;xit</source>
         <translation>&amp;Avslutt</translation>
     </message>
     <message>
-        <location filename="../app/shell/tray.cpp" line="101"/>
+        <location filename="../app/shell/tray.cpp" line="109"/>
         <source>CPU Usage: %1</source>
         <translation>CPU-bruk: %1</translation>
     </message>
     <message>
-        <location filename="../app/shell/tray.cpp" line="128"/>
+        <location filename="../app/shell/tray.cpp" line="136"/>
         <source>CPU use is at %1.</source>
         <translation>CPU-bruken er på %1.</translation>
     </message>
     <message>
-        <location filename="../app/shell/tray.cpp" line="134"/>
+        <location filename="../app/shell/tray.cpp" line="142"/>
         <source>Memory use is at %1.</source>
         <translation>Minnebruken er på %1.</translation>
     </message>
     <message>
-        <location filename="../app/shell/tray.cpp" line="137"/>
+        <location filename="../app/shell/tray.cpp" line="145"/>
         <source>The processor is at %1.</source>
         <translation>Prosessoren er på %1.</translation>
     </message>
     <message>
-        <location filename="../app/shell/tray.h" line="41"/>
+        <location filename="../app/shell/tray.h" line="44"/>
         <source>High CPU use</source>
         <translation>Høy CPU-bruk</translation>
     </message>
     <message>
-        <location filename="../app/shell/tray.h" line="42"/>
+        <location filename="../app/shell/tray.h" line="45"/>
         <source>High memory use</source>
         <translation>Høy minnebruk</translation>
     </message>
     <message>
-        <location filename="../app/shell/tray.h" line="43"/>
+        <location filename="../app/shell/tray.h" line="46"/>
         <source>High temperature</source>
         <translation>Høy temperatur</translation>
     </message>
@@ -3625,111 +3801,128 @@ Sending %2</translation>
 <context>
     <name>fg::Treemap</name>
     <message>
-        <location filename="../app/views/diskspace.cpp" line="126"/>
+        <location filename="../app/views/diskspace.cpp" line="131"/>
         <source>Map of the largest items</source>
         <translation>Kart over de største elementene</translation>
     </message>
     <message>
-        <location filename="../app/views/diskspace.cpp" line="132"/>
+        <location filename="../app/views/diskspace.cpp" line="142"/>
+        <source>%1, %2, %3</source>
+        <translation>%1, %2, %3</translation>
+    </message>
+    <message>
+        <location filename="../app/views/diskspace.cpp" line="142"/>
+        <location filename="../app/views/diskspace.cpp" line="158"/>
+        <source>folder</source>
+        <translation>mappe</translation>
+    </message>
+    <message>
+        <location filename="../app/views/diskspace.cpp" line="142"/>
+        <location filename="../app/views/diskspace.cpp" line="158"/>
+        <source>file</source>
+        <translation>fil</translation>
+    </message>
+    <message>
+        <location filename="../app/views/diskspace.cpp" line="153"/>
         <source>Arrow keys move between items, Enter opens a folder and Backspace goes up.</source>
         <translation>Piltastene flytter mellom elementene, Enter åpner en mappe og Backspace går opp.</translation>
     </message>
     <message>
-        <location filename="../app/views/diskspace.cpp" line="137"/>
-        <source>%1, %2. %3</source>
-        <translation>%1, %2. %3</translation>
+        <location filename="../app/views/diskspace.cpp" line="158"/>
+        <source>%1, %2, %3. %4</source>
+        <translation>%1, %2, %3. %4</translation>
     </message>
 </context>
 <context>
     <name>fg::UsersView</name>
     <message>
-        <location filename="../app/views/users.cpp" line="35"/>
+        <location filename="../app/views/users.cpp" line="37"/>
         <source>&amp;Users:</source>
         <translation>&amp;Brukere:</translation>
     </message>
     <message>
-        <location filename="../app/views/users.cpp" line="39"/>
-        <location filename="../app/views/users.cpp" line="47"/>
+        <location filename="../app/views/users.cpp" line="41"/>
+        <location filename="../app/views/users.cpp" line="49"/>
         <source>User</source>
         <translation>Bruker</translation>
     </message>
     <message>
-        <location filename="../app/views/users.cpp" line="39"/>
+        <location filename="../app/views/users.cpp" line="41"/>
         <source>Processes</source>
         <translation>Prosesser</translation>
     </message>
     <message>
-        <location filename="../app/views/users.cpp" line="39"/>
+        <location filename="../app/views/users.cpp" line="41"/>
         <source>CPU</source>
         <translation>CPU</translation>
     </message>
     <message>
-        <location filename="../app/views/users.cpp" line="39"/>
+        <location filename="../app/views/users.cpp" line="41"/>
         <source>Memory</source>
         <translation>Minne</translation>
     </message>
     <message>
-        <location filename="../app/views/users.cpp" line="39"/>
+        <location filename="../app/views/users.cpp" line="41"/>
         <source>Disk</source>
         <translation>Disk</translation>
     </message>
     <message>
-        <location filename="../app/views/users.cpp" line="40"/>
+        <location filename="../app/views/users.cpp" line="42"/>
         <source>Users</source>
         <translation>Brukere</translation>
     </message>
     <message>
-        <location filename="../app/views/users.cpp" line="43"/>
+        <location filename="../app/views/users.cpp" line="45"/>
         <source>&amp;Sessions:</source>
         <translation>&amp;Økter:</translation>
     </message>
     <message>
-        <location filename="../app/views/users.cpp" line="47"/>
+        <location filename="../app/views/users.cpp" line="49"/>
         <source>Session</source>
         <translation>Økt</translation>
     </message>
     <message>
-        <location filename="../app/views/users.cpp" line="47"/>
+        <location filename="../app/views/users.cpp" line="49"/>
         <source>Seat</source>
         <translation>Plass</translation>
     </message>
     <message>
-        <location filename="../app/views/users.cpp" line="48"/>
+        <location filename="../app/views/users.cpp" line="50"/>
         <source>Sessions</source>
         <translation>Økter</translation>
     </message>
     <message>
-        <location filename="../app/views/users.cpp" line="54"/>
+        <location filename="../app/views/users.cpp" line="56"/>
         <source>&amp;Lock</source>
         <translation>&amp;Lås</translation>
     </message>
     <message>
-        <location filename="../app/views/users.cpp" line="55"/>
+        <location filename="../app/views/users.cpp" line="57"/>
         <source>Sign &amp;Out</source>
         <translation>Logg &amp;ut</translation>
     </message>
     <message>
-        <location filename="../app/views/users.cpp" line="59"/>
+        <location filename="../app/views/users.cpp" line="61"/>
         <source>Lock</source>
         <translation>Lås</translation>
     </message>
     <message>
-        <location filename="../app/views/users.cpp" line="60"/>
+        <location filename="../app/views/users.cpp" line="62"/>
         <source>Sign out</source>
         <translation>Logg ut</translation>
     </message>
     <message>
-        <location filename="../app/views/users.cpp" line="72"/>
+        <location filename="../app/views/users.cpp" line="74"/>
         <source>Sessions are not available: %1</source>
         <translation>Økter er ikke tilgjengelige: %1</translation>
     </message>
     <message>
-        <location filename="../app/views/users.cpp" line="114"/>
+        <location filename="../app/views/users.cpp" line="118"/>
         <source>Select a session first.</source>
         <translation>Velg en økt først.</translation>
     </message>
     <message>
-        <location filename="../app/views/users.cpp" line="117"/>
+        <location filename="../app/views/users.cpp" line="121"/>
         <source>%1 session %2 of %3?
 
 Unsaved work may be lost.</source>
@@ -3738,12 +3931,17 @@ Unsaved work may be lost.</source>
 Ulagret arbeid kan gå tapt.</translation>
     </message>
     <message>
-        <location filename="../app/views/users.cpp" line="120"/>
+        <location filename="../app/views/users.cpp" line="123"/>
+        <source>%1: waiting for the system...</source>
+        <translation>%1: venter på systemet ...</translation>
+    </message>
+    <message>
+        <location filename="../app/views/users.cpp" line="125"/>
         <source>%1: done.</source>
         <translation>%1: ferdig.</translation>
     </message>
     <message>
-        <location filename="../app/views/users.cpp" line="120"/>
+        <location filename="../app/views/users.cpp" line="125"/>
         <source>%1 failed: %2</source>
         <translation>%1 mislyktes: %2</translation>
     </message>

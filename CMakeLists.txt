@@ -31,7 +31,7 @@ add_library(fg_core STATIC
 )
 target_include_directories(fg_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets DBus Sql LinguistTools)
+find_package(Qt6 6.7 REQUIRED COMPONENTS Core Gui Widgets DBus Sql LinguistTools)
 set(CMAKE_AUTOMOC ON)
 
 add_library(fg_appearance STATIC
@@ -58,6 +58,7 @@ add_library(fg_app STATIC
     app/shell/options.cpp
     app/shell/sheet.cpp
     app/shell/titlebar.cpp
+    app/widgets/confirm.cpp
     app/widgets/graph.cpp
     app/widgets/icons.cpp
     app/widgets/infogrid.cpp

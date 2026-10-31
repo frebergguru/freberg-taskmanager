@@ -11,6 +11,8 @@ namespace fg {
 
 namespace {
 
+constexpr std::uint64_t kSupplyRescanPasses = 30; // a battery or charger can come and go
+
 std::vector<std::string> listDir(const std::string& path)
 {
     std::vector<std::string> names;
@@ -35,10 +37,10 @@ std::string readTrimmed(const std::string& path)
 }
 
 template <class Convert>
-auto readNumber(const std::string& path, std::string& buffer, Convert convert)
+auto readNumber(CachedFile& file, std::string& buffer, Convert convert)
 {
     using Value = decltype(convert(std::uint64_t{}));
-    const ReadStatus status = readFile(path, buffer);
+    const ReadStatus status = file.read(buffer);
     if (status != ReadStatus::Ok)
         return Reading<Value>::missing(toAvailability(status));
     const auto value = parseU64(buffer);
@@ -69,13 +71,21 @@ GpuSampler::GpuSampler(const std::string& root) : m_root(root)
             continue;
         Card card;
         card.name = name;
-        card.device = drm + name + "/device";
-        card.driver = baseName(card.device + "/driver");
-        for (const std::string& hwmon : listDir(card.device + "/hwmon")) {
-            card.hwmon = card.device + "/hwmon/" + hwmon;
+        const std::string device = drm + name + "/device";
+        card.driver = baseName(device + "/driver");
+        card.busy = CachedFile(device + "/gpu_busy_percent");
+        card.vramUsed = CachedFile(device + "/mem_info_vram_used");
+        card.vramTotal = CachedFile(device + "/mem_info_vram_total");
+        card.gtFreq = CachedFile(drm + name + "/gt_act_freq_mhz");
+        for (const std::string& hwmon : listDir(device + "/hwmon")) {
+            const std::string dir = device + "/hwmon/" + hwmon;
+            card.hasHwmon = true;
+            card.temp = CachedFile(dir + "/temp1_input");
+            card.powerAverage = CachedFile(dir + "/power1_average");
+            card.powerInput = CachedFile(dir + "/power1_input");
+            card.hwmonFreq = CachedFile(dir + "/freq1_input");
             break;
         }
-        card.gtFreq = drm + name + "/gt_act_freq_mhz";
         m_cards.push_back(std::move(card));
     }
 }
@@ -85,23 +95,23 @@ void GpuSampler::sample(std::vector<GpuSample>& out)
     const auto toDouble = [](std::uint64_t v) { return static_cast<double>(v); };
     const auto same = [](std::uint64_t v) { return v; };
 
-    for (const Card& card : m_cards) {
+    for (Card& card : m_cards) {
         GpuSample gpu;
         gpu.card = card.name;
         gpu.driver = card.driver;
-        gpu.busyPct = readNumber(card.device + "/gpu_busy_percent", m_buffer, toDouble);
-        gpu.vramUsed = readNumber(card.device + "/mem_info_vram_used", m_buffer, same);
-        gpu.vramTotal = readNumber(card.device + "/mem_info_vram_total", m_buffer, same);
+        gpu.busyPct = readNumber(card.busy, m_buffer, toDouble);
+        gpu.vramUsed = readNumber(card.vramUsed, m_buffer, same);
+        gpu.vramTotal = readNumber(card.vramTotal, m_buffer, same);
 
         gpu.freqMHz = readNumber(card.gtFreq, m_buffer, toDouble);
-        if (!card.hwmon.empty()) {
-            gpu.tempC = readNumber(card.hwmon + "/temp1_input", m_buffer, [](std::uint64_t v) { return static_cast<double>(v) / 1000.0; });
+        if (card.hasHwmon) {
+            gpu.tempC = readNumber(card.temp, m_buffer, [](std::uint64_t v) { return static_cast<double>(v) / 1000.0; });
             const auto microwatts = [](std::uint64_t v) { return static_cast<double>(v) / 1000000.0; };
-            gpu.powerW = readNumber(card.hwmon + "/power1_average", m_buffer, microwatts);
+            gpu.powerW = readNumber(card.powerAverage, m_buffer, microwatts);
             if (!gpu.powerW.known())
-                gpu.powerW = readNumber(card.hwmon + "/power1_input", m_buffer, microwatts);
+                gpu.powerW = readNumber(card.powerInput, m_buffer, microwatts);
             if (!gpu.freqMHz.known())
-                gpu.freqMHz = readNumber(card.hwmon + "/freq1_input", m_buffer, [](std::uint64_t v) { return static_cast<double>(v) / 1000000.0; });
+                gpu.freqMHz = readNumber(card.hwmonFreq, m_buffer, [](std::uint64_t v) { return static_cast<double>(v) / 1000000.0; });
         } else {
             gpu.tempC = gpu.powerW = Reading<double>::missing(Availability::Unsupported);
         }
@@ -169,12 +179,21 @@ ThermalSampler::ThermalSampler(const std::string& root) : m_root(root)
         m_sensors.push_back({"thermal zone", type.empty() ? zone : type, CachedFile(dir + "temp"), cpu, limit});
     }
 
+    // Every processor keeps its own copy of its package's count, so one per package is the real total.
     const std::string cpuDir = root + "/sys/devices/system/cpu/";
+    std::vector<std::string> packages;
     for (const std::string& name : listDir(cpuDir)) {
         const std::string path = cpuDir + name + "/thermal_throttle/package_throttle_count";
         struct stat info;
-        if (name.starts_with("cpu") && ::stat(path.c_str(), &info) == 0)
-            m_throttle.push_back(path);
+        if (!name.starts_with("cpu") || ::stat(path.c_str(), &info) != 0)
+            continue;
+        const std::string package = readTrimmed(cpuDir + name + "/topology/physical_package_id");
+        if (!package.empty()) {
+            if (std::find(packages.begin(), packages.end(), package) != packages.end())
+                continue;
+            packages.push_back(package);
+        }
+        m_throttle.emplace_back(path);
     }
 }
 
@@ -218,86 +237,141 @@ void ThermalSampler::sample(ThermalSample& out)
         out.throttleEvents = Reading<std::uint64_t>::missing(Availability::Unsupported);
     } else {
         std::uint64_t events = 0;
-        for (const std::string& path : m_throttle)
-            if (readFile(path, m_buffer) == ReadStatus::Ok)
-                events += parseU64(m_buffer).value_or(0);
-        out.throttleEvents = Reading<std::uint64_t>::measured(events);
+        bool anyRead = false;
+        Availability why = Availability::Unsupported;
+        for (CachedFile& file : m_throttle) {
+            const ReadStatus status = file.read(m_buffer);
+            const auto count = status == ReadStatus::Ok ? parseU64(m_buffer) : std::nullopt;
+            if (count) {
+                events += *count;
+                anyRead = true;
+            } else if (status != ReadStatus::Ok) {
+                why = toAvailability(status);
+            }
+        }
+        out.throttleEvents = anyRead ? Reading<std::uint64_t>::measured(events) : Reading<std::uint64_t>::missing(why);
     }
 }
 
-PowerSampler::PowerSampler(const std::string& root) : m_root(root)
+PowerSampler::PowerSampler(const std::string& root)
+    : m_root(root),
+      m_governor(root + "/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor"),
+      m_energyPreference(root + "/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference"),
+      m_platformProfile(root + "/sys/firmware/acpi/platform_profile")
 {
     const std::string base = root + "/sys/class/powercap/";
     for (const std::string& name : listDir(base)) {
         // intel-rapl:0 is a package domain; intel-rapl:0:0 is a part of it.
         if (name.starts_with("intel-rapl:") && name.find(':', 11) == std::string::npos) {
-            m_raplDomain = base + name;
-            break;
+            RaplDomain domain;
+            domain.energy = CachedFile(base + name + "/energy_uj");
+            domain.range = parseU64(readTrimmed(base + name + "/max_energy_range_uj")).value_or(0);
+            m_rapl.push_back(std::move(domain));
         }
     }
-    if (!m_raplDomain.empty())
-        m_raplRange = parseU64(readTrimmed(m_raplDomain + "/max_energy_range_uj")).value_or(0);
+}
+
+void PowerSampler::findSupplies()
+{
+    m_supplies.clear();
+    const std::string supplies = m_root + "/sys/class/power_supply/";
+    for (const std::string& name : listDir(supplies)) {
+        const std::string dir = supplies + name + "/";
+        const std::string type = readTrimmed(dir + "type");
+        if (type != "Mains" && (type != "Battery" || readTrimmed(dir + "scope") == "Device"))
+            continue;
+        Supply supply;
+        supply.name = name;
+        supply.isMains = type == "Mains";
+        supply.online = CachedFile(dir + "online");
+        supply.status = CachedFile(dir + "status");
+        supply.capacity = CachedFile(dir + "capacity");
+        supply.powerNow = CachedFile(dir + "power_now");
+        supply.currentNow = CachedFile(dir + "current_now");
+        supply.voltageNow = CachedFile(dir + "voltage_now");
+        m_supplies.push_back(std::move(supply));
+    }
+}
+
+std::string PowerSampler::readText(CachedFile& file)
+{
+    return file.read(m_buffer) == ReadStatus::Ok ? std::string(trimmed(m_buffer)) : std::string();
 }
 
 void PowerSampler::sample(std::int64_t nowMs, PowerSample& out)
 {
-    if (m_raplDomain.empty()) {
+    if (m_rapl.empty()) {
         out.cpuPackageW = Reading<double>::missing(Availability::Unsupported);
     } else {
-        const ReadStatus status = readFile(m_raplDomain + "/energy_uj", m_buffer);
-        const auto energy = status == ReadStatus::Ok ? parseU64(m_buffer) : std::nullopt;
-        if (!energy) {
-            // Root-only since kernel 5.10, unless the user has granted group access.
-            out.cpuPackageW = Reading<double>::missing(toAvailability(status));
-        } else {
-            if (m_previousMs != 0 && nowMs > m_previousMs) {
-                std::uint64_t delta = *energy >= m_previousEnergy ? *energy - m_previousEnergy : 0;
-                if (*energy < m_previousEnergy && m_raplRange != 0)
-                    delta = m_raplRange - m_previousEnergy + *energy; // the counter wrapped
-                out.cpuPackageW = Reading<double>::measured(static_cast<double>(delta) / (static_cast<double>(nowMs - m_previousMs) * 1000.0));
+        std::uint64_t delta = 0;
+        bool haveDelta = m_previousMs != 0 && nowMs > m_previousMs;
+        bool readAll = true;
+        Availability why = Availability::Unsupported;
+        for (RaplDomain& domain : m_rapl) {
+            const ReadStatus status = domain.energy.read(m_buffer);
+            const auto energy = status == ReadStatus::Ok ? parseU64(m_buffer) : std::nullopt;
+            if (!energy) {
+                // Root-only since kernel 5.10, unless the user has granted group access.
+                readAll = false;
+                why = toAvailability(status);
+                domain.havePrevious = false;
+                continue;
             }
-            m_previousEnergy = *energy;
+            if (!domain.havePrevious)
+                haveDelta = false;
+            else if (*energy >= domain.previous)
+                delta += *energy - domain.previous;
+            else if (domain.range != 0)
+                delta += domain.range - domain.previous + *energy; // the counter wrapped
+            else
+                haveDelta = false; // it wrapped, and we don't know where: a gap, not 0 W
+            domain.previous = *energy;
+            domain.havePrevious = true;
+        }
+        if (!readAll) {
+            out.cpuPackageW = Reading<double>::missing(why);
+        } else {
+            if (haveDelta)
+                out.cpuPackageW = Reading<double>::measured(static_cast<double>(delta) / (static_cast<double>(nowMs - m_previousMs) * 1000.0));
             m_previousMs = nowMs;
         }
     }
 
-    const std::string supplies = m_root + "/sys/class/power_supply/";
+    if (m_passes++ % kSupplyRescanPasses == 0)
+        findSupplies();
     bool haveAc = false, acOnline = false;
-    for (const std::string& name : listDir(supplies)) {
-        const std::string dir = supplies + name + "/";
-        const std::string type = readTrimmed(dir + "type");
-        if (type == "Mains") {
-            const std::string online = readTrimmed(dir + "online");
+    for (Supply& supply : m_supplies) {
+        if (supply.isMains) {
+            const std::string online = readText(supply.online);
             if (!online.empty()) {
                 haveAc = true;
                 acOnline = acOnline || online == "1";
             }
-        } else if (type == "Battery" && readTrimmed(dir + "scope") != "Device") {
-            BatterySample battery;
-            battery.name = name;
-            battery.status = readTrimmed(dir + "status");
-            battery.percent = readNumber(dir + "capacity", m_buffer, [](std::uint64_t v) { return static_cast<double>(v); });
-            battery.powerW = readNumber(dir + "power_now", m_buffer, [](std::uint64_t v) { return static_cast<double>(v) / 1000000.0; });
-            if (!battery.powerW.known()) {
-                const auto current = parseU64(readTrimmed(dir + "current_now"));
-                const auto voltage = parseU64(readTrimmed(dir + "voltage_now"));
-                if (current && voltage)
-                    battery.powerW = Reading<double>::measured(static_cast<double>(*current) * static_cast<double>(*voltage) / 1e12);
-            }
-            out.batteries.push_back(std::move(battery));
+            continue;
         }
+        BatterySample battery;
+        battery.name = supply.name;
+        battery.status = readText(supply.status);
+        battery.percent = readNumber(supply.capacity, m_buffer, [](std::uint64_t v) { return static_cast<double>(v); });
+        battery.powerW = readNumber(supply.powerNow, m_buffer, [](std::uint64_t v) { return static_cast<double>(v) / 1000000.0; });
+        if (!battery.powerW.known()) {
+            const auto current = parseU64(readText(supply.currentNow));
+            const auto voltage = parseU64(readText(supply.voltageNow));
+            if (current && voltage)
+                battery.powerW = Reading<double>::estimated(static_cast<double>(*current) * static_cast<double>(*voltage) / 1e12); // worked out from two separate reads
+        }
+        out.batteries.push_back(std::move(battery));
     }
     out.onAc = haveAc ? Reading<bool>::measured(acOnline) : Reading<bool>::missing(Availability::Unsupported);
 
-    const auto text = [this](const std::string& path) {
-        const ReadStatus status = readFile(path, m_buffer);
+    const auto text = [this](CachedFile& file) {
+        const ReadStatus status = file.read(m_buffer);
         return status == ReadStatus::Ok ? Reading<std::string>::measured(std::string(trimmed(m_buffer)))
                                         : Reading<std::string>::missing(toAvailability(status));
     };
-    const std::string cpu0 = m_root + "/sys/devices/system/cpu/cpu0/cpufreq/";
-    out.governor = text(cpu0 + "scaling_governor");
-    out.energyPreference = text(cpu0 + "energy_performance_preference");
-    out.platformProfile = text(m_root + "/sys/firmware/acpi/platform_profile");
+    out.governor = text(m_governor);
+    out.energyPreference = text(m_energyPreference);
+    out.platformProfile = text(m_platformProfile);
 }
 
 } // namespace fg

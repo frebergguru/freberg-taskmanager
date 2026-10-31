@@ -192,11 +192,12 @@ using SnapshotPtr = std::shared_ptr<const Snapshot>;
 // Facts about the processor, read once.
 struct CpuTopology {
     std::string model;
+    std::vector<int> ids;          // the kernel's number for each online processor, which may have holes
     int logical = 0;
-    int physical = 0;
+    int physical = 0;              // 0 when the system doesn't say
     int numaNodes = 0;
-    std::vector<int> coreNode;     // logical processor -> NUMA node
-    std::vector<bool> efficiency;  // logical processor -> efficiency core
+    std::vector<int> coreNode;     // position in ids -> NUMA node
+    std::vector<bool> efficiency;  // position in ids -> efficiency core
     bool hybrid = false;
     Reading<double> maxFreqMHz;
 };

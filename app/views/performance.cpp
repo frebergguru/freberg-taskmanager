@@ -20,6 +20,7 @@
 #include <QStackedWidget>
 #include <QVBoxLayout>
 #include <algorithm>
+#include <climits>
 #include <cmath>
 
 namespace fg {
@@ -32,6 +33,12 @@ const QString kThermal = QStringLiteral("thermal");
 const QString kEnergy = QStringLiteral("energy");
 const QString kAllDisks = QStringLiteral("disks");
 
+// Offline processors leave holes in the kernel's numbering.
+int processorNumber(const CpuTopology& topology, int position)
+{
+    return position < static_cast<int>(topology.ids.size()) ? topology.ids[position] : position;
+}
+
 template <class T>
 double valueOr0(const Reading<T>& reading)
 {
@@ -40,7 +47,7 @@ double valueOr0(const Reading<T>& reading)
 
 } // namespace
 
-PerformanceView::PerformanceView(SamplerHub& hub) : m_hub(hub), m_list(new QListWidget(this)), m_stack(new QStackedWidget(this))
+PerformanceView::PerformanceView(SamplerHub& hub) : m_hub(hub), m_list(new QListWidget(this)), m_stack(new QStackedWidget(this)), m_savedKey(Settings::instance().value("performance/selected", kCpu).toString())
 {
     auto* layout = new QHBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
@@ -115,7 +122,7 @@ PerformanceView::Page& PerformanceView::page(const QString& key, const QString& 
 
     auto* item = new QListWidgetItem(label, m_list);
     item->setData(Qt::UserRole, key);
-    if (key == Settings::instance().value("performance/selected", kCpu).toString() || !m_list->currentItem())
+    if (key == m_savedKey || !m_list->currentItem())
         m_list->setCurrentItem(item);
     return created;
 }
@@ -147,7 +154,39 @@ void PerformanceView::onSnapshot(const Snapshot& snapshot)
     updateGpus(snapshot);
     updateThermals(snapshot);
     updateEnergy(snapshot);
+    dropGonePages(snapshot);
     m_updating = false;
+}
+
+// Containers and USB sticks come and go, and each page holds widgets and a long history.
+void PerformanceView::dropGonePages(const Snapshot& snapshot)
+{
+    for (auto page = m_pages.begin(); page != m_pages.end();) {
+        const QString key = page->key;
+        bool gone = false;
+        if (key == kAllDisks && (snapshot.collected & SubDisk)) {
+            gone = snapshot.disks.size() <= 1;
+        } else if (key.startsWith(QLatin1String("disk:")) && (snapshot.collected & SubDisk)) {
+            const std::string name = key.mid(5).toStdString();
+            gone = std::none_of(snapshot.disks.begin(), snapshot.disks.end(), [&name](const DiskSample& d) { return d.name == name; });
+        } else if (key.startsWith(QLatin1String("net:")) && (snapshot.collected & SubNetwork)) {
+            const std::string name = key.mid(4).toStdString();
+            gone = std::none_of(snapshot.networks.begin(), snapshot.networks.end(), [&name](const NetworkSample& n) { return n.name == name; });
+        }
+        if (!gone) {
+            ++page;
+            continue;
+        }
+        for (int row = 0; row < m_list->count(); ++row)
+            if (m_list->item(row)->data(Qt::UserRole).toString() == key) {
+                delete m_list->takeItem(row); // moves the selection on, if it was here
+                break;
+            }
+        m_stack->removeWidget(page->widget);
+        delete page->widget;
+        m_byKey.remove(key);
+        page = m_pages.erase(page);
+    }
 }
 
 void PerformanceView::updateCpu(const Snapshot& snapshot)
@@ -192,7 +231,7 @@ void PerformanceView::updateCpu(const Snapshot& snapshot)
         m_coreHistory[core].push(snapshot.cpu.cores[core].usagePct);
     for (qsizetype g = 0; g < m_coreGraphs.size(); ++g) {
         if (m_cpuMode->currentIndex() == 1 && static_cast<std::size_t>(g) < snapshot.cpu.cores.size()) {
-            m_coreGraphs[g]->sampled(tr("Processor %1: %2").arg(g).arg(Format::percent(snapshot.cpu.cores[g].usagePct)));
+            m_coreGraphs[g]->sampled(tr("Processor %1: %2").arg(processorNumber(topology, static_cast<int>(g))).arg(Format::percent(snapshot.cpu.cores[g].usagePct)));
         } else if (m_cpuMode->currentIndex() == 2) {
             m_coreGraphs[g]->sampled(tr("NUMA node %1").arg(g));
         }
@@ -203,7 +242,7 @@ void PerformanceView::updateCpu(const Snapshot& snapshot)
     p.grid->set(tr("Usage:"), Format::percent(snapshot.cpu.usagePct));
     p.grid->set(tr("Speed:"), Format::megahertz(snapshot.cpu.freqMHz));
     p.grid->set(tr("Maximum speed:"), Format::megahertz(topology.maxFreqMHz));
-    p.grid->set(tr("Cores:"), tr("%1 physical, %2 logical").arg(topology.physical).arg(topology.logical));
+    p.grid->set(tr("Cores:"), topology.physical > 0 ? tr("%1 physical, %2 logical").arg(topology.physical).arg(topology.logical) : tr("%1 logical").arg(topology.logical));
     p.grid->set(tr("NUMA nodes:"), QString::number(topology.numaNodes));
     if (topology.hybrid) {
         const auto efficient = std::count(topology.efficiency.begin(), topology.efficiency.end(), true);
@@ -234,9 +273,11 @@ void PerformanceView::rebuildCoreGraphs()
             const bool efficient = i < static_cast<int>(topology.efficiency.size()) && topology.efficiency[i];
             graph->addSeries(&m_coreHistory[i], efficient);
             // The letter says what the colour says, so colour is not the only sign.
-            graph->setAccessibleName(topology.hybrid ? tr("Processor %1 (%2)").arg(i).arg(efficient ? tr("E") : tr("P")) : tr("Processor %1").arg(i));
+            const int number = processorNumber(topology, i);
+            graph->setAccessibleName(topology.hybrid ? tr("Processor %1 (%2)").arg(number).arg(efficient ? tr("E") : tr("P")) : tr("Processor %1").arg(number));
         } else {
-            for (int core = 0; core < static_cast<int>(m_coreHistory.size()); ++core)
+            // The topology was read once, and a processor can come online after that.
+            for (int core = 0; core < static_cast<int>(m_coreHistory.size()) && core < static_cast<int>(topology.coreNode.size()); ++core)
                 if (topology.coreNode[core] == i)
                     graph->addSeries(&m_coreHistory[core]);
             graph->setAccessibleName(tr("NUMA node %1").arg(i));
@@ -300,6 +341,13 @@ void PerformanceView::updateDisks(const Snapshot& snapshot)
                 }
                 health->setEnabled(false);
                 auto* process = new QProcess(this);
+                connect(process, &QProcess::errorOccurred, this, [this, process, name, health](QProcess::ProcessError error) {
+                    if (error != QProcess::FailedToStart)
+                        return;
+                    health->setEnabled(true);
+                    QMessageBox::information(this, tr("Disk Health: %1").arg(name), tr("Could not ask for permission, because the pkexec tool is not installed."));
+                    process->deleteLater();
+                });
                 connect(process, &QProcess::finished, this, [this, process, name, health] {
                     health->setEnabled(true);
                     const QString text = QString::fromLocal8Bit(process->readAllStandardOutput()) + QString::fromLocal8Bit(process->readAllStandardError());
@@ -322,7 +370,7 @@ void PerformanceView::updateDisks(const Snapshot& snapshot)
             continue;
         p.grid->set(tr("Active time:"), Format::percent(disk.activePct));
         p.grid->set(tr("Read (solid line):"), Format::diskRate(disk.readBps));
-        p.grid->set(tr("Write (second line):"), Format::diskRate(disk.writeBps));
+        p.grid->set(tr("Write (dashed line):"), Format::diskRate(disk.writeBps));
         p.grid->set(tr("Capacity:"), Format::bytes(disk.sizeBytes));
         if (disk.fsTotal.known())
             p.grid->set(tr("Filesystem free:"), tr("%1 of %2").arg(Format::bytes(disk.fsFree), Format::bytes(disk.fsTotal)));
@@ -348,7 +396,7 @@ void PerformanceView::updateDisks(const Snapshot& snapshot)
         all.second.push(write);
         all.graph->sampled(tr("Read %1, write %2").arg(Format::diskRate(read), Format::diskRate(write)));
         all.grid->set(tr("Read (solid line):"), Format::diskRate(read));
-        all.grid->set(tr("Write (second line):"), Format::diskRate(write));
+        all.grid->set(tr("Write (dashed line):"), Format::diskRate(write));
     }
 }
 
@@ -370,7 +418,7 @@ void PerformanceView::updateNetworks(const Snapshot& snapshot)
         if (!isShown(p))
             continue;
         p.grid->set(tr("Receive (solid line):"), Format::rate(net.rxBps));
-        p.grid->set(tr("Send (second line):"), Format::rate(net.txBps));
+        p.grid->set(tr("Send (dashed line):"), Format::rate(net.txBps));
         p.grid->set(tr("Received in total:"), Format::bytes(net.rxTotal));
         p.grid->set(tr("Sent in total:"), Format::bytes(net.txTotal));
         p.grid->set(tr("Link speed:"), net.linkMbps.known() ? tr("%1 Mbit/s").arg(net.linkMbps.value) : Format::why(net.linkMbps.state));
@@ -414,7 +462,7 @@ void PerformanceView::updateThermals(const Snapshot& snapshot)
     p.graph->sampled(p.subheading->text());
     if (!isShown(p))
         return;
-    p.grid->set(tr("Thermal pressure:"), t.throttleEvents.known() ? tr("%1 throttle events").arg(t.throttleEvents.value) : Format::why(t.throttleEvents.state));
+    p.grid->set(tr("Thermal pressure:"), t.throttleEvents.known() ? tr("%n throttle event(s)", nullptr, static_cast<int>(std::min<std::uint64_t>(t.throttleEvents.value, INT_MAX))) : Format::why(t.throttleEvents.state));
     for (const ThermalSensor& sensor : t.sensors)
         p.grid->set(QStringLiteral("%1 %2:").arg(QString::fromStdString(sensor.chip), QString::fromStdString(sensor.label)), Format::temperature(sensor.tempC));
 }

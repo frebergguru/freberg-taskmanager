@@ -15,7 +15,7 @@ sudo tee /etc/udev/rules.d/90-powercap-readers.rules >/dev/null <<'RULE'
 SUBSYSTEM=="powercap", ACTION=="add", RUN+="/bin/chgrp powercap-readers /sys%p/energy_uj", RUN+="/bin/chmod g+r /sys%p/energy_uj"
 RULE
 sudo udevadm control --reload
-sudo udevadm trigger --subsystem-match=powercap
+sudo udevadm trigger --action=add --subsystem-match=powercap
 ```
 
 ## Memory module details (`/sys/firmware/dmi/tables/DMI`)

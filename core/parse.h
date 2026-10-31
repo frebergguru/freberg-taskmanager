@@ -12,9 +12,10 @@ namespace fg {
 struct CpuTimes {
     std::uint64_t total = 0;
     std::uint64_t idle = 0; // idle + iowait
+    int id = -1; // the number in "cpu3", which skips any offline ones; -1 for the "cpu" line
 };
 
-// Index 0 of the result is the "cpu" line, 1.. are cpu0, cpu1, ...
+// Index 0 of the result is the "cpu" line, 1.. are the online processors in order.
 void parseCpuStat(std::string_view text, std::vector<CpuTimes>& out);
 
 // Percent busy between two samples. Empty when no time has passed.

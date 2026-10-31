@@ -1,6 +1,7 @@
 #include "installedapps.h"
 
 #include "../format.h"
+#include "../widgets/confirm.h"
 
 #include <QDir>
 #include <QFile>
@@ -77,7 +78,10 @@ void readDpkg(QList<App>& out)
         installed = false;
     };
     while (!file.atEnd()) {
-        const QString line = QString::fromUtf8(file.readLine()).trimmed();
+        // Not trimmed: a description's next lines start with a space, and can look like fields.
+        QString line = QString::fromUtf8(file.readLine());
+        if (line.endsWith(QLatin1Char('\n')))
+            line.chop(1);
         if (line.isEmpty())
             finish();
         else if (line.startsWith(QLatin1String("Package: ")))
@@ -94,20 +98,26 @@ void readDpkg(QList<App>& out)
     finish();
 }
 
-QString runTool(const QString& program, const QStringList& arguments)
+QString runTool(const QString& program, const QStringList& arguments, const std::atomic<bool>& cancel)
 {
-    if (QStandardPaths::findExecutable(program).isEmpty())
+    if (cancel || QStandardPaths::findExecutable(program).isEmpty())
         return {};
     QProcess process;
     process.start(program, arguments);
-    if (!process.waitForFinished(60000))
-        return {};
+    // In short steps, so that leaving the app doesn't have to wait for a slow tool.
+    for (int waited = 0; !process.waitForFinished(100); waited += 100) {
+        if (cancel || waited >= 60000 || process.state() == QProcess::NotRunning) {
+            process.kill();
+            process.waitForFinished(1000);
+            return {};
+        }
+    }
     return QString::fromLocal8Bit(process.readAllStandardOutput());
 }
 
-void readRpm(QList<App>& out)
+void readRpm(QList<App>& out, const std::atomic<bool>& cancel)
 {
-    const QString text = runTool(QStringLiteral("rpm"), {QStringLiteral("-qa"), QStringLiteral("--qf"), QStringLiteral("%{NAME}\\t%{VERSION}\\t%{SIZE}\\t%{SUMMARY}\\n")});
+    const QString text = runTool(QStringLiteral("rpm"), {QStringLiteral("-qa"), QStringLiteral("--qf"), QStringLiteral("%{NAME}\\t%{VERSION}\\t%{SIZE}\\t%{SUMMARY}\\n")}, cancel);
     const QStringList lines = text.split(QLatin1Char('\n'), Qt::SkipEmptyParts);
     for (const QString& line : lines) {
         const QStringList f = line.split(QLatin1Char('\t'));
@@ -116,9 +126,9 @@ void readRpm(QList<App>& out)
     }
 }
 
-void readFlatpak(QList<App>& out)
+void readFlatpak(QList<App>& out, const std::atomic<bool>& cancel)
 {
-    const QString text = runTool(QStringLiteral("flatpak"), {QStringLiteral("list"), QStringLiteral("--app"), QStringLiteral("--columns=name,application,version,description")});
+    const QString text = runTool(QStringLiteral("flatpak"), {QStringLiteral("list"), QStringLiteral("--app"), QStringLiteral("--columns=name,application,version,description")}, cancel);
     const QStringList lines = text.split(QLatin1Char('\n'), Qt::SkipEmptyParts);
     for (const QString& line : lines) {
         const QStringList f = line.split(QLatin1Char('\t'));
@@ -127,9 +137,9 @@ void readFlatpak(QList<App>& out)
     }
 }
 
-void readSnap(QList<App>& out)
+void readSnap(QList<App>& out, const std::atomic<bool>& cancel)
 {
-    const QString text = runTool(QStringLiteral("snap"), {QStringLiteral("list")});
+    const QString text = runTool(QStringLiteral("snap"), {QStringLiteral("list")}, cancel);
     const QStringList lines = text.split(QLatin1Char('\n'), Qt::SkipEmptyParts);
     for (qsizetype i = 1; i < lines.size(); ++i) {
         const QStringList f = lines[i].split(QLatin1Char(' '), Qt::SkipEmptyParts);
@@ -153,7 +163,7 @@ QStringList uninstallCommand(const QString& source, const QString& key)
     if (source == QLatin1String("pacman"))
         return {QStringLiteral("pkexec"), QStringLiteral("pacman"), QStringLiteral("-R"), QStringLiteral("--noconfirm"), key};
     if (source == QLatin1String("dpkg"))
-        return {QStringLiteral("pkexec"), QStringLiteral("apt-get"), QStringLiteral("remove"), QStringLiteral("-y"), key};
+        return {QStringLiteral("pkexec"), QStringLiteral("dpkg"), QStringLiteral("-r"), key}; // refuses if others need it, as pacman and rpm do; apt would remove those too
     if (source == QLatin1String("rpm"))
         return {QStringLiteral("pkexec"), QStringLiteral("rpm"), QStringLiteral("-e"), key};
     if (source == QLatin1String("flatpak"))
@@ -208,10 +218,22 @@ InstalledAppsView::InstalledAppsView() : m_list(new QTreeWidget), m_filter(new Q
     connect(m_uninstall, &QPushButton::clicked, this, &InstalledAppsView::uninstall);
 }
 
+InstalledAppsView::~InstalledAppsView()
+{
+    if (m_scan) {
+        m_cancelScan->store(true);
+        m_scan->wait();
+        delete m_scan;
+    }
+}
+
 void InstalledAppsView::closed()
 {
     ++m_generation;
     m_list->clear();
+    m_scanAgain = false;
+    if (m_scan)
+        m_cancelScan->store(true);
 }
 
 void InstalledAppsView::refresh()
@@ -219,21 +241,35 @@ void InstalledAppsView::refresh()
     const int generation = ++m_generation;
     m_list->clear();
     m_message->setText(tr("Reading the list of installed apps..."));
+    // One at a time. The one already running hands over when it ends.
+    if (m_scan) {
+        m_cancelScan->store(true);
+        m_scanAgain = true;
+        return;
+    }
 
     // Package tools can take seconds, so this never runs on the window's thread.
     auto results = std::make_shared<QList<App>>();
-    QThread* thread = QThread::create([results] {
+    auto cancel = std::make_shared<std::atomic<bool>>(false);
+    m_cancelScan = cancel;
+    m_scan = QThread::create([results, cancel] {
         readPacman(*results);
         readDpkg(*results);
-        readRpm(*results);
-        readFlatpak(*results);
-        readSnap(*results);
+        readRpm(*results, *cancel);
+        readFlatpak(*results, *cancel);
+        readSnap(*results, *cancel);
         readAppImages(*results);
     });
-    connect(thread, &QThread::finished, thread, &QObject::deleteLater);
-    connect(thread, &QThread::finished, this, [this, results, generation] {
-        if (generation != m_generation)
+    connect(m_scan, &QThread::finished, this, [this, results, generation] {
+        m_scan->deleteLater();
+        m_scan = nullptr;
+        if (generation != m_generation) {
+            if (m_scanAgain) {
+                m_scanAgain = false;
+                refresh();
+            }
             return;
+        }
         m_list->setSortingEnabled(false);
         for (const App& app : std::as_const(*results)) {
             auto* item = new AppItem(m_list, {app.name, app.version, app.source, app.size >= 0 ? Format::bytes(static_cast<std::uint64_t>(app.size)) : Format::why(Availability::Unsupported), app.description});
@@ -245,7 +281,7 @@ void InstalledAppsView::refresh()
         applyFilter();
         m_message->setText(tr("%n app(s) installed.", nullptr, static_cast<int>(results->size())));
     });
-    thread->start(QThread::LowPriority);
+    m_scan->start(QThread::LowPriority);
 }
 
 void InstalledAppsView::applyFilter()
@@ -271,7 +307,7 @@ void InstalledAppsView::uninstall()
         m_message->setText(tr("This kind of app is removed by deleting its file: %1").arg(item->text(4)));
         return;
     }
-    if (QMessageBox::warning(this, tr("Uninstall"), tr("Uninstall %1 (%2)?\n\nThis will run:\n%3").arg(name, source, command.join(QLatin1Char(' '))), QMessageBox::Yes | QMessageBox::No, QMessageBox::No) != QMessageBox::Yes)
+    if (!confirmed(this, tr("Uninstall"), tr("Uninstall %1 (%2)?\n\nThis will run:\n%3").arg(name, source, command.join(QLatin1Char(' ')))))
         return;
 
     auto* process = new QProcess(this);

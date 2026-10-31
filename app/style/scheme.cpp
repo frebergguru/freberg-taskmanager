@@ -313,6 +313,26 @@ const Scheme& schemeFor(const QString& family, bool isDark)
     return schemeById(family + (isDark ? QStringLiteral("-dark") : QStringLiteral("-light")));
 }
 
+// Moves front towards black or white, whichever helps, and then back the other way if it must.
+static void keepContrast(QColor& front, QColor& back, double need)
+{
+    constexpr int kSteps = 20;
+    const auto mix = [](const QColor& from, const QColor& to, double amount) {
+        return QColor::fromRgbF(float(from.redF() + (to.redF() - from.redF()) * amount), float(from.greenF() + (to.greenF() - from.greenF()) * amount), float(from.blueF() + (to.blueF() - from.blueF()) * amount), from.alphaF());
+    };
+    if (contrastRatio(front, back) >= need)
+        return;
+    const QColor black(0, 0, 0), white(255, 255, 255);
+    const QColor towards = contrastRatio(black, back) > contrastRatio(white, back) ? black : white;
+    const QColor startFront = front;
+    for (int step = 1; step <= kSteps && contrastRatio(front, back) < need; ++step)
+        front = mix(startFront, towards, double(step) / kSteps);
+    const QColor away = towards == black ? white : black;
+    const QColor startBack = back;
+    for (int step = 1; step <= kSteps && contrastRatio(front, back) < need; ++step)
+        back = mix(startBack, away, double(step) / kSteps);
+}
+
 Scheme withSaturation(const Scheme& scheme, int saturation)
 {
     if (saturation >= 10)
@@ -322,6 +342,18 @@ Scheme withSaturation(const Scheme& scheme, int saturation)
     for (QColor* color : {&s.accent, &s.border, &s.hover, &s.face, &s.light, &s.midlight, &s.dark, &s.shadow, &s.base, &s.text, &s.disabledText, &s.selection, &s.selectionText,
                           &s.titleStart, &s.titleEnd, &s.titleText, &s.titleInactive, &s.graphBack, &s.graphGrid, &s.graphLine, &s.graphLine2})
         *color = desaturated(*color, factor);
+    // Grey hues can sit closer together than the colours they came from, and AA still has to hold.
+    for (int pass = 0; pass < 2; ++pass) {
+        keepContrast(s.text, s.face, 4.5);
+        keepContrast(s.text, s.base, 4.5);
+        keepContrast(s.disabledText, s.face, 4.5);
+        keepContrast(s.selectionText, s.selection, 4.5);
+        keepContrast(s.titleText, s.titleStart, 4.5);
+        keepContrast(s.accent, s.graphBack, 3.0);
+        keepContrast(s.hover, s.text, 4.5); // the row's colour gives way, since text must also stay readable elsewhere
+        keepContrast(s.graphLine, s.graphBack, 3.0);
+        keepContrast(s.graphLine2, s.graphBack, 3.0);
+    }
     return s;
 }
 

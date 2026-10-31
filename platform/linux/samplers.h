@@ -46,6 +46,9 @@ public:
 private:
     std::string m_root;
     CachedFile m_meminfo;
+    CachedFile m_vmstat;
+    std::vector<CachedFile> m_zram;
+    std::uint64_t m_passes = 0;
     std::string m_buffer;
 };
 
@@ -61,13 +64,14 @@ private:
     struct Identity {
         std::string model;
         bool physical = false, rotational = false, removable = false;
+        CachedFile size;
     };
-    const Identity& identity(const std::string& name);
+    Identity& identity(const std::string& name);
     void refreshFilesystems();
 
     std::string m_root;
     CachedFile m_diskstats;
-    std::string m_buffer;
+    std::string m_buffer, m_sizeText;
     std::vector<DiskCounters> m_counters;
     std::unordered_map<std::string, Previous> m_previous;
     std::unordered_map<std::string, Identity> m_identity;
@@ -90,11 +94,18 @@ private:
     struct Previous {
         std::uint64_t rx, tx;
     };
+    // What stays open per interface. The type and the kind of device never change.
+    struct Face {
+        CachedFile address, operState, speed;
+        bool loopback = false, wireless = false, hasDevice = false;
+    };
     std::string m_root;
     CachedFile m_netdev;
-    std::string m_buffer;
+    CachedFile m_wireless;
+    std::string m_buffer, m_wirelessText, m_faceText; // m_counters' names point into m_buffer
     std::vector<NetCounters> m_counters;
     std::unordered_map<std::string, Previous> m_previous;
+    std::unordered_map<std::string, Face> m_faces;
     std::int64_t m_previousMs = 0;
     struct KnownWifi {
         WifiLink link;
@@ -110,7 +121,9 @@ public:
 
 private:
     struct Card {
-        std::string name, driver, device, hwmon, gtFreq;
+        std::string name, driver;
+        bool hasHwmon = false;
+        CachedFile busy, vramUsed, vramTotal, gtFreq, temp, powerAverage, powerInput, hwmonFreq;
     };
     std::string m_root;
     std::vector<Card> m_cards;
@@ -137,7 +150,7 @@ private:
     std::string m_root;
     std::vector<Sensor> m_sensors;
     std::vector<Fan> m_fans;
-    std::vector<std::string> m_throttle;
+    std::vector<CachedFile> m_throttle; // one per CPU package
     std::string m_buffer;
 };
 
@@ -147,12 +160,28 @@ public:
     void sample(std::int64_t nowMs, PowerSample& out);
 
 private:
+    // One per CPU package.
+    struct RaplDomain {
+        CachedFile energy;
+        std::uint64_t range = 0;
+        std::uint64_t previous = 0;
+        bool havePrevious = false;
+    };
+    struct Supply {
+        std::string name;
+        bool isMains = false;
+        CachedFile online, status, capacity, powerNow, currentNow, voltageNow;
+    };
+    void findSupplies();
+    std::string readText(CachedFile& file);
+
     std::string m_root;
     std::string m_buffer;
-    std::string m_raplDomain;
-    std::uint64_t m_raplRange = 0;
-    std::uint64_t m_previousEnergy = 0;
+    std::vector<RaplDomain> m_rapl;
     std::int64_t m_previousMs = 0;
+    std::vector<Supply> m_supplies;
+    std::uint64_t m_passes = 0;
+    CachedFile m_governor, m_energyPreference, m_platformProfile;
 };
 
 class PressureSampler {

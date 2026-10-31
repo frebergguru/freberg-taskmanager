@@ -7,18 +7,9 @@ using namespace fg;
 
 class TestScheme : public QObject {
     Q_OBJECT
-private slots:
-    void textMeetsAA_data()
-    {
-        QTest::addColumn<QString>("scheme");
-        for (const Scheme& s : schemes())
-            QTest::newRow(qPrintable(s.id)) << s.id;
-    }
 
-    void textMeetsAA()
+    static void checkContrast(const Scheme& s)
     {
-        QFETCH(QString, scheme);
-        const Scheme& s = schemeById(scheme);
         const auto check = [](const QColor& a, const QColor& b, double need, const char* what) {
             const double ratio = contrastRatio(a, b);
             if (ratio < need)
@@ -35,6 +26,25 @@ private slots:
         }
         check(s.graphLine, s.graphBack, 3.0, "graph line");
         check(s.graphLine2, s.graphBack, 3.0, "second graph line");
+    }
+
+private slots:
+    void textMeetsAA_data()
+    {
+        QTest::addColumn<QString>("scheme");
+        for (const Scheme& s : schemes())
+            QTest::newRow(qPrintable(s.id)) << s.id;
+    }
+
+    void textMeetsAA()
+    {
+        QFETCH(QString, scheme);
+        for (int saturation = 0; saturation <= 10; ++saturation) {
+            const Scheme s = withSaturation(schemeById(scheme), saturation);
+            checkContrast(s);
+            if (QTest::currentTestFailed())
+                QFAIL(qPrintable(QStringLiteral("at saturation %1").arg(saturation)));
+        }
     }
 
     void everyThemeHasALightAndADarkMember()

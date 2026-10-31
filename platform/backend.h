@@ -28,6 +28,8 @@ struct ProcessDetails {
     std::string environment;
     std::string memoryMaps;
     std::string cgroup;
+    // Kernel threads have nothing here, which isn't the same as being refused.
+    Availability statusState = Availability::Measured, limitsState = Availability::Measured, environmentState = Availability::Measured, memoryMapsState = Availability::Measured;
     std::vector<std::string> openFiles;
     std::vector<std::string> sockets;
     std::vector<std::string> threads;
@@ -38,7 +40,7 @@ struct SystemFacts {
     std::string hostName, osName, kernel, architecture;
     std::string boardVendor, boardName, biosVersion, productName;
     std::string runningAs;
-    double uptimeSeconds = 0;
+    Reading<double> uptimeSeconds;
     std::vector<std::string> gpus;
     Reading<std::vector<MemoryModule>> memoryModules;
 };

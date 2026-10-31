@@ -31,6 +31,8 @@ void walk(int dirFd, DiskNode& node, Scan& scan, int depth)
     DIR* dir = ::fdopendir(dirFd);
     if (!dir) {
         ::close(dirFd);
+        node.denied = true;
+        ++scan.deniedFolders;
         return;
     }
     while (const dirent* entry = ::readdir(dir)) {
@@ -41,12 +43,18 @@ void walk(int dirFd, DiskNode& node, Scan& scan, int depth)
             continue;
 
         struct stat info;
-        if (::fstatat(dirFd, entry->d_name, &info, AT_SYMLINK_NOFOLLOW) != 0)
+        if (::fstatat(dirFd, entry->d_name, &info, AT_SYMLINK_NOFOLLOW) != 0) {
+            // A folder we may list but not enter holds files we can't weigh. One that vanished is fine.
+            if (errno == EACCES && !node.denied) {
+                node.denied = true;
+                ++scan.deniedFolders;
+            }
             continue;
+        }
+        if (info.st_dev != scan.device)
+            continue; // another filesystem is mounted here, on a folder or on a single file
 
         if (S_ISDIR(info.st_mode)) {
-            if (info.st_dev != scan.device)
-                continue; // another filesystem is mounted here
             auto child = std::make_unique<DiskNode>();
             child->name = entry->d_name;
             child->isDir = true;
@@ -102,8 +110,7 @@ DiskScanResult scanFolder(const std::string& path, const std::atomic<bool>& canc
         result.deniedFolders = 1;
         return result;
     }
-    Scan scan{cancel, progressFiles};
-    scan.device = info.st_dev;
+    Scan scan{cancel, progressFiles, info.st_dev, 0, 0, {}};
     walk(fd, *result.root, scan, 0);
     result.deniedFolders = scan.deniedFolders;
     result.cancelled = cancel.load();

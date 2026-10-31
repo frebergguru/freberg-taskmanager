@@ -13,6 +13,7 @@
 #include <QTreeWidget>
 #include <QVBoxLayout>
 #include <algorithm>
+#include <climits>
 
 namespace fg {
 
@@ -208,7 +209,7 @@ void ThermalsView::onSnapshot(const Snapshot& snapshot)
     if (thermal.throttleEvents.known()) {
         if (!m_firstThrottleCount)
             m_firstThrottleCount = thermal.throttleEvents.value;
-        m_grid->set(tr("Thermal pressure:"), tr("%1 throttle events since start, %2 since this page opened").arg(thermal.throttleEvents.value).arg(thermal.throttleEvents.value - *m_firstThrottleCount));
+        m_grid->set(tr("Thermal pressure:"), tr("%n throttle event(s) since start, %1 since this page opened", nullptr, static_cast<int>(std::min<std::uint64_t>(thermal.throttleEvents.value, INT_MAX))).arg(thermal.throttleEvents.value - *m_firstThrottleCount));
     } else {
         m_grid->set(tr("Thermal pressure:"), Format::why(thermal.throttleEvents.state));
     }

@@ -3,22 +3,17 @@
 #
 # check-stripped.sh — refuse a release that carries symbols or debug info.
 #
-# Every ELF, .exe, .dll and .so that ships must be stripped, including bundled
-# third-party libraries. Each cross-build script already ran `strip`, but with
-# `|| true` after it, so a strip that failed or matched no file was silent and
-# the release went out anyway. This reads the FINISHED files and fails if any
-# one of them still has:
+# Every binary and library that ships must be stripped, including bundled
+# third-party ones. A strip that failed or matched no file would otherwise go
+# unnoticed. This reads the FINISHED files and fails if any one of them still has
+# a .symtab section, or any .debug_* / .zdebug_* section.
 #
-#   ELF  a .symtab section, or any .debug_* / .zdebug_* section
-#   PE   any .debug_* section, or a nonzero COFF symbol count
-#
-# It parses the headers itself rather than calling readelf/objdump, because
-# the host's mingw x86_64 objdump cannot read an ARM64 PE and the release
-# covers both. Directories are walked; .apk, .zip and .tar* archives are
-# unpacked in memory and every file inside is checked the same way.
+# It parses the headers itself, so that it also works on another architecture's
+# files. Directories are walked; .deb, .zip and .tar* archives are unpacked in
+# memory and every file inside is checked the same way.
 #
 # Usage:
-#   ./check-stripped.sh build-linux-x64 build-win64 ...   exit 1 on any failure
+#   ./check-stripped.sh <file|dir|archive>...   exit 1 on any failure
 
 set -euo pipefail
 
@@ -101,7 +96,19 @@ def check(label, b):
     else:
         print('  stripped    %s' % label)
 
+def ar_members(b):
+    at = 8
+    while at + 60 <= len(b):
+        name = b[at:at + 16].decode('latin-1').strip()
+        size = int(b[at + 48:at + 58])
+        yield name, b[at + 60:at + 60 + size]
+        at += 60 + size + (size & 1)
+
 def visit(label, b):
+    if b[:8] == b'!<arch>\n':
+        for name, member in ar_members(b):
+            visit(label + '!' + name, member)
+        return
     if b[:4] == b'PK\x03\x04':
         with zipfile.ZipFile(io.BytesIO(b)) as z:
             for n in z.namelist():

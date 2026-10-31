@@ -1,6 +1,7 @@
 #include "processes.h"
 
 #include "../hub.h"
+#include "../widgets/confirm.h"
 #include "../settings.h"
 #include "inspector.h"
 #include "processmodel.h"
@@ -22,6 +23,7 @@
 #include <QStandardPaths>
 #include <QTreeView>
 #include <QVBoxLayout>
+#include <unistd.h>
 
 namespace fg {
 
@@ -46,7 +48,6 @@ ProcessesView::ProcessesView(SamplerHub& hub)
 
     m_tree->setModel(m_model);
     m_tree->setUniformRowHeights(true);
-    m_tree->setSortingEnabled(true);
     m_tree->setAllColumnsShowFocus(true);
     m_tree->setRootIsDecorated(m_model->isTree());
     m_tree->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -78,11 +79,15 @@ ProcessesView::ProcessesView(SamplerHub& hub)
     const auto sortColumn = Settings::instance().value("processes/sortColumn", ProcessModel::Cpu).toInt();
     const auto sortOrder = static_cast<Qt::SortOrder>(Settings::instance().value("processes/sortOrder", Qt::DescendingOrder).toInt());
     header->setSortIndicator(sortColumn, sortOrder);
+    m_tree->setSortingEnabled(true); // only now: turning it on sorts, which would overwrite the saved choice
     layout->addWidget(m_tree, 1);
 
     auto* bottom = new QHBoxLayout;
     m_message->setWordWrap(true);
     bottom->addWidget(m_message, 1);
+    auto* columns = new QPushButton(tr("Co&lumns..."), this);
+    connect(columns, &QPushButton::clicked, this, [this, columns] { showColumnMenu(columns->mapToGlobal(QPoint(0, columns->height()))); });
+    bottom->addWidget(columns);
     bottom->addWidget(m_export);
     bottom->addWidget(m_endTask);
     layout->addLayout(bottom);
@@ -188,10 +193,13 @@ void ProcessesView::endSelected(bool force, bool wholeTree)
     }
     const ProcessId id = process->info->id;
     const QString name = QString::fromStdString(process->info->name);
-    const QString question = wholeTree ? tr("End %1 (PID %2) and everything it started?\n\nUnsaved work in those programs will be lost.").arg(name).arg(id.pid)
-        : force                        ? tr("Force %1 (PID %2) to end now?\n\nIt gets no chance to save its work.").arg(name).arg(id.pid)
-                                       : tr("Ask %1 (PID %2) to end?").arg(name).arg(id.pid);
-    if (QMessageBox::warning(this, tr("End Task"), question, QMessageBox::Yes | QMessageBox::No, QMessageBox::No) != QMessageBox::Yes)
+    const QString pid = QString::number(id.pid);
+    const QString question = wholeTree ? tr("End %1 (PID %2) and everything it started?\n\nUnsaved work in those programs will be lost.").arg(name, pid)
+        : force                        ? tr("Force %1 (PID %2) to end now?\n\nIt gets no chance to save its work.").arg(name, pid)
+                                       : tr("Ask %1 (PID %2) to end?").arg(name, pid);
+    // Worked out before asking: while the question is open, this PID could go to another process.
+    const std::vector<ProcessId> family = wholeTree ? m_model->withDescendants(id) : std::vector<ProcessId>{};
+    if (!confirmed(this, tr("End Task"), question))
         return;
 
     const ProcessSignal signal = force ? ProcessSignal::Kill : ProcessSignal::End;
@@ -200,7 +208,6 @@ void ProcessesView::endSelected(bool force, bool wholeTree)
         return;
     }
     // Children first, so a parent cannot restart them while we work.
-    const std::vector<ProcessId> family = m_model->withDescendants(id);
     ActionResult last;
     for (auto it = family.rbegin(); it != family.rend(); ++it) {
         const ActionResult result = m_hub.backend().signalProcess(*it, signal);
@@ -208,6 +215,21 @@ void ProcessesView::endSelected(bool force, bool wholeTree)
             last = result;
     }
     report(tr("End tree"), last);
+}
+
+void ProcessesView::suspendSelected()
+{
+    const ProcessSample* process = currentProcess();
+    if (!process)
+        return;
+    const ProcessId id = process->info->id;
+    if (id.pid == ::getpid()) {
+        m_message->setText(tr("This app can't suspend itself, because nothing could then resume it."));
+        return;
+    }
+    if (!confirmed(this, tr("Suspend"), tr("Suspend %1 (PID %2)?\n\nIt stops until you choose Resume. Suspending a part of the desktop can freeze the screen.").arg(QString::fromStdString(process->info->name), QString::number(id.pid))))
+        return;
+    report(tr("Suspend"), m_hub.backend().signalProcess(id, ProcessSignal::Suspend));
 }
 
 void ProcessesView::changePriority(int nice)
@@ -243,8 +265,8 @@ void ProcessesView::changeAffinity()
     layout->addWidget(new QLabel(tr("Processors %1 may run on:").arg(QString::fromStdString(process->info->name)), &dialog));
     auto* list = new QListWidget(&dialog);
     list->setAccessibleName(tr("Processors"));
-    const int logical = m_hub.backend().topology().logical;
-    for (int cpu = 0; cpu < logical; ++cpu) {
+    const std::vector<int> online = m_hub.backend().topology().ids;
+    for (const int cpu : online) {
         auto* item = new QListWidgetItem(tr("Processor %1").arg(cpu), list);
         item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
         item->setCheckState(std::find(current.begin(), current.end(), cpu) != current.end() ? Qt::Checked : Qt::Unchecked);
@@ -258,9 +280,9 @@ void ProcessesView::changeAffinity()
         return;
 
     std::vector<int> chosen;
-    for (int cpu = 0; cpu < logical; ++cpu)
-        if (list->item(cpu)->checkState() == Qt::Checked)
-            chosen.push_back(cpu);
+    for (int row = 0; row < list->count(); ++row)
+        if (list->item(row)->checkState() == Qt::Checked)
+            chosen.push_back(online[static_cast<std::size_t>(row)]);
     if (chosen.empty()) {
         m_message->setText(tr("A process needs at least one processor. Nothing was changed."));
         return;
@@ -295,7 +317,7 @@ void ProcessesView::showContextMenu(const QPoint& position)
     menu.addAction(tr("&Force End"), this, [this] { endSelected(true, false); });
     menu.addAction(tr("End Process &Tree"), this, [this] { endSelected(false, true); });
     menu.addSeparator();
-    menu.addAction(tr("&Suspend"), this, [this, id] { report(tr("Suspend"), m_hub.backend().signalProcess(id, ProcessSignal::Suspend)); });
+    menu.addAction(tr("&Suspend"), this, &ProcessesView::suspendSelected);
     menu.addAction(tr("&Resume"), this, [this, id] { report(tr("Resume"), m_hub.backend().signalProcess(id, ProcessSignal::Resume)); });
     menu.addSeparator();
 
@@ -347,6 +369,11 @@ void ProcessesView::exportList()
             QStringList cells;
             for (const int column : std::as_const(columns)) {
                 QString cell = m_model->index(row, column, parent).data().toString();
+                // A spreadsheet would run a command line that starts like this as a formula.
+                bool isNumber = false;
+                cell.toDouble(&isNumber);
+                if (!isNumber && !cell.isEmpty() && QStringLiteral("=+-@\t\r").contains(cell.front()))
+                    cell.prepend(QLatin1Char('\''));
                 cell.replace(QLatin1Char('"'), QStringLiteral("\"\""));
                 cells << QLatin1Char('"') + cell + QLatin1Char('"');
             }
@@ -355,12 +382,34 @@ void ProcessesView::exportList()
         }
     };
     writeRows({});
-    m_message->setText(tr("Exported to %1").arg(path));
+    file.close();
+    m_message->setText(file.error() == QFile::NoError ? tr("Exported to %1").arg(path) : tr("Could not export: %1").arg(file.errorString()));
 }
 
 void ProcessesView::showHeaderMenu(const QPoint& position)
 {
+    showColumnMenu(m_tree->header()->mapToGlobal(position));
+}
+
+// The header takes no keyboard focus, so this is also the keyboard's way to sort and choose columns.
+void ProcessesView::showColumnMenu(const QPoint& globalPosition)
+{
     QMenu menu(this);
+    QHeaderView* header = m_tree->header();
+    QMenu* sortBy = menu.addMenu(tr("&Sort By"));
+    for (int column = 0; column < ProcessModel::ColumnCount; ++column) {
+        if (m_tree->isColumnHidden(column))
+            continue;
+        QAction* action = sortBy->addAction(m_model->headerData(column, Qt::Horizontal).toString());
+        action->setCheckable(true);
+        action->setChecked(header->sortIndicatorSection() == column);
+        connect(action, &QAction::triggered, this, [header, column] {
+            // Choosing the same column again turns the order around, as a click on the header does.
+            const bool flip = header->sortIndicatorSection() == column && header->sortIndicatorOrder() == Qt::DescendingOrder;
+            header->setSortIndicator(column, flip ? Qt::AscendingOrder : Qt::DescendingOrder);
+        });
+    }
+    menu.addSeparator();
     for (int column = 0; column < ProcessModel::ColumnCount; ++column) {
         QAction* action = menu.addAction(m_model->headerData(column, Qt::Horizontal).toString());
         action->setCheckable(true);
@@ -371,7 +420,7 @@ void ProcessesView::showHeaderMenu(const QPoint& position)
             emit wantsChanged();
         });
     }
-    menu.exec(m_tree->header()->mapToGlobal(position));
+    menu.exec(globalPosition);
 }
 
 } // namespace fg

@@ -6,6 +6,10 @@
 
 namespace fg {
 
+namespace {
+constexpr std::uint64_t kZramRescanPasses = 30; // a device can be added while running
+}
+
 CpuSampler::CpuSampler(const std::string& root) : m_root(root), m_stat(root + "/proc/stat") {}
 
 void CpuSampler::sample(CpuSample& out)
@@ -23,7 +27,10 @@ void CpuSampler::sample(CpuSample& out)
 
     const std::size_t logical = m_current.size() - 1;
     out.cores.resize(logical);
-    const bool havePrevious = m_previous.size() == m_current.size();
+    // A processor that went offline or came back changes which line is which.
+    bool havePrevious = m_previous.size() == m_current.size();
+    for (std::size_t line = 1; havePrevious && line < m_current.size(); ++line)
+        havePrevious = m_previous[line].id == m_current[line].id;
 
     if (havePrevious) {
         if (const auto busy = cpuBusyPercent(m_previous[0], m_current[0]))
@@ -32,14 +39,14 @@ void CpuSampler::sample(CpuSample& out)
             if (const auto busy = cpuBusyPercent(m_previous[cpu + 1], m_current[cpu + 1]))
                 out.cores[cpu].usagePct = Reading<double>::measured(*busy);
     }
-    m_previous.swap(m_current);
-
-    if (m_freq.size() != logical) {
+    if (!havePrevious) {
         m_freq.clear();
         m_freq.reserve(logical);
         for (std::size_t cpu = 0; cpu < logical; ++cpu)
-            m_freq.emplace_back(m_root + "/sys/devices/system/cpu/cpu" + std::to_string(cpu) + "/cpufreq/scaling_cur_freq");
+            m_freq.emplace_back(m_root + "/sys/devices/system/cpu/cpu" + std::to_string(m_current[cpu + 1].id) + "/cpufreq/scaling_cur_freq");
     }
+    m_previous.swap(m_current);
+
     double sum = 0;
     int counted = 0;
     Availability why = Availability::Unsupported;
@@ -75,22 +82,29 @@ CpuTopology CpuSampler::readTopology() const
 
     const std::string cpuDir = m_root + "/sys/devices/system/cpu/";
     if (readFile(cpuDir + "online", text) == ReadStatus::Ok)
-        topology.logical = static_cast<int>(parseCpuList(text).size());
-    if (topology.logical == 0) {
+        topology.ids = parseCpuList(text);
+    if (topology.ids.empty()) {
         std::string stat;
         std::vector<CpuTimes> times;
         if (readFile(m_root + "/proc/stat", stat) == ReadStatus::Ok) {
             parseCpuStat(stat, times);
-            topology.logical = times.empty() ? 0 : static_cast<int>(times.size()) - 1;
+            for (std::size_t line = 1; line < times.size(); ++line)
+                topology.ids.push_back(times[line].id);
         }
     }
+    topology.logical = static_cast<int>(topology.ids.size());
 
     topology.coreNode.assign(topology.logical, 0);
     topology.efficiency.assign(topology.logical, false);
+    // These lists use positions among the online processors, and the kernel's lists use its numbers.
+    const auto positionOf = [&topology](int id) {
+        const auto found = std::find(topology.ids.begin(), topology.ids.end(), id);
+        return found == topology.ids.end() ? -1 : static_cast<int>(found - topology.ids.begin());
+    };
 
     std::set<std::pair<std::string, std::string>> physical;
-    for (int cpu = 0; cpu < topology.logical; ++cpu) {
-        const std::string dir = cpuDir + "cpu" + std::to_string(cpu) + "/topology/";
+    for (const int id : topology.ids) {
+        const std::string dir = cpuDir + "cpu" + std::to_string(id) + "/topology/";
         std::string package, core;
         if (readFile(dir + "physical_package_id", package) == ReadStatus::Ok && readFile(dir + "core_id", core) == ReadStatus::Ok)
             physical.emplace(package, core);
@@ -99,8 +113,8 @@ CpuTopology CpuSampler::readTopology() const
 
     // Intel hybrid processors list their efficiency cores here.
     if (readFile(m_root + "/sys/devices/cpu_atom/cpus", text) == ReadStatus::Ok) {
-        for (const int cpu : parseCpuList(text))
-            if (cpu >= 0 && cpu < topology.logical) {
+        for (const int id : parseCpuList(text))
+            if (const int cpu = positionOf(id); cpu >= 0) {
                 topology.efficiency[cpu] = true;
                 topology.hybrid = true;
             }
@@ -109,7 +123,7 @@ CpuTopology CpuSampler::readTopology() const
         std::vector<std::uint64_t> capacity(topology.logical, 0);
         std::uint64_t highest = 0;
         for (int cpu = 0; cpu < topology.logical; ++cpu)
-            if (readFile(cpuDir + "cpu" + std::to_string(cpu) + "/cpu_capacity", text) == ReadStatus::Ok) {
+            if (readFile(cpuDir + "cpu" + std::to_string(topology.ids[cpu]) + "/cpu_capacity", text) == ReadStatus::Ok) {
                 capacity[cpu] = parseU64(text).value_or(0);
                 highest = std::max(highest, capacity[cpu]);
             }
@@ -130,8 +144,8 @@ CpuTopology CpuSampler::readTopology() const
                 continue;
             ++topology.numaNodes;
             if (readFile(m_root + "/sys/devices/system/node/" + std::string(name) + "/cpulist", text) == ReadStatus::Ok)
-                for (const int cpu : parseCpuList(text))
-                    if (cpu >= 0 && cpu < topology.logical)
+                for (const int id : parseCpuList(text))
+                    if (const int cpu = positionOf(id); cpu >= 0)
                         topology.coreNode[cpu] = static_cast<int>(*node);
         }
         ::closedir(nodes);
@@ -145,7 +159,7 @@ CpuTopology CpuSampler::readTopology() const
     return topology;
 }
 
-MemorySampler::MemorySampler(const std::string& root) : m_root(root), m_meminfo(root + "/proc/meminfo") {}
+MemorySampler::MemorySampler(const std::string& root) : m_root(root), m_meminfo(root + "/proc/meminfo"), m_vmstat(root + "/proc/vmstat") {}
 
 void MemorySampler::sample(MemorySample& out)
 {
@@ -188,7 +202,7 @@ void MemorySampler::sample(MemorySample& out)
     else
         out.swapUsed = Reading<std::uint64_t>::missing(Availability::Unsupported);
 
-    const ReadStatus vmstat = readFile(m_root + "/proc/vmstat", m_buffer);
+    const ReadStatus vmstat = m_vmstat.read(m_buffer);
     out.oomKills = Reading<std::uint64_t>::missing(toAvailability(vmstat));
     if (vmstat == ReadStatus::Ok) {
         const std::size_t key = m_buffer.find("oom_kill ");
@@ -204,25 +218,30 @@ void MemorySampler::sample(MemorySample& out)
     // zram: mm_stat starts with original size, then compressed size.
     std::uint64_t original = 0, compressed = 0;
     bool anyZram = false;
-    if (DIR* blocks = ::opendir((m_root + "/sys/block").c_str())) {
-        while (const dirent* entry = ::readdir(blocks)) {
-            if (std::string_view(entry->d_name).starts_with("zram")
-                && readFile(m_root + "/sys/block/" + entry->d_name + "/mm_stat", m_buffer) == ReadStatus::Ok) {
-                std::string_view text = trimmed(m_buffer);
-                const std::size_t gap = text.find(' ');
-                if (gap == std::string_view::npos)
-                    continue;
-                const auto first = parseU64(text.substr(0, gap));
-                text = trimmed(text.substr(gap));
-                const auto second = parseU64(text.substr(0, text.find(' ')));
-                if (first && second) {
-                    original += *first;
-                    compressed += *second;
-                    anyZram = true;
-                }
-            }
+    if (m_passes++ % kZramRescanPasses == 0) {
+        m_zram.clear();
+        if (DIR* blocks = ::opendir((m_root + "/sys/block").c_str())) {
+            while (const dirent* entry = ::readdir(blocks))
+                if (std::string_view(entry->d_name).starts_with("zram"))
+                    m_zram.emplace_back(m_root + "/sys/block/" + entry->d_name + "/mm_stat");
+            ::closedir(blocks);
         }
-        ::closedir(blocks);
+    }
+    for (CachedFile& file : m_zram) {
+        if (file.read(m_buffer) != ReadStatus::Ok)
+            continue;
+        std::string_view text = trimmed(m_buffer);
+        const std::size_t gap = text.find(' ');
+        if (gap == std::string_view::npos)
+            continue;
+        const auto first = parseU64(text.substr(0, gap));
+        text = trimmed(text.substr(gap));
+        const auto second = parseU64(text.substr(0, text.find(' ')));
+        if (first && second) {
+            original += *first;
+            compressed += *second;
+            anyZram = true;
+        }
     }
     out.zramOriginal = anyZram ? Reading<std::uint64_t>::measured(original) : Reading<std::uint64_t>::missing(Availability::Unsupported);
     out.zramCompressed = anyZram ? Reading<std::uint64_t>::measured(compressed) : Reading<std::uint64_t>::missing(Availability::Unsupported);

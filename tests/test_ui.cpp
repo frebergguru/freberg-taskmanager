@@ -19,6 +19,7 @@
 #include "app/style/appearance.h"
 #include "app/style/style.h"
 #include "app/views/processes.h"
+#include "app/widgets/confirm.h"
 
 #include <QAbstractItemModel>
 #include <QAccessible>
@@ -28,6 +29,9 @@
 #include <QCursor>
 #include <QDir>
 #include <QMenu>
+#include <QDialog>
+#include <QDialogButtonBox>
+#include <QLabel>
 #include <QProcess>
 #include <QPushButton>
 #include <QSignalSpy>
@@ -72,7 +76,6 @@ private slots:
         MainWindow window(*m_hub);
         window.show();
         QVERIFY(QTest::qWaitForWindowExposed(&window));
-        QSignalSpy samples(m_hub, &SamplerHub::sampled);
         for (int view = 0; view < window.viewCount(); ++view) {
             window.openView(view);
             QTest::qWait(30);
@@ -92,6 +95,11 @@ private slots:
         QTRY_VERIFY(m_hub->wanted() != SubNone); // starts once the window is really on screen
         window.hide();
         QCOMPARE(m_hub->wanted(), Subsystems(SubNone));
+        // Not just the wish: nothing comes from the sampler at all. One already on its way may land first.
+        QTest::qWait(100);
+        QSignalSpy samples(m_hub, &SamplerHub::sampled);
+        QTest::qWait(1500);
+        QCOMPARE(samples.count(), 0);
     }
 
     void popoutSamplesOnlyWhileShown()
@@ -107,7 +115,7 @@ private slots:
         QVERIFY(popout.sizeHint().isValid());
     }
 
-    void endTaskStopsARealProcessAfterConfirmation()
+    void signalReachesARealProcessByItsVerifiedId()
     {
         QProcess sleeper;
         sleeper.start("sleep", {"120"});
@@ -122,6 +130,48 @@ private slots:
         QVERIFY(id.startTicks != 0);
         QVERIFY(m_hub->backend().signalProcess(id, ProcessSignal::End).ok());
         QVERIFY(sleeper.waitForFinished(3000));
+    }
+
+    void askingFirstDefaultsToNoAndKeepsTextPlain()
+    {
+        // Checked after the dialog has closed, so that a failure can't leave it waiting for ever.
+        Qt::TextFormat format = Qt::AutoText;
+        QString defaultButton;
+        const auto answerWith = [&](bool useEscape, QDialogButtonBox::ButtonRole role) {
+            auto* poll = new QTimer(qApp); // it may take a moment to appear
+            connect(poll, &QTimer::timeout, poll, [&format, &defaultButton, useEscape, role, poll] {
+                for (QWidget* widget : QApplication::topLevelWidgets()) {
+                    auto* dialog = qobject_cast<QDialog*>(widget);
+                    if (!dialog || dialog->objectName() != QLatin1String("fgConfirm") || !dialog->isVisible())
+                        continue;
+                    for (const QLabel* label : dialog->findChildren<QLabel*>())
+                        if (!label->text().isEmpty())
+                            format = label->textFormat();
+                    auto* buttons = dialog->findChild<QDialogButtonBox*>();
+                    for (const QAbstractButton* button : buttons->buttons())
+                        if (static_cast<const QPushButton*>(button)->isDefault())
+                            defaultButton = button->text();
+                    poll->deleteLater();
+                    if (useEscape) {
+                        dialog->reject();
+                        return;
+                    }
+                    for (QAbstractButton* button : buttons->buttons())
+                        if (buttons->buttonRole(button) == role)
+                            button->click();
+                    return;
+                }
+            });
+            poll->start(10);
+        };
+        answerWith(true, QDialogButtonBox::RejectRole);
+        QVERIFY(!confirmed(nullptr, QStringLiteral("Title"), QStringLiteral("<b>sleep</b>?")));
+        QCOMPARE(format, Qt::PlainText);
+        QCOMPARE(defaultButton, QStringLiteral("&No"));
+        answerWith(false, QDialogButtonBox::AcceptRole);
+        QVERIFY(confirmed(nullptr, QStringLiteral("Title"), QStringLiteral("Question?")));
+        answerWith(false, QDialogButtonBox::RejectRole);
+        QVERIFY(!confirmed(nullptr, QStringLiteral("Title"), QStringLiteral("Question?")));
     }
 
     void everyControlOnEveryPageHasARoleAndAName()
@@ -278,6 +328,28 @@ private slots:
         for (QTreeWidget* list : view.findChildren<QTreeWidget*>())
             for (int i = 0; i < list->topLevelItemCount(); ++i)
                 QVERIFY(list->topLevelItem(i)->text(3) != QLatin1String("alias"));
+    }
+
+    void aSkinManifestMustBeARealFileOfReasonableSize()
+    {
+        QTemporaryDir dir(QCoreApplication::applicationDirPath() + "/fixture-XXXXXX");
+        QVERIFY(QDir(dir.path()).mkdir("endless.fgskin"));
+        QVERIFY(QFile::link("/dev/zero", dir.path() + "/endless.fgskin/skin.json"));
+        const SkinLibrary library = loadSkins(dir.path()); // used to read forever
+        QCOMPARE(library.problems.size(), 1);
+    }
+
+    void aSkinCantRepeatAChannelOrLinkToAnImage()
+    {
+        QTemporaryDir dir(QCoreApplication::applicationDirPath() + "/fixture-XXXXXX");
+        QImage(4, 4, QImage::Format_RGB32).save(dir.path() + "/real.png");
+        QVERIFY(QFile::link(dir.path() + "/real.png", dir.path() + "/link.png"));
+        Skin skin;
+        QString reason;
+        QVERIFY(parseSkin("{\"format\":1,\"id\":\"x\",\"name\":\"X\",\"quadrants\":[\"cpu\",\"cpu\",\"memory\",\"cpu\"],\"surfaces\":{\"windowImage\":{\"file\":\"link.png\"},\"headerImage\":{\"file\":\"real.png\"}}}", dir.path(), skin, reason));
+        QCOMPARE(skin.quadrants, QStringList({"cpu", "memory"}));
+        QVERIFY(skin.windowImage.image.isNull());
+        QVERIFY(!skin.headerImage.image.isNull());
     }
 
     void numberColumnsSortByValue()

@@ -19,8 +19,14 @@ DIST=$ROOT/dist
 WORK=$BUILD/package # never /tmp: it is small and shared
 NAME=freberg-taskmanager-$VERSION-linux-$ARCH
 
+# A version number names one set of source. A tag for it on other code means this needs a new number.
+if TAGGED=$(git -C "$ROOT" rev-parse -q --verify "refs/tags/v$VERSION^{commit}") && [ "$TAGGED" != "$(git -C "$ROOT" rev-parse HEAD)" ]; then
+    echo "v$VERSION is already tagged on another commit. Raise the version in CMakeLists.txt first." >&2
+    exit 1
+fi
+
 # The GPL needs the source of exactly what ships, so only committed code can be released.
-if [ -n "$(git -C "$ROOT" status --porcelain)" ]; then
+if [ "$(git -C "$ROOT" status --porcelain)" ]; then
     echo "The source tree has uncommitted changes. Commit them first, so the source package matches." >&2
     exit 1
 fi
@@ -40,6 +46,20 @@ DESTDIR="$STAGE" cmake --install "$BUILD" --strip
 
 tar -C "$STAGE/usr" --owner=0 --group=0 -czf "$DIST/$NAME.tar.gz" --transform "s,^\.,$NAME," .
 
+# The newest symbol version a binary needs from a library, such as 2.38 for GLIBC.
+needs_version() {
+    objdump -T "$STAGE/usr/bin/freberg-taskmanager" | grep -o "$1_[0-9.]*" | sed "s/$1_//" | sort -V | tail -n 1
+}
+GLIBC_NEEDED=$(needs_version GLIBC)
+GLIBCXX_NEEDED=$(needs_version GLIBCXX)
+if [ -z "$GLIBC_NEEDED" ] || [ -z "$GLIBCXX_NEEDED" ]; then
+    echo "Could not read which glibc and libstdc++ versions the binary needs." >&2
+    exit 1
+fi
+# Qt keeps old programs working on newer Qt, not the other way, so the build's own version is the floor.
+QT_BUILT=$(qmake6 -query QT_VERSION)
+echo "This build needs glibc $GLIBC_NEEDED or later, GLIBCXX $GLIBCXX_NEEDED or later and Qt $QT_BUILT or later."
+
 # A .deb is an ar archive of three members, so it needs no Debian tools.
 DEB=$WORK/deb
 mkdir -p "$DEB/control"
@@ -48,8 +68,8 @@ Package: freberg-taskmanager
 Version: $VERSION
 Architecture: $DEB_ARCH
 Maintainer: Freberg.guru <37067463-Freberg.guru@users.noreply.gitlab.com>
-Depends: libqt6widgets6 (>= 6.4), libqt6sql6 (>= 6.4), libqt6sql6-sqlite (>= 6.4), libqt6dbus6 (>= 6.4)
-Recommends: policykit-1, smartmontools
+Depends: libc6 (>= $GLIBC_NEEDED), libqt6widgets6 (>= $QT_BUILT), libqt6sql6 (>= $QT_BUILT), libqt6sql6-sqlite (>= $QT_BUILT), libqt6dbus6 (>= $QT_BUILT)
+Recommends: qt6-wayland, pkexec | policykit-1, smartmontools
 Section: utils
 Priority: optional
 Description: Small system monitor and task manager with a classic desktop look
@@ -61,7 +81,8 @@ tar -C "$STAGE" --owner=0 --group=0 -czf "$DEB/data.tar.gz" .
 printf '2.0\n' >"$DEB/debian-binary"
 (cd "$DEB" && ar rcD "$DIST/freberg-taskmanager_${VERSION}_$DEB_ARCH.deb" debian-binary control.tar.gz data.tar.gz)
 
-# The AppImage carries its own Qt, for systems whose Qt is too old.
+# The AppImage carries its own Qt, for systems whose Qt is too old. It still uses the system's
+# C and C++ libraries, so the versions printed above are its floor too.
 APPDIR=$WORK/AppDir
 mkdir -p "$APPDIR/usr"
 cp -a "$STAGE/usr/." "$APPDIR/usr/"
@@ -77,12 +98,25 @@ for group in platforms:libqoffscreen.so platforms:libqwayland.so platforms:libqx
         cp -L "$QT_PLUGINS/$dir/$file" "$PLUGINS/$dir/"
     fi
 done
+# Without these the app can't open a window or keep its history, which must not go unnoticed.
+for needed in platforms/libqxcb.so platforms/libqwayland.so sqldrivers/libqsqlite.so; do
+    if [ ! -e "$PLUGINS/$needed" ]; then
+        echo "The AppImage would lack the Qt plugin $needed." >&2
+        exit 1
+    fi
+done
 [ -d "$QT_PLUGINS/wayland-shell-integration" ] && cp -rL "$QT_PLUGINS/wayland-shell-integration" "$PLUGINS/"
 [ -d "$QT_PLUGINS/wayland-graphics-integration-client" ] && cp -rL "$QT_PLUGINS/wayland-graphics-integration-client" "$PLUGINS/"
 
-# Every library those need, except the ones a system must supply itself.
-SKIP='^(ld-linux|libc\.|libm\.|libdl\.|libpthread|librt\.|libresolv|libgcc_s|libstdc\+\+|libGL|libEGL|libGLX|libGLdispatch|libOpenGL|libdrm|libgbm|libX11|libxcb|libwayland|libdbus-1|libfontconfig|libfreetype|libz\.|libsystemd|libudev)'
+# Every library those need, except the ones a system must supply itself. The small helper
+# libraries around libxcb are often not installed, and the X11 plugin needs them, so they are carried.
+SKIP='^(ld-linux|libc\.|libm\.|libdl\.|libpthread|librt\.|libresolv|libgcc_s|libstdc\+\+|libGL|libEGL|libGLX|libGLdispatch|libOpenGL|libdrm|libgbm|libX11|libxcb(\.|-(dri|glx|present|randr|render\.|shape|shm|sync|xfixes|xkb|xinput|xinerama))|libwayland|libdbus-1|libfontconfig|libfreetype|libz\.|libsystemd|libudev)'
 copy_deps() {
+    if ldd "$1" 2>/dev/null | grep -q '=> not found'; then
+        echo "A library that $1 needs is missing:" >&2
+        ldd "$1" | grep '=> not found' >&2
+        exit 1
+    fi
     ldd "$1" 2>/dev/null | awk '/=> \//{print $3}' | while read -r lib; do
         base=$(basename "$lib")
         if ! [[ $base =~ $SKIP ]] && [ ! -e "$LIBS/$base" ]; then
@@ -100,6 +134,9 @@ find "$APPDIR" -type f \( -name '*.so' -o -name '*.so.*' \) -exec strip --strip-
 cat >"$APPDIR/AppRun" <<'APPRUN'
 #!/bin/sh
 HERE=$(dirname "$(readlink -f "$0")")
+# The app hands programs it starts the original value, so they don't load the libraries in here.
+export FG_APPIMAGE=1
+export FG_ORIGINAL_LD_LIBRARY_PATH="${LD_LIBRARY_PATH:-}"
 export LD_LIBRARY_PATH="$HERE/usr/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 export QT_PLUGIN_PATH="$HERE/usr/plugins"
 exec "$HERE/usr/bin/freberg-taskmanager" "$@"
@@ -110,8 +147,11 @@ cp "$ROOT/packaging/guru.freberg.TaskManager.png" "$APPDIR/"
 ln -sf guru.freberg.TaskManager.png "$APPDIR/.DirIcon"
 ARCH="$ARCH" appimagetool --no-appstream "$APPDIR" "$DIST/$NAME.AppImage" >/dev/null
 
-# Stops the release if anything that ships still carries symbols or debug info.
-"$ROOT/tools/check-stripped.sh" "$STAGE" "$APPDIR" "$DIST/$NAME.tar.gz"
+# Stops the release if anything that ships still carries symbols or debug info, and leaves nothing to publish.
+if ! "$ROOT/tools/check-stripped.sh" "$STAGE" "$APPDIR" "$DIST/$NAME.tar.gz" "$DIST/freberg-taskmanager_${VERSION}_$DEB_ARCH.deb"; then
+    rm -rf "$DIST"
+    exit 1
+fi
 
 (cd "$DIST" && sha256sum ./* >SHA256SUMS)
 ls -la "$DIST"

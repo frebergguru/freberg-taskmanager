@@ -60,6 +60,8 @@ private:
     void togglePopout();
     void showScreensaver();
     void runNewTask();
+    void quitForReal();
+    void connectTray();
 
     SamplerHub& m_hub;
     QList<ViewDef> m_defs;
@@ -78,6 +80,7 @@ private:
     Popout* m_popout = nullptr;
     Screensaver* m_screensaver = nullptr;
     TrayAndAlerts* m_tray = nullptr;
+    bool m_quitting = false;
 };
 
 } // namespace fg

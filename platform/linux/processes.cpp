@@ -44,7 +44,8 @@ std::shared_ptr<const ProcessInfo> ProcessSampler::readInfo(int pid, const PidSt
                 path = path.substr(0, path.find(' '));
                 path = path.substr(path.rfind('/') + 1);
                 path = path.substr(0, path.find(':'));
-                if (path.starts_with(info->name)) {
+                // A real program name fits in a file name. Longer is a rewritten command line.
+                if (path.starts_with(info->name) && path.size() <= NAME_MAX) {
                     info->name = std::string(path);
                     break;
                 }
@@ -116,8 +117,11 @@ Reading<double> ProcessSampler::gpuShare(int pid, Known& known, double seconds)
         }
     }
     ::closedir(fds);
-    if (!any)
-        return Reading<double>::measured(0.0); // this process has no GPU contexts at all
+    if (!any) {
+        known.haveGpu = false;
+        // No GPU contexts at all is a true 0. Contexts whose driver gives no engine times are not.
+        return clients.empty() ? Reading<double>::measured(0.0) : Reading<double>::missing(Availability::Unsupported);
+    }
 
     Reading<double> share;
     if (known.haveGpu && seconds > 0 && total >= known.gpuNs)
@@ -211,6 +215,8 @@ void ProcessSampler::sample(std::int64_t nowMs, std::uint64_t totalCpuTicksDelta
         const double elapsed = known.atMs != 0 && nowMs > known.atMs ? static_cast<double>(nowMs - known.atMs) / 1000.0 : 0;
         if (wanted & SubProcessGpu)
             sample.gpuPct = gpuShare(static_cast<int>(*pid), known, elapsed);
+        else
+            known.haveGpu = false; // or the time since the column was on would count as one interval
         if (wanted & SubProcessNetwork) {
             // A process with no TCP sockets is not at 0: we only know about TCP.
             const auto bytes = networkBytes.find(static_cast<int>(*pid));
@@ -218,11 +224,14 @@ void ProcessSampler::sample(std::int64_t nowMs, std::uint64_t totalCpuTicksDelta
                 sample.networkBps = Reading<double>::missing(Availability::Unsupported);
                 known.haveNetwork = false;
             } else {
-                if (known.haveNetwork && elapsed > 0)
-                    sample.networkBps = Reading<double>::measured(bytes->second >= known.networkBytes ? static_cast<double>(bytes->second - known.networkBytes) / elapsed : 0.0);
+                // The total falls when a connection closes, which says nothing about this interval.
+                if (known.haveNetwork && elapsed > 0 && bytes->second >= known.networkBytes)
+                    sample.networkBps = Reading<double>::measured(static_cast<double>(bytes->second - known.networkBytes) / elapsed);
                 known.networkBytes = bytes->second;
                 known.haveNetwork = true;
             }
+        } else {
+            known.haveNetwork = false;
         }
         known.atMs = nowMs;
         known.seenAt = m_pass;

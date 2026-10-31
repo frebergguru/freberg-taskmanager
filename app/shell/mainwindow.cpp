@@ -91,10 +91,10 @@ MainWindow::MainWindow(SamplerHub& hub) : QWidget(nullptr, Qt::Window | Qt::Fram
     m_hub.setIntervalMs(Settings::instance().updateMs());
     if (Settings::instance().closeToTray() || Settings::instance().value("app/trayMeter", false).toBool() || Settings::instance().value("alerts/cpuPercent", 0).toInt() > 0
         || Settings::instance().value("alerts/memoryPercent", 0).toInt() > 0 || Settings::instance().value("alerts/temperatureC", 0).toInt() > 0)
-        m_tray = new TrayAndAlerts(m_hub, this);
+        connectTray();
     connect(&Settings::instance(), &Settings::changed, this, [this](const QString& key) {
         if (!m_tray && (key.startsWith(QLatin1String("alerts/")) || key == QLatin1String("app/closeToTray") || key == QLatin1String("app/trayMeter")))
-            m_tray = new TrayAndAlerts(m_hub, this);
+            connectTray();
     });
     setWindowFlag(Qt::WindowStaysOnTopHint, Settings::instance().value("app/alwaysOnTop", false).toBool());
     resize(kBaseWidth, kBaseHeight);
@@ -139,12 +139,18 @@ void MainWindow::applyAppearance()
     update();
 }
 
+void MainWindow::connectTray()
+{
+    m_tray = new TrayAndAlerts(m_hub, this);
+    connect(m_tray, &TrayAndAlerts::exitRequested, this, &MainWindow::quitForReal);
+}
+
 void MainWindow::buildMenus()
 {
     QMenu* file = m_menus->addMenu(tr("&File"));
     file->addAction(tr("&New Task (Run...)"), this, &MainWindow::runNewTask);
     file->addSeparator();
-    file->addAction(tr("E&xit"), QKeySequence(Qt::ALT | Qt::Key_F4), this, &QWidget::close);
+    file->addAction(tr("E&xit"), QKeySequence(Qt::ALT | Qt::Key_F4), this, &MainWindow::quitForReal);
 
     QMenu* options = m_menus->addMenu(tr("&Options"));
     QAction* onTop = options->addAction(tr("&Always On Top"));
@@ -349,11 +355,21 @@ void MainWindow::runNewTask()
 
 void MainWindow::closeEvent(QCloseEvent* event)
 {
-    if (Settings::instance().closeToTray() && m_tray && m_tray->iconShown()) {
+    if (!m_quitting && Settings::instance().closeToTray() && m_tray && m_tray->iconShown()) {
         hide();
         event->ignore();
         return;
     }
+    quitForReal();
+    event->accept();
+}
+
+// What Exit means, whether the window is showing or waiting in the tray.
+void MainWindow::quitForReal()
+{
+    if (m_quitting)
+        return;
+    m_quitting = true; // or the close event below, sent by quit(), would just hide the window
     if (m_currentIndex >= 0 && m_views[m_currentIndex])
         m_views[m_currentIndex]->closed(); // pages save their layout here
     if (m_popout)
@@ -361,7 +377,6 @@ void MainWindow::closeEvent(QCloseEvent* event)
     if (m_screensaver)
         m_screensaver->close();
     QApplication::quit();
-    event->accept();
 }
 
 void MainWindow::setUpdateSpeed(int intervalMs)

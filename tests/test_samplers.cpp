@@ -352,7 +352,13 @@ private slots:
         // Lower than now, since raising it is refused however the test was started.
         const int niceness = std::min(19, ::getpriority(PRIO_PROCESS, 0) + 3);
         QVERIFY(system->setPriority(id, niceness).ok());
-        QVERIFY(system->setAffinity(id, {0}).ok());
+        // The first processor this test may use itself, since a container may rule out CPU 0.
+        cpu_set_t allowed;
+        QCOMPARE(::sched_getaffinity(0, sizeof allowed, &allowed), 0);
+        int first = 0;
+        while (!CPU_ISSET(first, &allowed))
+            ++first;
+        QVERIFY(system->setAffinity(id, {first}).ok());
         for (const QString& thread : threads()) {
             QFile file(tasks + "/" + thread + "/stat");
             QVERIFY(file.open(QIODevice::ReadOnly));
@@ -488,6 +494,173 @@ private slots:
         QVERIFY(second->processes[0].gpuPct.known());
         QVERIFY(second->processes[0].gpuPct.value > 30 && second->processes[0].gpuPct.value <= 60); // about 50%
         QCOMPARE(system->sample(SubProcesses)->processes[0].gpuPct.state, Availability::NotYetSampled); // not asked, not read
+    }
+
+    void offlineProcessorsKeepTheirNumbers()
+    {
+        put("/proc/stat", "cpu  10 0 0 90 0 0 0 0 0 0\ncpu0 5 0 0 45 0 0 0 0 0 0\ncpu2 5 0 0 45 0 0 0 0 0 0\nintr 1\n");
+        put("/sys/devices/system/cpu/online", "0,2\n");
+        put("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq", "1000000\n");
+        put("/sys/devices/system/cpu/cpu2/cpufreq/scaling_cur_freq", "3000000\n");
+        put("/sys/devices/cpu_atom/cpus", "2\n");
+        auto system = backend();
+        const auto snapshot = system->sample(SubCpu);
+        QCOMPARE(snapshot->cpu.cores.size(), std::size_t(2));
+        QCOMPARE(snapshot->cpu.cores[0].freqMHz.value, 1000.0);
+        QCOMPARE(snapshot->cpu.cores[1].freqMHz.value, 3000.0); // cpu2's, not the absent cpu1's
+        const CpuTopology& topology = system->topology();
+        QCOMPARE(topology.ids, std::vector<int>({0, 2}));
+        QCOMPARE(topology.logical, 2);
+        QCOMPARE(topology.physical, 0); // not told, and the UI doesn't show this as a count
+        QVERIFY(!topology.efficiency[0]);
+        QVERIFY(topology.efficiency[1]);
+    }
+
+    void aProcessorChangingStateIsNotARate()
+    {
+        put("/proc/stat", "cpu  10 0 0 90 0 0 0 0 0 0\ncpu0 5 0 0 45 0 0 0 0 0 0\ncpu1 5 0 0 45 0 0 0 0 0 0\n");
+        auto system = backend();
+        system->sample(SubCpu);
+        put("/proc/stat", "cpu  20 0 0 180 0 0 0 0 0 0\ncpu0 10 0 0 90 0 0 0 0 0 0\ncpu2 5 0 0 45 0 0 0 0 0 0\n");
+        const auto snapshot = system->sample(SubCpu);
+        QCOMPARE(snapshot->cpu.cores[1].usagePct.state, Availability::NotYetSampled);
+    }
+
+    void throttleCountsEachPackageOnce()
+    {
+        const auto add = [this](int cpu, int package, int count) {
+            const QString dir = QStringLiteral("/sys/devices/system/cpu/cpu%1/").arg(cpu);
+            put(dir + "thermal_throttle/package_throttle_count", QByteArray::number(count) + "\n");
+            put(dir + "topology/physical_package_id", QByteArray::number(package) + "\n");
+        };
+        add(0, 0, 5);
+        add(1, 0, 5);
+        add(2, 1, 3);
+        const auto snapshot = backend()->sample(SubThermal);
+        QCOMPARE(snapshot->thermal.throttleEvents.value, std::uint64_t(8));
+    }
+
+    void anUnreadableThrottleCountIsNotZero()
+    {
+        if (::geteuid() == 0)
+            QSKIP("Root can read everything.");
+        const QString file = "/sys/devices/system/cpu/cpu0/thermal_throttle/package_throttle_count";
+        put(file, "5\n");
+        ::chmod((m_dir->path() + file).toUtf8().constData(), 0);
+        QCOMPARE(backend()->sample(SubThermal)->thermal.throttleEvents.state, Availability::AccessDenied);
+    }
+
+    void powerAddsEveryPackage()
+    {
+        put("/sys/class/powercap/intel-rapl:0/energy_uj", "1000000");
+        put("/sys/class/powercap/intel-rapl:1/energy_uj", "1000000");
+        auto system = backend();
+        system->sample(SubPower);
+        QTest::qWait(100);
+        put("/sys/class/powercap/intel-rapl:0/energy_uj", "2000000");
+        QTest::qWait(1);
+        put("/sys/class/powercap/intel-rapl:1/energy_uj", "2000000");
+        const auto second = system->sample(SubPower);
+        QVERIFY(second->power.cpuPackageW.known());
+        QVERIFY(second->power.cpuPackageW.value > 5); // 2 J in about 0.1 s, far more than one package's share
+    }
+
+    void aWrapOfUnknownSizeIsAGapNotZeroWatts()
+    {
+        put("/sys/class/powercap/intel-rapl:0/energy_uj", "999000");
+        auto system = backend();
+        system->sample(SubPower);
+        put("/sys/class/powercap/intel-rapl:0/energy_uj", "1000");
+        QTest::qWait(50);
+        QCOMPARE(system->sample(SubPower)->power.cpuPackageW.state, Availability::NotYetSampled);
+    }
+
+    void batteryPowerWorkedOutFromTwoReadsIsAnEstimate()
+    {
+        put("/sys/class/power_supply/BAT0/type", "Battery\n");
+        put("/sys/class/power_supply/BAT0/current_now", "1000000\n");
+        put("/sys/class/power_supply/BAT0/voltage_now", "12000000\n");
+        const auto snapshot = backend()->sample(SubPower);
+        QCOMPARE(snapshot->power.batteries.size(), std::size_t(1));
+        QCOMPARE(snapshot->power.batteries[0].powerW.state, Availability::Estimated);
+        QCOMPARE(snapshot->power.batteries[0].powerW.value, 12.0);
+    }
+
+    void aDeviceThatReturnsStartsOver()
+    {
+        const auto stats = [this](const QByteArray& lines) { put("/proc/diskstats", lines); };
+        put("/sys/block/sdb/device/model", "First\n");
+        stats("8 16 sdb 1 0 2 0 3 0 4 0 0 5 0\n");
+        put("/proc/net/dev", "h\nh\n  veth1: 100 0 0 0 0 0 0 0 200 0 0 0 0 0 0 0\n");
+        auto system = backend();
+        system->sample(SubDisk | SubNetwork);
+        QTest::qWait(10);
+        stats("");
+        put("/proc/net/dev", "h\nh\n");
+        QVERIFY(system->sample(SubDisk | SubNetwork)->disks.empty());
+        QTest::qWait(10);
+        put("/sys/block/sdb/device/model", "Second\n");
+        stats("8 16 sdb 1 0 900000 0 3 0 4 0 0 5 0\n");
+        put("/proc/net/dev", "h\nh\n  veth1: 900000 0 0 0 0 0 0 0 200 0 0 0 0 0 0 0\n");
+        const auto back = system->sample(SubDisk | SubNetwork);
+        QCOMPARE(back->disks.at(0).model, std::string("Second"));
+        QCOMPARE(back->disks.at(0).readBps.state, Availability::NotYetSampled); // not a spike from the old counters
+        QCOMPARE(back->networks.at(0).rxBps.state, Availability::NotYetSampled);
+    }
+
+    void everyInterfaceKeepsItsName()
+    {
+        put("/proc/net/dev", "h\nh\n  eth0: 1 0 0 0 0 0 0 0 2 0 0 0 0 0 0 0\n  wlan0: 3 0 0 0 0 0 0 0 4 0 0 0 0 0 0 0\n");
+        put("/sys/class/net/eth0/address", "aa:bb:cc:dd:ee:ff\n");
+        put("/sys/class/net/eth0/operstate", "up\n");
+        put("/sys/class/net/eth0/speed", "1000\n");
+        const auto snapshot = backend()->sample(SubNetwork);
+        QCOMPARE(snapshot->networks.at(0).name, std::string("eth0"));
+        QCOMPARE(snapshot->networks.at(0).mac, std::string("aa:bb:cc:dd:ee:ff"));
+        QCOMPARE(snapshot->networks.at(1).name, std::string("wlan0"));
+        QCOMPARE(snapshot->networks.at(1).rxTotal, std::uint64_t(3));
+    }
+
+    void aGpuClientWithoutEngineTimesIsNotZero()
+    {
+        put("/proc/stat", "cpu  1000 0 0 0 0 0 0 0 0 0\n");
+        put("/proc/42/stat", "42 (game) S 1 42 42 0 -1 0 0 0 0 0 1 0 0 0 20 0 1 0 500 1000 10 0 0");
+        put("/proc/42/fdinfo/5", "drm-client-id:\t7\ndrm-cycles-rcs:\t1000\n");
+        put("/proc/43/stat", "43 (quiet) S 1 43 43 0 -1 0 0 0 0 0 1 0 0 0 20 0 1 0 500 1000 10 0 0");
+        put("/proc/43/fdinfo/5", "pos: 0\n");
+        auto list = backend()->sample(SubProcesses | SubProcessGpu)->processes;
+        std::sort(list.begin(), list.end(), [](const ProcessSample& a, const ProcessSample& b) { return a.info->id.pid < b.info->id.pid; });
+        QCOMPARE(list.at(0).gpuPct.state, Availability::Unsupported);
+        QCOMPARE(list.at(1).gpuPct.state, Availability::Measured); // no GPU contexts at all really is 0
+        QCOMPARE(list.at(1).gpuPct.value, 0.0);
+    }
+
+    void aRewrittenCommandLineIsNotAName()
+    {
+        put("/proc/15/stat", "15 (fifteen-letters) S 1 1 1 0 -1 0 0 0 0 0 1 1 0 0 20 0 1 0 77 0 5 0 0 0\n");
+        put("/proc/15/cmdline", "fifteen-letters" + QByteArray(5000, 'x') + QByteArray(1, '\0'));
+        const auto snapshot = backend()->sample(SubProcesses);
+        QCOMPARE(snapshot->processes.at(0).info->name, std::string("fifteen-letters"));
+    }
+
+    void missingUptimeIsNotZero()
+    {
+        QCOMPARE(backend()->systemFacts().uptimeSeconds.state, Availability::Unsupported);
+        put("/proc/uptime", "120.5 300.0\n");
+        QCOMPARE(backend()->systemFacts().uptimeSeconds.value, 120.5);
+    }
+
+    void aFolderWeCantEnterIsCountedAsDenied()
+    {
+        if (::geteuid() == 0)
+            QSKIP("Root can read everything.");
+        put("/tree/closed/file", QByteArray(8192, 'x'));
+        const QByteArray closed = (m_dir->path() + "/tree/closed").toUtf8();
+        ::chmod(closed.constData(), 0444); // may be listed, but nothing in it can be weighed
+        const auto reopen = qScopeGuard([&closed] { ::chmod(closed.constData(), 0755); });
+        std::atomic<bool> cancel{false};
+        const DiskScanResult result = scanFolder((m_dir->path() + "/tree").toStdString(), cancel);
+        QCOMPARE(result.deniedFolders, std::uint64_t(1));
     }
 
     void liveSystemAnswers()

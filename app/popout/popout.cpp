@@ -88,6 +88,10 @@ Popout::Popout(SamplerHub& hub) : QWidget(nullptr, Qt::Tool | Qt::FramelessWindo
     connect(&m_hub, &SamplerHub::sampled, this, &Popout::onSampled);
     setPinned(Settings::instance().value("popout/pinned", false).toBool());
     reloadSkins();
+    connect(&Settings::instance(), &Settings::changed, this, [this](const QString& key) {
+        if (key == QLatin1String("appearance/textPercent"))
+            applySkin(Skin(m_skin));
+    });
 }
 
 Popout::~Popout()
@@ -109,8 +113,18 @@ void Popout::reloadSkins()
     applySkin(m_library.skins.first());
 }
 
-void Popout::applySkin(const Skin& skin)
+void Popout::applySkin(const Skin& chosen)
 {
+    Skin skin = chosen;
+    if (!chosen.imageFolder.isEmpty()) {
+        QString reason;
+        if (parseSkin(chosen.manifest, chosen.imageFolder, skin, reason)) {
+            skin.manifest = chosen.manifest;
+            skin.imageFolder = chosen.imageFolder;
+        } else {
+            skin = chosen; // the folder changed since it was listed, so this one goes without images
+        }
+    }
     m_skin = skin;
     m_channels.clear();
     for (const QString& key : skin.quadrants) {
@@ -126,7 +140,7 @@ void Popout::applySkin(const Skin& skin)
         channel.valueText = Format::why(Availability::NotYetSampled);
     }
     QFont skinFont = QApplication::font();
-    skinFont.setPointSizeF(skin.fontSize);
+    skinFont.setPointSizeF(skin.fontSize * Settings::instance().textPercent() / 100.0);
     skinFont.setBold(skin.fontBold);
     if (!skin.fontFamily.isEmpty())
         skinFont.setFamily(skin.fontFamily);
@@ -197,8 +211,22 @@ void Popout::showEvent(QShowEvent* event)
     for (Channel& channel : m_channels)
         if (channel.history.size() > 0)
             channel.history.push(History::gap());
+    if (QWindow* handle = windowHandle())
+        handle->installEventFilter(this); // installing twice is harmless, Qt keeps one
     m_hub.setWanted(this, subsystemsFor(m_skin.quadrants));
     emit visibilityChanged(true);
+}
+
+bool Popout::eventFilter(QObject* watched, QEvent* event)
+{
+    // Covered or minimized: the compositor stops exposing us, so sampling stops too.
+    if (watched == windowHandle() && event->type() == QEvent::Expose && isVisible()) {
+        if (windowHandle()->isExposed())
+            m_hub.setWanted(this, subsystemsFor(m_skin.quadrants));
+        else
+            m_hub.clearWanted(this);
+    }
+    return QWidget::eventFilter(watched, event);
 }
 
 void Popout::hideEvent(QHideEvent* event)
@@ -359,7 +387,8 @@ void Popout::paintChannel(QPainter& p, const QRect& area, const Channel& channel
     switch (m_skin.meterStyle) {
     case Skin::Rows: {
         const int labelWidth = fontMetrics().horizontalAdvance(QStringLiteral("Memory "));
-        const int valueWidth = fontMetrics().horizontalAdvance(QStringLiteral("100.0 MB/s "));
+        // "Not supported" is wider than any number, and must not lose its start.
+        const int valueWidth = std::min(in.width() - labelWidth, std::max(fontMetrics().horizontalAdvance(QStringLiteral("100.0 MB/s ")), fontMetrics().horizontalAdvance(channel.valueText + QLatin1Char(' '))));
         p.setPen(m_skin.ink);
         p.drawText(QRect(in.left(), in.top(), labelWidth, in.height()), Qt::AlignLeft | Qt::AlignVCenter, channel.label);
         p.setPen(known ? m_skin.ink : m_skin.inkDim);
@@ -543,7 +572,7 @@ void Popout::showMenu(const QPoint& where)
     QMenu* skins = menu.addMenu(tr("&Skin"));
     auto* group = new QActionGroup(&menu);
     for (const Skin& skin : std::as_const(m_library.skins)) {
-        QAction* action = skins->addAction(skin.name);
+        QAction* action = skins->addAction(skin.builtIn ? QCoreApplication::translate("fg::Skin", skin.name.toUtf8().constData()) : skin.name);
         action->setCheckable(true);
         action->setChecked(skin.id == m_skin.id);
         action->setToolTip(skin.description);

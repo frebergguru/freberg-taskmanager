@@ -96,7 +96,7 @@ void glowStroke(QPainter& p, const QPainterPath& path, const QColor& color, doub
     p.restore();
 }
 
-void strokeSeries(QPainter& p, const QPainterPath& line, const QColor& color, double baseline)
+void strokeSeries(QPainter& p, const QPainterPath& line, const QColor& color, double baseline, bool dashed)
 {
     p.save();
     p.setRenderHint(QPainter::Antialiasing, true);
@@ -116,7 +116,7 @@ void strokeSeries(QPainter& p, const QPainterPath& line, const QColor& color, do
         }
     }
     glowStroke(p, line, color, 4);
-    p.setPen(QPen(color, 1.4, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+    p.setPen(QPen(color, 1.4, dashed ? Qt::DashLine : Qt::SolidLine, dashed ? Qt::FlatCap : Qt::RoundCap, Qt::RoundJoin));
     p.drawPath(line);
     p.restore();
 }
