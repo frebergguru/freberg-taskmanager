@@ -2,10 +2,12 @@
 
 ## Not exercised yet on real targets
 
-- [ ] Uninstalling an app. The commands are written, but only ever shown, never run here.
-- [ ] Services: start, stop, restart, enable and disable from the page, on the system bus. The same calls work on a throwaway user service.
-- [ ] Users: lock and sign out.
-- [ ] Disk health, which needs `smartctl`.
+- [ ] Uninstalling an app. The commands are written, but only ever shown, never run here. That includes the Debian one, which now uses `dpkg -r`.
+- [ ] Services: start, stop, restart, enable and disable from the page, on the system bus. These calls no longer block the window, and that new code has only been built and run through the tests.
+- [ ] Startup: turning a user service on or off, which uses the same new calls.
+- [ ] Users: lock and sign out, also through the new calls.
+- [ ] Disk health, using Check Health on a disk's page. `smartctl` is installed here now, and it asks for a password.
+- [ ] A trial run of `tools/release.sh`, whose checks and `.deb` dependencies changed after 0.1.0. It refuses to run until the version in `CMakeLists.txt` is raised, because `v0.1.0` is tagged on older code.
 - [ ] Installing the `.deb` on Debian or Ubuntu, and using the AppImage on an older system.
 - [ ] `tools/grant-sensor-access.sh`.
 
@@ -30,6 +32,8 @@ Measured offscreen, on a busy machine:
 
 ## Smaller things
 
+- [ ] Build the AppImage on an older system. It needs glibc 2.43 today, so it only starts on very new ones.
+- [ ] Decide on the glow in the neon skins. `app/popout/popout.cpp` draws it outside `glowStroke()`, whatever the theme, which bends the rule that only the Neon Glow theme glows. Either allow it in `AGENTS.md` or draw it through the helper.
 - [ ] Ship the MIT and BSD license texts of the AppImage runtime (type2-runtime, squashfuse), with their authors' names. `tools/third-party-notices.sh` copies only what is on the build machine, and the notice points to the source for the rest.
 - [ ] Sorting from the keyboard on lists other than Processes.
 - [ ] Connections: the refresh walks every process's files on the window's thread. It can be slow with auto-update on and thousands of open files. The lists on Services and Users also read D-Bus on the window's thread.
