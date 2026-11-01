@@ -63,15 +63,15 @@ void SystemInfoView::refresh()
         for (const MemoryModule& module : facts.memoryModules.value) {
             if (!module.sizeKnown) {
                 ++used; // something is there, even if the firmware won't say how big
-                modules << tr("%1: size not reported").arg(QString::fromStdString(module.locator));
+                modules << tr("%1: size not reported").arg(QString::fromStdString(module.name));
                 continue;
             }
             if (module.sizeBytes == 0) {
-                modules << tr("%1: empty").arg(QString::fromStdString(module.locator));
+                modules << tr("%1: empty").arg(QString::fromStdString(module.name));
                 continue;
             }
             ++used;
-            const QString description = tr("%1: %2 %3 %4").arg(QString::fromStdString(module.locator), Format::bytes(module.sizeBytes), QString::fromStdString(module.type), QString::fromStdString(module.formFactor));
+            const QString description = tr("%1: %2 %3 %4").arg(QString::fromStdString(module.name), Format::bytes(module.sizeBytes), QString::fromStdString(module.type), QString::fromStdString(module.formFactor));
             // A speed of 0 means the firmware doesn't say, which virtual machines often do.
             modules << (module.speedMTs > 0 ? tr("%1, %2 MT/s").arg(description).arg(module.speedMTs) : description);
         }

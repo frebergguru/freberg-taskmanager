@@ -1,5 +1,7 @@
 #include "smbios.h"
 
+#include <algorithm>
+
 namespace fg {
 
 namespace {
@@ -47,6 +49,32 @@ std::string typeName(unsigned value)
     }
 }
 
+// Text fields hold a one-based index into the text after the fixed part. Zero means none.
+std::string textAt(std::string_view strings, unsigned wanted)
+{
+    for (unsigned index = 1; wanted != 0 && !strings.empty(); ++index) {
+        const std::size_t end = strings.find('\0');
+        if (index == wanted)
+            return std::string(strings.substr(0, end));
+        if (end == std::string_view::npos)
+            break;
+        strings.remove_prefix(end + 1);
+    }
+    return {};
+}
+
+// Some firmware gives every module the same locator, and only the bank tells them apart.
+// A bank shared as well, such as "Not Specified", would add nothing, so it is left out.
+void nameModules(std::vector<MemoryModule>& modules)
+{
+    for (MemoryModule& module : modules) {
+        const auto sameLocator = [&module](const MemoryModule& other) { return other.locator == module.locator; };
+        const auto sameBank = [&module](const MemoryModule& other) { return other.locator == module.locator && other.bank == module.bank; };
+        const bool needsBank = !module.bank.empty() && std::ranges::count_if(modules, sameLocator) > 1 && std::ranges::count_if(modules, sameBank) == 1;
+        module.name = !needsBank ? module.locator : module.locator.empty() ? module.bank : module.bank + ", " + module.locator;
+    }
+}
+
 } // namespace
 
 std::vector<MemoryModule> parseMemoryModules(std::string_view table)
@@ -83,24 +111,13 @@ std::vector<MemoryModule> parseMemoryModules(std::string_view table)
             module.type = typeName(static_cast<unsigned char>(s[0x12]));
             if (length > 0x16)
                 module.speedMTs = word(s, 0x15);
-
-            // The locator is a one-based index into the text strings.
-            unsigned wanted = static_cast<unsigned char>(s[0x10]);
-            std::string_view rest = strings;
-            for (unsigned index = 1; wanted != 0 && !rest.empty(); ++index) {
-                const std::size_t end = rest.find('\0');
-                if (index == wanted) {
-                    module.locator = std::string(rest.substr(0, end));
-                    break;
-                }
-                if (end == std::string_view::npos)
-                    break;
-                rest.remove_prefix(end + 1);
-            }
+            module.locator = textAt(strings, static_cast<unsigned char>(s[0x10]));
+            module.bank = textAt(strings, static_cast<unsigned char>(s[0x11]));
             out.push_back(std::move(module));
         }
         at = stringsEnd + 2;
     }
+    nameModules(out);
     return out;
 }
 

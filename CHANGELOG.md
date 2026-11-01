@@ -15,6 +15,7 @@
 ### Changed
 
 - View, Sort By sorts the list on any page from the keyboard.
+- System Info tells memory modules with the same slot name apart by their bank.
 - The AppImage now ships the license texts of everything in its runtime, with their authors' names.
 - Graphs draw their second line dashed, the popout follows the text size, every saturation setting keeps WCAG AA, and the Processes page can choose columns and sort from the keyboard.
 - Files are kept open rather than reopened on each sample. Network and disk devices that leave no longer stay in memory.

@@ -144,6 +144,34 @@ private slots:
         QVERIFY(!slots_[0].sizeKnown);
     }
 
+    void memoryModulesWithTheSameSlotNameUseTheirBanks()
+    {
+        const auto tableOf = [](const std::vector<std::pair<std::string, std::string>>& modules) {
+            std::string table;
+            for (const auto& [locator, bank] : modules) {
+                std::string s(0x17, '\0');
+                s[0] = 17;
+                s[1] = 0x17;
+                s[0x10] = 1;
+                s[0x11] = 2;
+                table += s + locator + '\0' + bank + std::string(2, '\0');
+            }
+            return table + std::string{char(127), char(4), 0, 0, 0, 0};
+        };
+
+        // As this machine's firmware reports its four LPDDR5 modules.
+        const auto shared = parseMemoryModules(tableOf({{"DIMM 0", "P0 CHANNEL A"}, {"DIMM 0", "P0 CHANNEL B"}, {"DIMM 0", "P0 CHANNEL C"}, {"DIMM 0", "P0 CHANNEL D"}}));
+        QCOMPARE(shared.size(), std::size_t(4));
+        QCOMPARE(shared[0].name, std::string("P0 CHANNEL A, DIMM 0"));
+        QCOMPARE(shared[3].name, std::string("P0 CHANNEL D, DIMM 0"));
+
+        // Names that already differ stay short, and a bank they all share tells nothing.
+        const auto distinct = parseMemoryModules(tableOf({{"DIMM A", "BANK 0"}, {"DIMM B", "BANK 1"}}));
+        QCOMPARE(distinct[0].name, std::string("DIMM A"));
+        const auto placeholder = parseMemoryModules(tableOf({{"DIMM 0", "Not Specified"}, {"DIMM 0", "Not Specified"}}));
+        QCOMPARE(placeholder[0].name, std::string("DIMM 0"));
+    }
+
     void historyKeepsGaps()
     {
         History history(3);

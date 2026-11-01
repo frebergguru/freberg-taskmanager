@@ -10,6 +10,8 @@ namespace fg {
 
 struct MemoryModule {
     std::string locator;
+    std::string bank;
+    std::string name; // the locator, with the bank in front if other modules share that locator
     std::string formFactor;
     std::string type;
     std::uint64_t sizeBytes = 0; // 0 means the slot is empty, if the size is known at all

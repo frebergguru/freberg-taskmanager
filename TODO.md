@@ -29,7 +29,6 @@ Measured offscreen, on a busy machine:
 
 ## Smaller things
 
-- [ ] System Info lists every memory module here as "DIMM 0", which is what the table's slot name says. Its bank name tells them apart ("P0 CHANNEL A"), but `core/smbios.cpp` doesn't read it.
 - [ ] Check Health on a USB disk. `smartctl` stops with "Unknown USB bridge" and asks for a device type, and the page shows that text as it is, which tells the user to use an option they can't set.
 - [ ] Build the AppImage on an older system. It needs glibc 2.43 today, so it only starts on very new ones.
 - [ ] Connections: the refresh walks every process's files on the window's thread. It can be slow with auto-update on and thousands of open files. The lists on Services and Users also read D-Bus on the window's thread.
