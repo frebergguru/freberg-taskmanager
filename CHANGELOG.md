@@ -14,6 +14,8 @@
 
 ### Changed
 
+- View, Sort By sorts the list on any page from the keyboard.
+- The AppImage now ships the license texts of everything in its runtime, with their authors' names.
 - Graphs draw their second line dashed, the popout follows the text size, every saturation setting keeps WCAG AA, and the Processes page can choose columns and sort from the keyboard.
 - Files are kept open rather than reopened on each sample. Network and disk devices that leave no longer stay in memory.
 - `tools/grant-sensor-access.sh` applies the power counter rule without a reboot. `tools/measure-idle.sh` counts every thread and page. `tools/release.sh` refuses a version already tagged on other code, a missing library or plugin, and sets the `.deb`'s real dependencies. Building now requires Qt 6.7.

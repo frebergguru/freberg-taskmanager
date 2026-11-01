@@ -63,6 +63,7 @@ add_library(fg_app STATIC
     app/widgets/icons.cpp
     app/widgets/infogrid.cpp
     app/widgets/resultsdb.cpp
+    app/widgets/sortmenu.cpp
     app/system/dbus.cpp
     app/views/views.cpp
     app/views/apphistory.cpp

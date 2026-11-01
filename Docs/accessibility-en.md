@@ -5,7 +5,7 @@ This app aims to be usable with a screen reader, with the keyboard alone, and wi
 ## What it offers
 
 - **Screen readers:** built to work through AT-SPI, though not yet confirmed with a real screen reader (see Testing). Controls have names and roles, and graphs and meters give their current value as a description.
-- **Keyboard:** everything in the main window can be reached without a mouse. Tab moves between controls, arrow keys move between tabs, Ctrl+Tab changes page, Enter and Space activate, Esc closes, Alt+Space opens the window menu, and Alt with the underlined letter opens menus. The focused control has a dotted outline, drawn thicker than usual.
+- **Keyboard:** everything in the main window can be reached without a mouse. Tab moves between controls, arrow keys move between tabs, Ctrl+Tab changes page, Enter and Space activate, Esc closes, Alt+Space opens the window menu, and Alt with the underlined letter opens menus. View, Sort By sorts the page's list, and on Processes the Columns button also chooses the columns. The focused control has a dotted outline, drawn thicker than usual.
 - **Contrast:** text meets WCAG AA (4.5:1) in all eleven themes, in both their light and dark versions and at every colour saturation setting, checked by an automated test. A High Contrast theme is included, in light and dark.
 - **Text size:** 100% to 200% in the settings. It is remembered, the window grows to fit, and the popout follows it.
 - **Motion:** the app has no animation, so there is nothing for reduced-motion settings to turn off. Replay in the Flight Recorder only runs when you start it.
@@ -14,7 +14,6 @@ This app aims to be usable with a screen reader, with the keyboard alone, and wi
 
 ## Known limits
 
-- Lists other than Processes can only be sorted with the mouse. On Processes, the Columns button chooses the columns and the sort order from the keyboard.
 - The title bar's minimize, maximize and close buttons aren't keyboard stops. Use Alt+Space or Alt+F4 instead.
 - Scrubbing with the mouse in the Flight Recorder panels has no direct keyboard route. The position slider does the same.
 - The popout's moving and resizing are left to the desktop, and it has no menu bar. It closes with Esc, and its menu opens with the Menu key or Shift+F10.

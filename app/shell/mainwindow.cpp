@@ -5,6 +5,7 @@
 #include "../style/appearance.h"
 #include "../style/style.h"
 #include "../widgets/icons.h"
+#include "../widgets/sortmenu.h"
 #include "../popout/popout.h"
 #include "menubar.h"
 #include "options.h"
@@ -32,6 +33,7 @@
 #include <QScreen>
 #include <QStatusBar>
 #include <QToolBar>
+#include <QTreeView>
 #include <QVBoxLayout>
 #include <QWindow>
 #include <qdrawutil.h>
@@ -173,6 +175,13 @@ void MainWindow::buildMenus()
     view->addAction(tr("&Popout Readout"), QKeySequence(Qt::Key_F11), this, &MainWindow::togglePopout);
     view->addAction(tr("&Full-Screen Load"), QKeySequence(Qt::Key_F12), this, &MainWindow::showScreensaver);
     view->addSeparator();
+    // Filled each time from the page on screen, since each has its own list and columns.
+    QMenu* sortBy = view->addMenu(tr("&Sort By"));
+    connect(view, &QMenu::aboutToShow, this, [this, sortBy] {
+        QTreeView* list = m_currentIndex >= 0 ? sortableList(m_views[m_currentIndex]) : nullptr;
+        fillSortMenu(sortBy, list);
+        sortBy->setEnabled(list != nullptr);
+    });
     QMenu* themes = view->addMenu(tr("&Theme"));
     auto* familyGroup = new QActionGroup(this);
     auto* modeGroup = new QActionGroup(this);

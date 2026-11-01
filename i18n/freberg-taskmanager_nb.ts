@@ -1294,184 +1294,189 @@ Dette kjører:
 <context>
     <name>fg::MainWindow</name>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="150"/>
+        <location filename="../app/shell/mainwindow.cpp" line="152"/>
         <source>&amp;File</source>
         <translation>&amp;Fil</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="151"/>
+        <location filename="../app/shell/mainwindow.cpp" line="153"/>
         <source>&amp;New Task (Run...)</source>
         <translation>&amp;Ny oppgave (kjør ...)</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="153"/>
+        <location filename="../app/shell/mainwindow.cpp" line="155"/>
         <source>E&amp;xit</source>
         <translation>&amp;Avslutt</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="155"/>
+        <location filename="../app/shell/mainwindow.cpp" line="157"/>
         <source>&amp;Options</source>
         <translation>&amp;Valg</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="156"/>
+        <location filename="../app/shell/mainwindow.cpp" line="158"/>
         <source>&amp;Always On Top</source>
         <translation>&amp;Alltid øverst</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="165"/>
+        <location filename="../app/shell/mainwindow.cpp" line="167"/>
         <source>&amp;Settings...</source>
         <translation>&amp;Innstillinger ...</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="167"/>
+        <location filename="../app/shell/mainwindow.cpp" line="169"/>
         <source>&amp;View</source>
         <translation>V&amp;is</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="168"/>
+        <location filename="../app/shell/mainwindow.cpp" line="170"/>
         <source>&amp;Refresh Now</source>
         <translation>&amp;Oppdater nå</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="173"/>
+        <location filename="../app/shell/mainwindow.cpp" line="175"/>
         <source>&amp;Popout Readout</source>
         <translation>&amp;Miniviser</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="174"/>
+        <location filename="../app/shell/mainwindow.cpp" line="176"/>
         <source>&amp;Full-Screen Load</source>
         <translation>&amp;Belastning i fullskjerm</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="176"/>
+        <location filename="../app/shell/mainwindow.cpp" line="179"/>
+        <source>&amp;Sort By</source>
+        <translation>&amp;Sorter etter</translation>
+    </message>
+    <message>
+        <location filename="../app/shell/mainwindow.cpp" line="185"/>
         <source>&amp;Theme</source>
         <translation>&amp;Tema</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="198"/>
+        <location filename="../app/shell/mainwindow.cpp" line="207"/>
         <source>&amp;Dark</source>
         <translation>&amp;Mørk</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="198"/>
+        <location filename="../app/shell/mainwindow.cpp" line="207"/>
         <source>&amp;Light</source>
         <translation>&amp;Lys</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="211"/>
+        <location filename="../app/shell/mainwindow.cpp" line="220"/>
         <source>&amp;Update Speed</source>
         <translation>O&amp;ppdateringshastighet</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="216"/>
+        <location filename="../app/shell/mainwindow.cpp" line="225"/>
         <source>&amp;High (every 1/2 second)</source>
         <translation>&amp;Høy (hvert halve sekund)</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="216"/>
+        <location filename="../app/shell/mainwindow.cpp" line="225"/>
         <source>&amp;Normal (every second)</source>
         <translation>&amp;Normal (hvert sekund)</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="216"/>
+        <location filename="../app/shell/mainwindow.cpp" line="225"/>
         <source>&amp;Low (every 4 seconds)</source>
         <translation>&amp;Lav (hvert 4. sekund)</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="216"/>
+        <location filename="../app/shell/mainwindow.cpp" line="225"/>
         <source>&amp;Paused</source>
         <translation>&amp;Pause</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="225"/>
+        <location filename="../app/shell/mainwindow.cpp" line="234"/>
         <source>&amp;Help</source>
         <translation>&amp;Hjelp</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="226"/>
+        <location filename="../app/shell/mainwindow.cpp" line="235"/>
         <source>&amp;Accessibility Statement...</source>
         <translation>&amp;Tilgjengelighetserklæring ...</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="228"/>
+        <location filename="../app/shell/mainwindow.cpp" line="237"/>
         <source>&amp;License...</source>
         <translation>&amp;Lisens...</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="229"/>
+        <location filename="../app/shell/mainwindow.cpp" line="238"/>
         <source>&amp;About...</source>
         <translation>&amp;Om ...</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="236"/>
+        <location filename="../app/shell/mainwindow.cpp" line="245"/>
         <source>Refresh Now</source>
         <translation>Oppdater nå</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="242"/>
+        <location filename="../app/shell/mainwindow.cpp" line="251"/>
         <source>Settings</source>
         <translation>Innstillinger</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="243"/>
+        <location filename="../app/shell/mainwindow.cpp" line="252"/>
         <source>Popout Readout</source>
         <translation>Miniviser</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="303"/>
+        <location filename="../app/shell/mainwindow.cpp" line="312"/>
         <source>CPU Usage: %1</source>
         <translation>CPU-bruk: %1</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="305"/>
+        <location filename="../app/shell/mainwindow.cpp" line="314"/>
         <source>Memory: %1 / %2</source>
         <translation>Minne: %1 / %2</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="311"/>
+        <location filename="../app/shell/mainwindow.cpp" line="320"/>
         <source>This app: %1 s CPU, peak %2</source>
         <translation>Denne appen: %1 s CPU, topp %2</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="345"/>
-        <location filename="../app/shell/mainwindow.cpp" line="353"/>
+        <location filename="../app/shell/mainwindow.cpp" line="354"/>
+        <location filename="../app/shell/mainwindow.cpp" line="362"/>
         <source>Create New Task</source>
         <translation>Opprett ny oppgave</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="345"/>
+        <location filename="../app/shell/mainwindow.cpp" line="354"/>
         <source>Type the name of a program to open:</source>
         <translation>Skriv navnet på et program som skal åpnes:</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="353"/>
+        <location filename="../app/shell/mainwindow.cpp" line="362"/>
         <source>Could not start %1.</source>
         <translation>Fikk ikke startet %1.</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="395"/>
+        <location filename="../app/shell/mainwindow.cpp" line="404"/>
         <source>About</source>
         <translation>Om</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="395"/>
+        <location filename="../app/shell/mainwindow.cpp" line="404"/>
         <source>&lt;b&gt;Freberg.guru - Task manager&lt;/b&gt;&lt;br&gt;Version %1&lt;br&gt;&lt;br&gt;Copyright © 2026 Freberg.guru&lt;br&gt;&lt;br&gt;Sends no usage data, hardware details or process information anywhere.&lt;br&gt;&lt;br&gt;Free software: you may share and change it under the GNU General Public License, version 3 or later. It comes with no warranty. See Help, License, for the terms. The source code is released with every version.</source>
         <translation>&lt;b&gt;Freberg.guru - Task manager&lt;/b&gt;&lt;br&gt;Versjon %1&lt;br&gt;&lt;br&gt;Copyright © 2026 Freberg.guru&lt;br&gt;&lt;br&gt;Sender ikke bruksdata, maskinvaredetaljer eller prosessinformasjon noe sted.&lt;br&gt;&lt;br&gt;Fri programvare: du kan dele og endre den under GNU General Public License, versjon 3 eller nyere. Den kommer uten garanti. Se Hjelp, Lisens, for vilkårene. Kildekoden utgis med hver versjon.</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="402"/>
-        <location filename="../app/shell/mainwindow.cpp" line="409"/>
+        <location filename="../app/shell/mainwindow.cpp" line="411"/>
+        <location filename="../app/shell/mainwindow.cpp" line="418"/>
         <source>License</source>
         <translation>Lisens</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="421"/>
+        <location filename="../app/shell/mainwindow.cpp" line="430"/>
         <source>Accessibility Statement</source>
         <translation>Tilgjengelighetserklæring</translation>
     </message>
     <message>
-        <location filename="../app/shell/mainwindow.cpp" line="422"/>
+        <location filename="../app/shell/mainwindow.cpp" line="431"/>
         <source>This app aims for full keyboard use, screen reader support through AT-SPI, WCAG AA contrast in every colour scheme, text size from 100% to 200%, and no information conveyed by colour or sound alone.
 
 Known limits are listed in the README.</source>
@@ -3139,6 +3144,19 @@ Den står stille til du velger Fortsett. Setter du en del av skrivebordet på ve
         <location filename="../app/popout/skin.cpp" line="390"/>
         <source>This name is already taken.</source>
         <translation>Dette navnet er allerede i bruk.</translation>
+    </message>
+</context>
+<context>
+    <name>fg::SortMenu</name>
+    <message>
+        <location filename="../app/widgets/sortmenu.cpp" line="58"/>
+        <source>&amp;Ascending</source>
+        <translation>&amp;Stigende</translation>
+    </message>
+    <message>
+        <location filename="../app/widgets/sortmenu.cpp" line="58"/>
+        <source>&amp;Descending</source>
+        <translation>S&amp;ynkende</translation>
     </message>
 </context>
 <context>

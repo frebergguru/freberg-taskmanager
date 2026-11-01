@@ -26,7 +26,7 @@ A task manager for Linux in C++20 and Qt 6 Widgets, in English and Norwegian. Se
 **Design**
 - The classic design is the default: bevels, square corners, navy title bar, stacked tabs, drawn at today's sharpness (smooth text in points, antialiased curves, vector icons).
 - Themes come as a family with a light and a dark member. Every member must pass `tests/test_scheme.cpp` (WCAG AA).
-- Modern has no glow or neon effects at all. Only the Neon Glow theme glows, through `glowStroke()`, which draws nothing in other themes.
+- Modern has no glow or neon effects at all. Only the Neon Glow theme glows, through `glowStroke()`, which draws nothing in other themes. The one exception is a popout skin with `glow` set in its manifest: the user chose that skin, so `app/popout/popout.cpp` draws its glow whatever the theme.
 - Classic drawing lives in `app/style/style.cpp` and the flat designs in `app/style/style_modern.cpp`. Hand-drawn widgets use `raisedPanel()`, `sunkenPanel()` and `strokeSeries()`, not raw bevels.
 
 **Accessibility**

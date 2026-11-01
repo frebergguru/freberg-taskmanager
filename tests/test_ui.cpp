@@ -20,6 +20,7 @@
 #include "app/style/style.h"
 #include "app/views/processes.h"
 #include "app/widgets/confirm.h"
+#include "app/widgets/sortmenu.h"
 
 #include <QAbstractItemModel>
 #include <QAccessible>
@@ -31,6 +32,7 @@
 #include <QMenu>
 #include <QDialog>
 #include <QDialogButtonBox>
+#include <QHeaderView>
 #include <QLabel>
 #include <QProcess>
 #include <QPushButton>
@@ -42,6 +44,7 @@
 #include <QTimer>
 #include <QTreeView>
 #include <QTreeWidget>
+#include <QVBoxLayout>
 #include <cmath>
 
 using namespace fg;
@@ -362,6 +365,73 @@ private slots:
         list->sortByColumn(2, Qt::DescendingOrder);
         for (int i = 1; i < list->topLevelItemCount(); ++i)
             QVERIFY(list->topLevelItem(i - 1)->text(2).toInt() >= list->topLevelItem(i)->text(2).toInt());
+    }
+
+    void sortMenuSortsTheListFromTheKeyboard()
+    {
+        QWidget page;
+        auto* layout = new QVBoxLayout(&page);
+        auto* plain = new QTreeWidget;
+        auto* list = new QTreeWidget;
+        layout->addWidget(plain);
+        layout->addWidget(list);
+        QCOMPARE(sortableList(&page), nullptr); // nothing here can sort yet
+        list->setHeaderLabels({"A & B", "Hidden", "Size"});
+        list->setColumnHidden(1, true);
+        list->setSortingEnabled(true);
+        list->sortByColumn(-1, Qt::AscendingOrder);
+        for (const char* size : {"2", "3", "1"})
+            new QTreeWidgetItem(list, {QStringLiteral("x"), QString(), QString::fromLatin1(size)});
+        QCOMPARE(sortableList(&page), list);
+
+        QMenu menu;
+        fillSortMenu(&menu, list);
+        const auto named = [&menu](const QString& text) -> QAction* {
+            for (QAction* action : menu.actions())
+                if (action->text() == text)
+                    return action;
+            return nullptr;
+        };
+        QVERIFY(named("A && B"));
+        QVERIFY(!named("Hidden"));
+        QVERIFY(!named("&Descending")->isEnabled()); // no column is chosen yet
+
+        named("Size")->trigger();
+        QCOMPARE(list->header()->sortIndicatorSection(), 2);
+        QCOMPARE(list->topLevelItem(0)->text(2), QStringLiteral("1"));
+
+        fillSortMenu(&menu, list); // as the next opening does
+        QVERIFY(named("Size")->isChecked());
+        QVERIFY(named("&Ascending")->isChecked());
+        named("&Descending")->trigger();
+        QCOMPARE(list->topLevelItem(0)->text(2), QStringLiteral("3"));
+        QCOMPARE(list->header()->sortIndicatorSection(), 2);
+
+        fillSortMenu(&menu, nullptr);
+        QVERIFY(menu.isEmpty());
+    }
+
+    void sortMenuFollowsThePageOnScreen()
+    {
+        Settings::instance().setValue("app/lastPage", QStringLiteral("summary"));
+        MainWindow window(*m_hub);
+        window.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&window));
+        QMenu* view = window.findChild<HoverMenuBar*>()->actions()[2]->menu();
+        QAction* sortBy = nullptr;
+        for (QAction* action : view->actions())
+            if (action->menu() && action->text().contains(QLatin1String("Sort")))
+                sortBy = action;
+        QVERIFY(sortBy);
+
+        window.openView(0); // Summary's list keeps its own order
+        emit view->aboutToShow();
+        QVERIFY(!sortBy->isEnabled());
+
+        window.openView(kProcessesView);
+        emit view->aboutToShow();
+        QVERIFY(sortBy->isEnabled());
+        QVERIFY(sortBy->menu()->actions().size() > 2);
     }
 
     void summaryOpensTheChosenProcessEvenTheFirstTime()
